@@ -225,31 +225,62 @@ function update(path, value) {
   const Label = ({ children }) => <label className="muted">{children}</label>;
   const Text = ({ children }) => <div style={{ fontSize: 14 }}>{children}</div>;
   
-  // --- 置き換え：IMEセーフ版 ---
-  const Input = ({ value, onChange, ...p }) => {
+  // ← これで置き換え（ローカルバッファ付き IMEセーフ版）
+const Input = ({ value, onChange, ...p }) => {
+  const [buf, setBuf] = React.useState(value ?? "");
   const composing = React.useRef(false);
+
+  // 親の値が更新されたとき、IME中でなければバッファに反映
+  React.useEffect(() => {
+    if (!composing.current) setBuf(value ?? "");
+  }, [value]);
+
   return (
     <input
       {...p}
       className="input"
-      value={value}
+      value={buf}
       onCompositionStart={() => (composing.current = true)}
-      onCompositionEnd={(e) => { composing.current = false; onChange && onChange(e); }}
-      onChange={(e) => { if (!composing.current) onChange && onChange(e); }}
+      onCompositionEnd={(e) => {
+        composing.current = false;
+        // 変換確定時に親へ“現在のbuf”を渡す
+        onChange?.({ ...e, target: { ...e.target, value: buf } });
+      }}
+      onChange={(e) => {
+        setBuf(e.target.value);          // まずローカルに表示を更新
+        if (!composing.current) {
+          // ローマ字入力などIMEでない場合は即親にも反映
+          onChange?.({ ...e, target: { ...e.target, value: e.target.value } });
+        }
+      }}
     />
   );
 };
 
 const TA = ({ value, onChange, ...p }) => {
+  const [buf, setBuf] = React.useState(value ?? "");
   const composing = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!composing.current) setBuf(value ?? "");
+  }, [value]);
+
   return (
     <textarea
       {...p}
       className="ta"
-      value={value}
+      value={buf}
       onCompositionStart={() => (composing.current = true)}
-      onCompositionEnd={(e) => { composing.current = false; onChange && onChange(e); }}
-      onChange={(e) => { if (!composing.current) onChange && onChange(e); }}
+      onCompositionEnd={(e) => {
+        composing.current = false;
+        onChange?.({ ...e, target: { ...e.target, value: buf } });
+      }}
+      onChange={(e) => {
+        setBuf(e.target.value);
+        if (!composing.current) {
+          onChange?.({ ...e, target: { ...e.target, value: e.target.value } });
+        }
+      }}
     />
   );
 };
