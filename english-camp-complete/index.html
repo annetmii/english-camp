@@ -2,18 +2,101 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>annetmii English Camp</title>
+  <!-- React & ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel CDN（ブラウザでJSXを変換するため） -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- React & Babel (CDN) -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- アプリ本体（JSXを直接書いてOK） -->
+  <script type="text/babel">
 
-  <!-- App Code -->
-  <script type="text/babel" src="./app.jsx"></script>
+    // PINコード確認
+    function checkPin() {
+      const storedPin = localStorage.getItem("trainerPin");
+      if (!storedPin) {
+        const newPin = prompt("講師用PINを設定してください（4〜6桁の数字）");
+        if (newPin && /^[0-9]{4,6}$/.test(newPin)) {
+          localStorage.setItem("trainerPin", newPin);
+          alert("PINを設定しました");
+          return true;
+        }
+        alert("PIN設定をキャンセルしました");
+        return false;
+      } else {
+        const inputPin = prompt("講師用PINを入力してください");
+        return inputPin === storedPin;
+      }
+    }
+
+    function EnglishCampApp() {
+      const [role, setRole] = React.useState("student");
+      const [date, setDate] = React.useState(new Date().toISOString().slice(0, 10));
+      const [user, setUser] = React.useState("Masayuki");
+      const [db, setDb] = React.useState({ days: {}, submissions: {} });
+
+      function update(path, value) {
+        setDb(prev => {
+          const newDb = { ...prev };
+          let ref = newDb;
+          for (let i = 0; i < path.length - 1; i++) {
+            const key = path[i];
+            if (!ref[key]) ref[key] = {};
+            ref = ref[key];
+          }
+          ref[path[path.length - 1]] = value;
+          localStorage.setItem("englishCampDB", JSON.stringify(newDb));
+          return newDb;
+        });
+      }
+
+      function handleRoleChange(newRole) {
+        if (newRole === "trainer") {
+          if (checkPin()) setRole("trainer");
+        } else {
+          setRole("student");
+        }
+      }
+
+      return (
+        <div style={{padding:16, maxWidth:640, margin:"0 auto", fontFamily:"system-ui"}}>
+          <h1 style={{fontSize:22, fontWeight:"700"}}>annetmii English Camp</h1>
+          <div style={{display:"flex", gap:8, marginTop:8}}>
+            <select value={role} onChange={e => handleRoleChange(e.target.value)}>
+              <option value="student">学習者</option>
+              <option value="trainer">講師 (PIN)</option>
+            </select>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <input placeholder="氏名" value={user} onChange={e => setUser(e.target.value)} />
+          </div>
+
+          {/* 本日の学習テーマ */}
+          <div style={{marginTop:16}}>
+            <label style={{fontWeight:"600"}}>本日の学習テーマ</label>
+            {role === "trainer" ? (
+              <input
+                style={{border:"1px solid #ccc", padding:8, width:"100%"}}
+                value={db.days?.[date]?.theme || ""}
+                onChange={e => update(["days", date, "theme"], e.target.value)}
+              />
+            ) : (
+              <div style={{border:"1px solid #ddd", padding:8, background:"#f8f8f8"}}>
+                {db.days?.[date]?.theme || "(未設定)"}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<EnglishCampApp />);
+
+  </script>
 </body>
 </html>
