@@ -1,0 +1,9 @@
+{
+  "name": "english-camp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "annetmii English Camp - Netlify + GitHub functions (no build)",
+  "dependencies": {
+    "octokit": "^3.2.1"
+  }
+}
