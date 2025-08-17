@@ -16,6 +16,17 @@ const todayISO = () => new Date().toISOString().slice(0, 10);
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const STORAGE_KEY = "englishCampDB_v4";
 
+// --- 追加：ローカル保存のデバウンス（0.3秒） ---
+const saveLocalDebounced = (() => {
+  let t = null;
+  return (snapshot) => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)); } catch {}
+    }, 300); // 入力が0.3秒止まったら保存
+  };
+})();
+
 // ---- PIN（ローカル保存） ----
 function checkPin() {
   const stored = localStorage.getItem("trainerPin");
@@ -97,11 +108,6 @@ function EnglishCampApp() {
     idleTimer.current = setTimeout(() => doCloudAutoSave(), 60_000); // 60秒アイドルで自動同期
   };
 
-  // ローカル保存
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-  }, [db]);
-
   // 起動/ユーザー/日付変更時にクラウド読み込み
   useEffect(() => {
     (async () => {
@@ -145,21 +151,25 @@ function EnglishCampApp() {
     return merged;
   }
 
-  // DB更新ユーティリティ
-  function update(path, value) {
-    setDb((prev) => {
-      const next = clone(prev);
-      let ref = next;
-      for (let i = 0; i < path.length - 1; i++) {
-        const k = path[i];
-        if (ref[k] == null) ref[k] = {};
-        ref = ref[k];
-      }
-      ref[path[path.length - 1]] = value;
-      return next;
-    });
-    touch();
-  }
+  // --- 置き換え：深コピーせず部分コピー＋遅延保存 ---
+function update(path, value) {
+  setDb(prev => {
+    const next = { ...prev };
+    let ref = next;
+    for (let i = 0; i < path.length - 1; i++) {
+      const k = path[i];
+      const cur = ref[k];
+      // 必要な階層だけ軽量コピー
+      ref[k] = Array.isArray(cur) ? [...cur] : { ...(cur || {}) };
+      ref = ref[k];
+    }
+    ref[path[path.length - 1]] = value;
+    saveLocalDebounced(next); // ← 毎キーで巨大JSONを書かない
+    return next;
+  });
+  // 既存のクラウド自動同期タイマーはそのまま
+  if (typeof touch === "function") touch();
+}
 
   // ロール切替（講師はPIN）
   function handleRoleChange(newRole) {
@@ -214,8 +224,35 @@ function EnglishCampApp() {
   const Row = (props) => <div className="row" style={props.style}>{props.children}</div>;
   const Label = ({ children }) => <label className="muted">{children}</label>;
   const Text = ({ children }) => <div style={{ fontSize: 14 }}>{children}</div>;
-  const Input = (p) => <input {...p} className="input" style={p.style||{}} />;
-  const TA = (p) => <textarea {...p} className="ta" style={p.style||{}} />;
+  
+  // --- 置き換え：IMEセーフ版 ---
+  const Input = ({ value, onChange, ...p }) => {
+  const composing = React.useRef(false);
+  return (
+    <input
+      {...p}
+      className="input"
+      value={value}
+      onCompositionStart={() => (composing.current = true)}
+      onCompositionEnd={(e) => { composing.current = false; onChange && onChange(e); }}
+      onChange={(e) => { if (!composing.current) onChange && onChange(e); }}
+    />
+  );
+};
+
+const TA = ({ value, onChange, ...p }) => {
+  const composing = React.useRef(false);
+  return (
+    <textarea
+      {...p}
+      className="ta"
+      value={value}
+      onCompositionStart={() => (composing.current = true)}
+      onCompositionEnd={(e) => { composing.current = false; onChange && onChange(e); }}
+      onChange={(e) => { if (!composing.current) onChange && onChange(e); }}
+    />
+  );
+};
 
   return (
     <div className="container">
