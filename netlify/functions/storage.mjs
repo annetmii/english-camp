@@ -1,3 +1,5 @@
+console.log("PATH_PREFIX:", process.env.PATH_PREFIX);
+
 export async function handler(event) {
     const headers = { 
     "Access-Control-Allow-Origin": "*",
