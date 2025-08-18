@@ -1,5 +1,9 @@
 export async function handler(event) {
-  const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" };
+    const headers = { 
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
+  };
   if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers };
 
   const { GITHUB_TOKEN, REPO, PATH_PREFIX = "masayuki", TRAINER_PIN } = process.env;
@@ -9,7 +13,15 @@ export async function handler(event) {
   const [owner, repo] = REPO.split("/");
   const gh = async (path, init) => {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-    return fetch(url, { ...init, headers: { Authorization: `Bearer ${GITHUB_TOKEN}`, Accept: "application/vnd.github+json", ...(init && init.headers || {}) } });
+    return fetch(url, { 
+      ...init, 
+      headers: { 
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: "application/vnd.github+json",
+        "User-Agent": "annetmii-english-camp-netlify",
+        ...(init && init.headers || {}) 
+      } 
+    });
   };
 
   if (event.httpMethod === "GET") {
