@@ -1,10 +1,10 @@
 {
-  "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から",
+  "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう",
   "part1": [
     {
       "id": "9281907a-f0f8-4e96-918d-52c9d94f1b00",
       "en": "Internet listing",
-      "ja": "",
+      "ja": "インターネット",
       "feedback": ""
     },
     {
@@ -53,9 +53,9 @@
   "part2": [
     {
       "id": "a5ecaf6e-79be-428a-9c4c-4ab64fec3c5b",
-      "prompt": "",
+      "prompt": "I found a nice apartment on the ＿＿＿＿＿＿＿＿＿＿＿＿＿.",
       "hint": "",
-      "ja": "",
+      "ja": "良い物件をネットで見つけた",
       "feedback": ""
     },
     {
