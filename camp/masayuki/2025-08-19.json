@@ -13,39 +13,44 @@
       "instructions": "英単語の日本語訳を入力してください。（8問）",
       "items": [
         {
-          "id": "4eaa9761-ffef-4281-a0e4-81c7f65fa673",
+          "id": "c7ba2088-8bc0-4440-98e2-46e78b88cae7",
           "en": "warning"
         },
         {
-          "id": "ff8d0e7b-29d8-4a81-9176-e934937e1e9f",
+          "id": "c0e39871-6756-4da7-971a-e81effd5b929",
           "en": "shelter"
         },
         {
-          "id": "587e1383-7169-4de9-89b2-a45f0c7a21ef",
+          "id": "9f8d4567-9930-4a05-ad55-1d4667065989",
           "en": "evacuate"
         },
         {
-          "id": "4139de13-88db-4505-bbd7-a0f89239c3aa",
+          "id": "147423b0-529c-4479-b69e-eb6144b3fdb0",
           "en": "calm"
         },
         {
-          "id": "7a35521d-cb88-4efa-8b45-a339386dc1d4",
+          "id": "acab10f9-e939-4670-b3be-72ea53dcb2f2",
           "en": "debris"
         },
         {
-          "id": "ceb2459e-8d2d-4e11-be2c-a529a2198e05",
+          "id": "ce179415-72c1-4072-9054-1a2ead64d4e3",
           "en": "inspect"
         },
         {
-          "id": "e9bdaf82-cd73-49dd-9266-63eafc1db0fe",
+          "id": "7a6cfc1a-69a1-49ca-b244-bf5a5809e345",
           "en": "help"
         },
         {
-          "id": "1d957636-4c1d-4b1c-b6b0-7ca83055fbba",
+          "id": "65792442-8190-49ae-94ed-47c663ed56a0",
           "en": "take cover"
         }
       ],
-      "answers": {},
+      "answers": {
+        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "警告",
+        "c0e39871-6756-4da7-971a-e81effd5b929": "シェルター",
+        "9f8d4567-9930-4a05-ad55-1d4667065989": "避難",
+        "147423b0-529c-4479-b69e-eb6144b3fdb0": "落ち着き"
+      },
       "trainerNotes": ""
     },
     "part2": {
@@ -53,27 +58,32 @@
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。（5問）",
       "items": [
         {
-          "id": "e4d3b742-e982-41e4-acb3-eb567a79ceae",
+          "id": "4f059020-5a55-426f-bf7a-b1c950762f21",
           "prompt": "We need to follow the ______ from the radio."
         },
         {
-          "id": "1d327fdf-ffa8-4824-a060-524ff599e6d8",
+          "id": "05d5e2ef-15e0-4987-9ae3-a8b616489874",
           "prompt": "Please stay ______ until we know it’s safe."
         },
         {
-          "id": "b0a1dec4-34e2-428a-8b23-3647ea9cc65e",
+          "id": "de60e8d9-af4e-4dc7-a832-b9da6473e67e",
           "prompt": "Let’s ______ the area before it’s too dangerous."
         },
         {
-          "id": "f4b19743-dea2-4edb-9f26-6cc8ca694aee",
+          "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
           "prompt": "The city sent volunteers to ______ the elderly."
         },
         {
-          "id": "53e2c8f9-5059-45a4-8d02-225f8b33cb7f",
+          "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
           "prompt": "After the storm, we need to ______ the power lines."
         }
       ],
-      "answers": {},
+      "answers": {
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {
+          "en": "instruction",
+          "ja": ""
+        }
+      },
       "trainerNotes": ""
     },
     "part3": {
@@ -81,25 +91,25 @@
       "instructions": "相手役の英語セリフ（講師編集）＋Masayukiの日本語→学習者が英訳を入力（4問）",
       "items": [
         {
-          "id": "db6d5050-5a57-4b73-889f-8d48bc078f39",
+          "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
           "otherRole": "Coworker",
           "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
           "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
         },
         {
-          "id": "86bb3e4f-e461-4f94-ba60-f3eeaf44b831",
+          "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
           "otherRole": "Coworker",
           "otherEn": "Please stay calm and follow the official instructions.",
           "jp": "まずは警告を確認して指示に従いましょう。"
         },
         {
-          "id": "a49213b1-6690-45a7-88f2-21bd8c694514",
+          "id": "30ab5fdb-9e4e-4c34-8551-0a382057e42e",
           "otherRole": "Coworker",
           "otherEn": "Shall we evacuate to higher ground now?",
           "jp": "はい。急いで準備をして高台に行きましょう。"
         },
         {
-          "id": "35f76ffd-2758-4f08-b544-4bb643c5ff35",
+          "id": "ba514455-e224-4eb2-94b2-72dca770d876",
           "otherRole": "Coworker",
           "otherEn": "Do you need any help with your bag?",
           "jp": "いいえ。一緒に安全を確保しましょう。"
