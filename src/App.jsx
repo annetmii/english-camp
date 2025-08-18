@@ -22,7 +22,7 @@ const DAY_GENRE = {
   5: "Small Talk（雑談・会食）",
   6: "Writing（書き言葉・メール・案内）",
 };
-const DEFAULT_PIN = "1234"; // Functions側でTRAINER_PIN検証
+const DEFAULT_PIN = "1202"; // Functions側でTRAINER_PIN検証
 
 // ===================== Cloud I/O =====================
 async function cloudLoad({ userId, dateISO }) {
