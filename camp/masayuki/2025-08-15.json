@@ -3,144 +3,117 @@
     "app": "annetmii-english-camp",
     "version": 43,
     "date": "2025-08-15",
-    "genre": "Compliance（勤怠・制度）",
+    "genre": "Small Talk（雑談・会食）",
     "trainee": "Masayuki",
     "theme": "Week 5｜Tue（Compliance）- 健康診断\nPicture Dictionaryの「Medical Care」（p.118）から学びましょう"
   },
   "parts": {
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
-      "instructions": "英単語の日本語訳を入力してください。（8問）",
+      "instructions": "英単語の日本語訳を入力してください。",
       "items": [
         {
-          "id": "c7ba2088-8bc0-4440-98e2-46e78b88cae7",
-          "en": "appointment"
+          "id": "372ba494-e011-4d10-b2ed-395de31275c1",
+          "en": "warning"
         },
         {
-          "id": "c0e39871-6756-4da7-971a-e81effd5b929",
-          "en": "health insurance card"
+          "id": "a032c47d-9d26-452e-884d-4db387c6a959",
+          "en": "shelter"
         },
         {
-          "id": "9f8d4567-9930-4a05-ad55-1d4667065989",
-          "en": "health history form"
+          "id": "c1d21929-4e5c-4a81-884f-f026e66a7712",
+          "en": "evacuate"
         },
         {
-          "id": "147423b0-529c-4479-b69e-eb6144b3fdb0",
-          "en": "doctor"
+          "id": "8f0c92df-f41d-4af8-b0cf-cdb0dfe7ac14",
+          "en": "calm"
         },
         {
-          "id": "acab10f9-e939-4670-b3be-72ea53dcb2f2",
-          "en": "nurse"
+          "id": "6350b232-c249-4da6-a5f3-af8fb798250c",
+          "en": "debris"
         },
         {
-          "id": "ce179415-72c1-4072-9054-1a2ead64d4e3",
-          "en": "blood pressure gauge"
+          "id": "b7f0d52c-5183-4946-996c-4e22f6d356de",
+          "en": "inspect"
         },
         {
-          "id": "7a6cfc1a-69a1-49ca-b244-bf5a5809e345",
-          "en": "thermometer"
+          "id": "7375cc16-7d5e-4bbc-87ec-b7e002093065",
+          "en": "help"
         },
         {
-          "id": "65792442-8190-49ae-94ed-47c663ed56a0",
-          "en": "syringe"
-        }
-      ],
-      "answers": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "",
-        "c0e39871-6756-4da7-971a-e81effd5b929": "",
-        "9f8d4567-9930-4a05-ad55-1d4667065989": "",
-        "147423b0-529c-4479-b69e-eb6144b3fdb0": "",
-        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": ""
-      },
-      "trainerNotes": "",
-      "marks": {},
-      "answersUpdatedAt": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "2025-08-19T11:52:59.741Z",
-        "c0e39871-6756-4da7-971a-e81effd5b929": "2025-08-19T11:53:01.961Z",
-        "9f8d4567-9930-4a05-ad55-1d4667065989": "2025-08-19T11:53:04.131Z",
-        "147423b0-529c-4479-b69e-eb6144b3fdb0": "2025-08-19T11:53:06.284Z",
-        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "2025-08-19T11:53:08.969Z"
-      }
-    },
-    "part2": {
-      "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
-      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。（5問）",
-      "items": [
-        {
-          "id": "4f059020-5a55-426f-bf7a-b1c950762f21",
-          "prompt": "I made an ＿＿＿＿＿＿ for my annual health check."
-        },
-        {
-          "id": "05d5e2ef-15e0-4987-9ae3-a8b616489874",
-          "prompt": "Please bring your ＿＿＿＿＿＿ when you see the doctor."
-        },
-        {
-          "id": "de60e8d9-af4e-4dc7-a832-b9da6473e67e",
-          "prompt": "The nurse used a ＿＿＿＿＿＿ to check my blood pressure."
-        },
-        {
-          "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
-          "prompt": "The doctor asked me to fill out a ＿＿＿＿＿ before the examination."
-        },
-        {
-          "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
-          "prompt": "The patient was nervous when the nurse picked up the ＿＿＿＿＿＿."
-        }
-      ],
-      "answers": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {
-          "en": "",
-          "ja": ""
-        }
-      },
-      "trainerNotes": "",
-      "marks": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {}
-      },
-      "answersUpdatedAt": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {
-          "en": "2025-08-19T11:53:32.343Z",
-          "ja": "2025-08-19T11:53:32.343Z"
-        }
-      }
-    },
-    "part3": {
-      "label": "Part 3｜会話ロールプレイ（Masayukiの英語セリフを記入）",
-      "instructions": "相手役の英語セリフ（講師編集）＋Masayukiの日本語→学習者が英訳を入力（4問）",
-      "items": [
-        {
-          "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
-          "otherRole": "Nurse",
-          "otherEn": "Good morning, Masayuki. Do you have your health insurance card and health history form?",
-          "jp": "はい、こちらです。今日の予約に必要な資料全て持参しました。"
-        },
-        {
-          "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
-          "otherRole": "Nurse",
-          "otherEn": "Great. First, I’ll check your blood pressure and then take your temperature.",
-          "jp": "わかりました。自宅で測った時は、熱はありませんでした。"
-        },
-        {
-          "id": "30ab5fdb-9e4e-4c34-8551-0a382057e42e",
-          "otherRole": "Doctor",
-          "otherEn": "Hello, Masayuki. I’ll examine your throat.",
-          "jp": "特に喉の痛みや違和感はありません。"
-        },
-        {
-          "id": "ba514455-e224-4eb2-94b2-72dca770d876",
-          "otherRole": "Doctor",
-          "otherEn": "Great. Finally, we may need a blood test, so the nurse will draw your blood.",
-          "jp": "はい。注射は何度も経験していますが、苦手です。"
+          "id": "2b37cf66-03b7-4eac-89fc-888c9c478385",
+          "en": "take cover"
         }
       ],
       "answers": {},
-      "trainerNotes": "",
       "marks": {},
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
+    },
+    "part2": {
+      "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
+      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
+      "items": [
+        {
+          "id": "2fdbdf4a-a9d7-4fe8-8dba-b8b99cdc182b",
+          "prompt": "We need to follow the ______ from the radio."
+        },
+        {
+          "id": "7e28c582-83a5-4974-9889-33de425f5f87",
+          "prompt": "Please stay ______ until we know it’s safe."
+        },
+        {
+          "id": "42b861b9-ff83-4d32-88d6-b9ff971eeba7",
+          "prompt": "Let’s ______ the area before it’s too dangerous."
+        },
+        {
+          "id": "97fc7c88-1c74-4e11-9561-2d1220d757cb",
+          "prompt": "The city sent volunteers to ______ the elderly."
+        },
+        {
+          "id": "94c94b4e-22a9-48d7-a31d-78f971bb7db8",
+          "prompt": "After the storm, we need to ______ the power lines."
+        }
+      ],
+      "answers": {},
+      "marks": {},
+      "trainerNotes": ""
+    },
+    "part3": {
+      "label": "Part 3｜会話ロールプレイ",
+      "instructions": "英文を入力して会話を完成させてください。",
+      "items": [
+        {
+          "id": "be3dd0c9-9169-429f-b251-73ce9c1ed2f6",
+          "otherRole": "Coworker",
+          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
+          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
+        },
+        {
+          "id": "68bfbcb9-7608-44f9-8a7b-1abd5ded9af3",
+          "otherRole": "Coworker",
+          "otherEn": "Please stay calm and follow the official instructions.",
+          "jp": "まずは警告を確認して指示に従いましょう。"
+        },
+        {
+          "id": "0798ceda-34d2-4d74-bab5-d7b312a0e1ef",
+          "otherRole": "Coworker",
+          "otherEn": "Shall we evacuate to higher ground now?",
+          "jp": "はい。急いで準備をして高台に行きましょう。"
+        },
+        {
+          "id": "f4192c63-b195-45d2-8e96-ab930047ee5d",
+          "otherRole": "Coworker",
+          "otherEn": "Do you need any help with your bag?",
+          "jp": "いいえ。一緒に安全を確保しましょう。"
+        }
+      ],
+      "answers": {},
+      "marks": {},
+      "trainerNotes": ""
     },
     "part4": {
-      "label": "Part 4｜英作文 + 手書きパッド",
-      "instructions": "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。",
+      "label": "Part 4｜英作文",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
