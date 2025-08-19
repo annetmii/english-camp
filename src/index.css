@@ -196,12 +196,12 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .col-grow { flex:1 1 0; min-width:0; }   /* 入力側: 伸縮OK/折り返しOK */
 .mark-wrap{ flex:0 0 auto; }             /* ○×ボタン側: 幅固定で縮ませない */
 
-/* 提出ボタンを最強に目立たせる */
-.hdr-btn-submit {
-  background: #000;
+/* 提出ボタン：他と同じサイズを維持して色だけ変更 */
+.hdr-btn.submit-btn {
+  background: #000;   /* 黒背景 */
+  color: #fff;        /* 白文字 */
   border: 1px solid #000;
-  color: #ef4444;           /* 赤文字 */
-  font-weight: 800;
 }
-.hdr-btn-submit:active { transform: scale(0.98); }
-
+.hdr-btn.submit-btn:active {
+  transform: scale(0.98);
+}
