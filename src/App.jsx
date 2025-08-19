@@ -24,6 +24,10 @@ const DAY_GENRE = {
 };
 const DEFAULT_PIN = "1202"; // Functions側でTRAINER_PIN検証
 
+const BTN_SOLID_GRAY =
+  "inline-flex items-center justify-center rounded-xl px-3 py-1 text-sm font-medium text-white bg-gray-700 " +
+  "active:scale-[0.98] transition-transform disabled:opacity-50 disabled:pointer-events-none";
+
 // ===================== Cloud I/O =====================
 async function cloudLoad({ userId, dateISO }) {
   const url = `${ENDPOINT_STORAGE}?user=${encodeURIComponent(userId)}&date=${dateISO}`;
