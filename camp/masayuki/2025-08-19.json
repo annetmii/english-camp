@@ -52,9 +52,7 @@
         "147423b0-529c-4479-b69e-eb6144b3fdb0": "落ち着き"
       },
       "trainerNotes": "Perfect！その調子です",
-      "marks": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "ok"
-      }
+      "marks": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -87,7 +85,7 @@
           "ja": ""
         }
       },
-      "trainerNotes": "",
+      "trainerNotes": "惜しい！",
       "marks": {
         "4f059020-5a55-426f-bf7a-b1c950762f21": {}
       }
@@ -122,7 +120,7 @@
         }
       ],
       "answers": {},
-      "trainerNotes": "",
+      "trainerNotes": "惜しい！",
       "marks": {}
     },
     "part4": {
@@ -130,9 +128,9 @@
       "instructions": "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。",
       "answer": "",
       "handwriting": null,
-      "trainerNotes": ""
+      "trainerNotes": "いいね"
     }
   },
-  "trainerFeedback": "",
+  "trainerFeedback": "いいね",
   "submittedAt": null
 }
