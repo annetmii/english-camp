@@ -1,0 +1,41 @@
+/* 横スクロールを防止（iPhone対応） */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;  /* 横スクロール禁止 */
+}
+
+/* トップバナー固定 */
+.top-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+/* PIN入力ボックスを4桁分に短く */
+.pin-input {
+  width: 4ch;
+  text-align: center;
+}
+
+/* ボタンのスタイル（白文字＋グレー背景） */
+.custom-button {
+  background-color: #555;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.custom-button:hover {
+  background-color: #333;
+}
+
+/* 入力欄の幅を統一（Part2の翻訳ボックスと同じ長さに） */
+.wide-input {
+  width: 100%; 
+  max-width: 600px; /* 必要に応じて調整 */
+}
