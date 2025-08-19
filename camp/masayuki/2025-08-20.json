@@ -81,10 +81,20 @@
           "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
         }
       ],
-      "answers": {},
+      "answers": {
+        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
+          "en": "od",
+          "ja": ""
+        }
+      },
       "marks": {},
       "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "answersUpdatedAt": {
+        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
+          "en": "2025-08-19T16:50:23.316Z",
+          "ja": "2025-08-19T16:50:23.316Z"
+        }
+      }
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
