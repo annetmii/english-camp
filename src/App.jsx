@@ -843,7 +843,6 @@ export default function App() {
 
     return (
       <div className="p1-row">
-        <span className="label" style={{ width: 24 }}>{idx + 1}.</span>
 
         {mode === "trainer" ? (
            <DebouncedInput className="input p1-word" value={it.en} onChange={onChangeWord} />
@@ -914,7 +913,7 @@ export default function App() {
             multiline
             rows={3}
             autoGrow
-            className="input field-full"
+            className="input field-full teacher-comment"
             value={ws.parts.part1.trainerNotes}
             onChange={(v) =>
               setWs((cur) => ({
@@ -928,15 +927,7 @@ export default function App() {
           />
         </div>
       ) : ws.parts.part1.trainerNotes ? (
-        <div
-          style={{
-            marginTop: 12,
-            background: "#f9fafb",
-            borderLeft: "4px solid #e5e7eb",
-            padding: "8px 12px",
-            borderRadius: 8,
-          }}
-        >
+        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
           <strong>講師コメント：</strong>
           <br />
           {ws.parts.part1.trainerNotes}
@@ -988,7 +979,6 @@ export default function App() {
     <div key={it.id} style={{ marginBottom: 12 }}>
       {/* 1行目：出題 */}
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-        <span className="label" style={{ width: 24 }}>{idx + 1}.</span>
         {mode === "trainer" ? (
           <DebouncedInput
             className="input field-full"
@@ -1082,15 +1072,7 @@ export default function App() {
             />
           </div>
         ) : ws.parts.part2.trainerNotes ? (
-          <div
-            style={{
-              marginTop: 12,
-              background: "#f9fafb",
-              borderLeft: "4px solid #e5e7eb",
-              padding: "8px 12px",
-              borderRadius: 8,
-            }}
-          >
+          <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
             <strong>講師コメント：</strong>
             <br />
             {ws.parts.part2.trainerNotes}
@@ -1133,7 +1115,6 @@ export default function App() {
         return (
           <div key={it.id} style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <span className="label" style={{ width: 24 }}>{idx + 1}.</span>
               <div style={{ flex: 1 }}>
                 {mode === "trainer" ? (
                   <DebouncedInput
@@ -1190,8 +1171,8 @@ export default function App() {
 
             <div style={{ paddingLeft: 32, marginTop: 8 }}>
               <div className="label">Masayuki</div>
-              <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                <div className="flex-1">
+              <div className="p3-answer-row">>
+                <div className="p3-answer">
                 <DebouncedInput
                   multiline
                   rows={2}
@@ -1282,7 +1263,7 @@ export default function App() {
             multiline
             rows={3}
             autoGrow
-            className="input field-full"
+            className="input field-full teacher-comment"
             value={ws.parts.part3.trainerNotes || ""}
             onChange={(v) =>
               setWs((cur) => ({
@@ -1296,15 +1277,7 @@ export default function App() {
           />
         </div>
       ) : ws.parts.part3.trainerNotes ? (
-        <div
-          style={{
-            marginTop: 12,
-            background: "#f9fafb",
-            borderLeft: "4px solid #e5e7eb",
-            padding: "8px 12px",
-            borderRadius: 8,
-          }}
-        >
+        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
           <strong>講師コメント：</strong>
           <br />
           {ws.parts.part3.trainerNotes}
@@ -1424,7 +1397,7 @@ export default function App() {
             multiline
             rows={3}
             autoGrow
-            className="input field-full"
+            className="input field-full teacher-comment"
             value={ws.parts.part4.trainerNotes || ""}
             onChange={(v) =>
               setWs((cur) => ({
@@ -1438,15 +1411,7 @@ export default function App() {
           />
         </div>
       ) : ws.parts.part4.trainerNotes ? (
-        <div
-          style={{
-            marginTop: 12,
-            background: "#f9fafb",
-            borderLeft: "4px solid #e5e7eb",
-            padding: "8px 12px",
-            borderRadius: 8,
-          }}
-        >
+        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
           <strong>講師コメント：</strong>
           <br />
           {ws.parts.part4.trainerNotes}
@@ -1502,7 +1467,7 @@ export default function App() {
               multiline
               rows={4}
               autoGrow
-              className="input field-full"
+              className="input field-full teacher-comment"
               placeholder="今日のまとめコメントを入力"
               value={ws.trainerFeedback || ""}
               onChange={(v) => setWs((cur) => ({ ...cur, trainerFeedback: v }))}
