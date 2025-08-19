@@ -227,3 +227,7 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   .p1-row .input { width: 100%; }
 }
 
+/* 本日のテーマ（入力/表示どちらも少し小さめ） */
+.theme-input { font-size: 14px; }
+.theme-text  { font-size: 14px; line-height: 1.6; }
+
