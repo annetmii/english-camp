@@ -388,6 +388,22 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
+function ensureMaps(ws) {
+  try {
+    ws.parts.part1.answers = ws.parts.part1.answers || {};
+    ws.parts.part1.marks   = ws.parts.part1.marks   || {};
+    ws.parts.part2.answers = ws.parts.part2.answers || {};
+    ws.parts.part2.marks   = ws.parts.part2.marks   || {};
+    ws.parts.part3.answers = ws.parts.part3.answers || {};
+    ws.parts.part3.marks   = ws.parts.part3.marks   || {};
+  } catch (_) {
+    // ws が壊れてる場合は初期シートに置き換え
+    const d = todayISO();
+    ws = defaultWorksheet(d);
+  }
+  return ws;
+}
+
 // ===================== Header (4-lines compact layout) =====================
 const Header = React.memo(function Header({
   genre,
@@ -551,9 +567,9 @@ export default function App() {
 
   // worksheet state
   const [ws, setWs] = useState(() => {
-    const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${todayISO()}`);
-    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()));
-  });
+  const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${todayISO()}`);
+  return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()));
+});
 
   // genre
   const genre = useMemo(
@@ -594,15 +610,13 @@ export default function App() {
       try {
         setStatus("クラウド読込中…");
         const remote = await cloudLoad({ userId, dateISO });
-        if (remote && remote.data) { setWs(ensureMaps(remote.data)); setStatus("クラウドから読み込みました");
-        } else {
-          setWs((cur) =>
-            cur && cur.meta && cur.meta.date === dateISO
-              ? cur
-              : defaultWorksheet(dateISO)
-          );
-          setStatus("本日のワークシートを作成しました");
-        }
+        if (remote && remote.data) {
+  setWs(ensureMaps(remote.data));
+  setStatus("クラウドから読み込みました");
+} else {
+  setWs((cur) => (cur?.meta?.date === dateISO ? ensureMaps(cur) : ensureMaps(defaultWorksheet(dateISO))));
+  setStatus("本日のワークシートを作成しました");
+}
       } catch {
         setStatus("オフライン：ローカル保存のみ");
       }
