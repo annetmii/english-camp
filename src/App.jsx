@@ -58,41 +58,9 @@ const DebouncedInput = React.memo(function DebouncedInput({
   rows = 1,
   debounceMs = 220,
   autoGrow = true,
-  // ▼ 追加：未知のpropsも透過させて使えるようにする（style等）
-  ...rest
+  ...rest,               // ★ 追加：余剰propsを受け取る
 }) {
-  const [inner, setInner] = useState(value ?? "");
-  const compRef = useRef(false); // IME合成中
-  const tRef = useRef(null);
-  const elRef = useRef(null);
-
-  // 親->子 同期（フォーカス中は上書きしない）
-  useEffect(() => {
-    if (compRef.current) return;
-    if (document.activeElement === elRef.current) return;
-    setInner(value ?? "");
-  }, [value]);
-
-  const flush = useCallback((next) => {
-    if (typeof onChange !== "function") return;
-    if (next === value) return;
-    onChange(next);
-  }, [onChange, value]);
-
-  const schedule = useCallback((next) => {
-    if (compRef.current) return;
-    if (tRef.current) clearTimeout(tRef.current);
-    tRef.current = setTimeout(() => flush(next), debounceMs);
-  }, [flush, debounceMs]);
-
-  const resize = useCallback(() => {
-    if (!autoGrow || !multiline || !elRef.current) return;
-    const el = elRef.current;
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 320) + 'px';
-  }, [autoGrow, multiline]);
-  useEffect(() => { resize(); }, [inner, resize]);
-
+  // ...
   const common = {
     ref: elRef,
     className,
@@ -104,10 +72,16 @@ const DebouncedInput = React.memo(function DebouncedInput({
     onCompositionEnd: (e) => { compRef.current = false; const v = e.currentTarget.value; setInner(v); flush(v); },
     autoComplete: 'off', autoCorrect: 'off', spellCheck: false,
     inputMode: 'text',
-    ...rest, // ▲ 追加：styleなどを実input/textareaへ
+    ...rest,             // ★ 追加：style などを実 input/textarea に渡す
   };
   if (!multiline) return <input {...common} />;
-  return <textarea {...common} rows={rows} style={{resize:'none', overflow:'hidden', ...(rest?.style || {})}} />;
+  return (
+    <textarea
+      {...common}
+      rows={rows}
+      style={{ resize: 'none', overflow: 'hidden', ...(rest?.style || {}) }} // ★ 追加：styleをマージ
+    />
+  );
 });
 
 // ===================== Calendar helpers =====================
@@ -754,15 +728,25 @@ export default function App() {
   const Part3 = React.memo(() => (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
       {ws.parts.part3.items.map((it, idx) => {
-        // ▼ 修正：marks が未定義でも安全に参照（ビルド時の型落ち回避）
-        const m3 = (ws.parts.part3.marks || {})[it.id];
-        const wrong3 = m3 === 'wrong';
-        const ok3    = m3 === 'ok';
+  const m3 = (ws.parts.part3.marks || {})[it.id];            // ★ 修正
+  const wrong3 = m3 === 'wrong';
+  const ok3    = m3 === 'ok';
 
-        const setMark3 = (val) =>
-          setWs(c => ({ ...c, parts:{ ...c.parts, part3:{ ...c.parts.part3, marks:{ ...(c.parts.part3.marks || {}), [it.id]: val }}}));
-        const clearMark3 = () =>
-          setWs(c => { const m={...(c.parts.part3.marks || {})}; delete m[it.id]; return { ...c, parts:{ ...c.parts, part3:{ ...c.parts.part3, marks:m }}}; });
+  const setMark3 = (val) =>
+    setWs(c => ({
+      ...c,
+      parts:{ ...c.parts,
+        part3:{ ...c.parts.part3,
+          marks:{ ...(c.parts.part3.marks || {}), [it.id]: val }   // ★ 修正
+        }
+      }
+    }));
+  const clearMark3 = () =>
+    setWs(c => {
+      const m = { ...(c.parts.part3.marks || {}) };               // ★ 修正
+      delete m[it.id];
+      return { ...c, parts:{ ...c.parts, part3:{ ...c.parts.part3, marks:m }}};
+    });
 
         return (
           <div key={it.id} style={{marginBottom:12}}>
