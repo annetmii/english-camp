@@ -1,4 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import "./App.css";
+const genId = () => {
+  const g = globalThis;
+  if (g?.crypto && typeof g.crypto.randomUUID === "function") {
+    return g.genId();
+  }
+  // fallback: timestamp + ランダム文字列
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+};
 
 // ===================== Utils =====================
 const tz = "Asia/Tokyo";
@@ -49,20 +58,45 @@ async function cloudListDates({ userId }) {
 
 // ===================== Input (IME-safe, iOS-stable, autosize) =====================
 const DebouncedInput = React.memo(function DebouncedInput({
-  id,
-  value,
-  onChange,
-  className = "",
-  placeholder = "",
-  multiline = false,
-  rows = 1,
-  debounceMs = 220,
-  autoGrow = true,
-  ...rest               // ★ 追加：余剰propsを受け取る
+  id, value, onChange, className = "", placeholder = "",
+  multiline = false, rows = 1, debounceMs = 220, autoGrow = true,
+  ...rest
 }) {
-  // ...
+  const [inner, setInner] = useState(value ?? "");
+  const compRef = useRef(false);
+  const tRef = useRef(null);
+  const inputRef = useRef(null); // ★ 変数名を inputRef に統一
+
+  // 親->子 同期（フォーカス中は上書きしない）
+  useEffect(() => {
+    if (compRef.current) return;
+    if (document.activeElement === inputRef.current) return; // ★ 修正
+    setInner(value ?? "");
+  }, [value]);
+
+  const flush = useCallback((next) => {
+    if (typeof onChange !== "function") return;
+    if (next === value) return;
+    onChange(next);
+  }, [onChange, value]);
+
+  const schedule = useCallback((next) => {
+    if (compRef.current) return;
+    if (tRef.current) clearTimeout(tRef.current);
+    tRef.current = setTimeout(() => flush(next), debounceMs);
+  }, [flush, debounceMs]);
+
+  const resize = useCallback(() => {
+    if (!autoGrow || !multiline || !inputRef.current) return; // ★ 修正
+    const el = inputRef.current;                               // ★ 修正
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 320) + "px";
+  }, [autoGrow, multiline]);
+
+  useEffect(() => { resize(); }, [inner, resize]);
+
   const common = {
-    ref: elRef,
+    ref: inputRef,          // ★ 修正
     className,
     placeholder,
     value: inner,
@@ -70,16 +104,19 @@ const DebouncedInput = React.memo(function DebouncedInput({
     onBlur: () => flush(inner),
     onCompositionStart: () => { compRef.current = true; },
     onCompositionEnd: (e) => { compRef.current = false; const v = e.currentTarget.value; setInner(v); flush(v); },
-    autoComplete: 'off', autoCorrect: 'off', spellCheck: false,
-    inputMode: 'text',
-    ...rest,             // ★ 追加：style などを実 input/textarea に渡す
+    autoComplete: "off",
+    autoCorrect: "off",
+    spellCheck: false,
+    inputMode: "text",
+    ...rest
   };
+
   if (!multiline) return <input {...common} />;
   return (
     <textarea
       {...common}
       rows={rows}
-      style={{ resize: 'none', overflow: 'hidden', ...(rest?.style || {}) }} // ★ 追加：styleをマージ
+      style={{ resize: "none", overflow: "hidden", ...(rest?.style || {}) }}
     />
   );
 });
@@ -183,14 +220,14 @@ const defaultWorksheet = (dateISO) => ({
       label: "Part 1｜語彙チェック（英単語→日本語訳）",
       instructions: "英単語の日本語訳を入力してください。",
       items: [
-        { id: crypto.randomUUID(), en: "warning" },
-        { id: crypto.randomUUID(), en: "shelter" },
-        { id: crypto.randomUUID(), en: "evacuate" },
-        { id: crypto.randomUUID(), en: "calm" },
-        { id: crypto.randomUUID(), en: "debris" },
-        { id: crypto.randomUUID(), en: "inspect" },
-        { id: crypto.randomUUID(), en: "help" },
-        { id: crypto.randomUUID(), en: "take cover" },
+        { id: genId(), en: "warning" },
+        { id: genId(), en: "shelter" },
+        { id: genId(), en: "evacuate" },
+        { id: genId(), en: "calm" },
+        { id: genId(), en: "debris" },
+        { id: genId(), en: "inspect" },
+        { id: genId(), en: "help" },
+        { id: genId(), en: "take cover" },
       ],
       answers: {},
       marks: {},
@@ -200,11 +237,11 @@ const defaultWorksheet = (dateISO) => ({
       label: "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
       items: [
-        { id: crypto.randomUUID(), prompt: "We need to follow the ______ from the radio." },
-        { id: crypto.randomUUID(), prompt: "Please stay ______ until we know it’s safe." },
-        { id: crypto.randomUUID(), prompt: "Let’s ______ the area before it’s too dangerous." },
-        { id: crypto.randomUUID(), prompt: "The city sent volunteers to ______ the elderly." },
-        { id: crypto.randomUUID(), prompt: "After the storm, we need to ______ the power lines." },
+        { id: genId(), prompt: "We need to follow the ______ from the radio." },
+        { id: genId(), prompt: "Please stay ______ until we know it’s safe." },
+        { id: genId(), prompt: "Let’s ______ the area before it’s too dangerous." },
+        { id: genId(), prompt: "The city sent volunteers to ______ the elderly." },
+        { id: genId(), prompt: "After the storm, we need to ______ the power lines." },
       ],
       answers: {},
       marks: {},
@@ -214,10 +251,10 @@ const defaultWorksheet = (dateISO) => ({
       label: "Part 3｜会話ロールプレイ",
       instructions: "英文を入力して会話を完成させてください。",
       items: [
-        { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Hey Masayuki, did you hear they issued a tsunami warning?", jp: "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。" },
-        { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Please stay calm and follow the official instructions.", jp: "まずは警告を確認して指示に従いましょう。" },
-        { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Shall we evacuate to higher ground now?", jp: "はい。急いで準備をして高台に行きましょう。" },
-        { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Do you need any help with your bag?", jp: "いいえ。一緒に安全を確保しましょう。" },
+        { id: genId(), otherRole: "Coworker", otherEn: "Hey Masayuki, did you hear they issued a tsunami warning?", jp: "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。" },
+        { id: genId(), otherRole: "Coworker", otherEn: "Please stay calm and follow the official instructions.", jp: "まずは警告を確認して指示に従いましょう。" },
+        { id: genId(), otherRole: "Coworker", otherEn: "Shall we evacuate to higher ground now?", jp: "はい。急いで準備をして高台に行きましょう。" },
+        { id: genId(), otherRole: "Coworker", otherEn: "Do you need any help with your bag?", jp: "いいえ。一緒に安全を確保しましょう。" },
       ],
       answers: {},
       marks: {},
@@ -445,7 +482,8 @@ export default function App() {
 
   // Part1 Row
   const Part1Row = React.memo(function Part1Row({ it, idx }) {
-    const answer = ws.parts.part1.answers[it.id] ?? "";
+    const answerMap = ws.parts.part1.answers || {};
+    const answer = answerMap[it.id] ?? "";
     const mark = ws.parts.part1.marks[it.id];          // 'ok' | 'wrong' | undefined
     const isWrong = mark === 'wrong';
     const isOk    = mark === 'ok';
@@ -528,7 +566,7 @@ export default function App() {
       </div>
       {mode === "trainer" && (
         <div style={{paddingTop:8, display:'flex', gap:8}}>
-          <button className="btn btn-primary" onClick={() => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: crypto.randomUUID(), en: "new word" }] } } }))}>語彙を追加</button>
+          <button className="btn btn-primary" onClick={() => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "new word" }] } } }))}>語彙を追加</button>
         </div>
       )}
       {/* Trainer notes for Part1 */}
@@ -550,7 +588,8 @@ export default function App() {
     return (
       <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
         {ws.parts.part2.items.map((it, idx) => {
-          const ans = ws.parts.part2.answers[it.id] || { en: "", ja: "" };
+          const ansMap = ws.parts.part2.answers || {};
+        const ans = ansMap[it.id] || { en: "", ja: "" };
 
           // marks は未定義の可能性があるので安全に参照
           const markMap = ws.parts.part2.marks || {};
@@ -805,7 +844,9 @@ export default function App() {
                   multiline rows={2} autoGrow
                   className={`input ${wrong3 ? 'answer-wrong' : ''} ${ok3 ? 'answer-correct' : ''}`}
                   placeholder="英語：ここに英訳を入力"
-                  value={ws.parts.part3.answers[it.id] ?? ""}
+                  const ans3Map = ws.parts.part3.answers || {};
+...
+value={ans3Map[it.id] ?? ""}
                   onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }}
                 />
                 {mode === "trainer" && (
@@ -845,7 +886,7 @@ export default function App() {
       })}
       {mode === "trainer" && (
         <div style={{paddingTop:8, display:'flex', gap:8}}>
-          <button className="btn btn-primary" onClick={() => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: crypto.randomUUID(), otherRole: "", otherEn: "", jp: "" }] } } }))}>セリフを追加</button>
+          <button className="btn btn-primary" onClick={() => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } } }))}>セリフを追加</button>
         </div>
       )}
       {/* Trainer notes for Part3 */}
