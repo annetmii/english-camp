@@ -679,12 +679,11 @@ export default function App() {
         )}
 
         <DebouncedInput
-          className={`input ${isWrong ? "answer-wrong" : ""} ${isOk ? "answer-correct" : ""}`}
-          style={{ flex: 1 }}
-          placeholder="日本語訳"
-          value={answer}
-          onChange={onChangeAnswer}
-        />
+  className={`input field-full p1-answer ${isWrong ? 'answer-wrong' : ''} ${isOk ? 'answer-correct' : ''}`}
+  placeholder="日本語訳"
+  value={answer}
+  onChange={onChangeAnswer}
+/>
 
         {mode === "trainer" && (
           <>
@@ -708,7 +707,7 @@ export default function App() {
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
           <button className="btn btn-primary" onClick={() =>
-            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "new word" }] } }}))
+            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }}))
           }>語彙を追加</button>
         </div>
       )}
