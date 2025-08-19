@@ -108,3 +108,12 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   .brand-title { font-size: 22px; }
   .hdr-meta { font-size: 12px; }
 }
+/* === PINボックス：幅が長くならないよう厳密固定（iOS対策） === */
+.pin-4ch{
+  width: var(--hdr-btn-w) !important;     /* ← min-width ではなく width で厳密固定 */
+  min-width: var(--hdr-btn-w) !important;
+  box-sizing: border-box;                 /* パディング込みで幅計算 */
+  -webkit-appearance: none;               /* iOSの標準見た目を無効化 */
+  appearance: none;
+  padding-right: 10px;                    /* 右端のアイコン余白で押し出されないように */
+}
