@@ -14,35 +14,35 @@
       "items": [
         {
           "id": "a2514ec9-d538-4e7a-befc-06c0f4b37746",
-          "en": "warning"
+          "en": "Internet listing"
         },
         {
           "id": "90fbb2f7-158b-450c-a025-54aa041247d5",
-          "en": "shelter"
+          "en": "classified ad"
         },
         {
           "id": "23aeb272-70d8-4d78-9168-54fc7b9c9bfd",
-          "en": "evacuate"
-        },
-        {
-          "id": "54ad1d74-44ad-4c49-a7fb-59f2125534a2",
-          "en": "calm"
+          "en": "furnished apartment"
         },
         {
           "id": "4eb1ac5c-8a81-463b-970f-50c295ee9c24",
-          "en": "debris"
+          "en": "unfurnished apartment"
         },
         {
           "id": "2ff479d7-de29-4d22-8bbf-c613c1e9ee22",
-          "en": "inspect"
+          "en": "utilities"
         },
         {
           "id": "ea2e0c37-e0ae-44a2-b985-90fb5189586b",
-          "en": "help"
+          "en": "call the manager"
         },
         {
           "id": "9de89229-80d0-4f35-b447-0b6f038ede0c",
-          "en": "take cover"
+          "en": "submit an application"
+        },
+        {
+          "id": "e9caf0c3-ac6c-45b6-b62b-48bb3672ce17",
+          "en": "sign the rental agreement"
         }
       ],
       "answers": {},
