@@ -166,3 +166,90 @@ textarea { resize: none; }
   flex-wrap: wrap;
 }
 
+/* ====== 共通：中央カラム幅（各Partと同じ） ====== */
+.container {
+  max-width: 960px;         /* 必要なら 880～1040px で微調整可 */
+  margin: 0 auto;
+}
+
+/* ====== Sticky Header（背景ぼかし＋枠線） ====== */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+  background: rgba(255,255,255,0.85);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ====== iPhoneでも触りやすい大きさに統一 ====== */
+:root {
+  --hdr-btn-h: 48px;    /* タップ領域 44px 以上を確保 */
+  --hdr-gap: 10px;
+}
+.header-bar { padding: 12px 16px; }
+.hdr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;                /* 狭い画面で自然に折返し */
+}
+
+/* 左側：ロゴ＋タイトル */
+.brand { display: flex; align-items: center; gap: 10px; }
+.header-logo { height: 36px; }
+@media (min-width: 480px) { .header-logo { height: 40px; } }
+.brand-title { font-size: 24px; font-weight: 800; margin: 0; line-height: 1.1; }
+
+/* 右側：ボタン群 */
+.hdr-controls, .hdr-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hdr-gap);
+  flex-wrap: wrap;
+}
+
+/* ボタンのベース（塗りあり/なし共通の箱） */
+.hdr-btn, .hdr-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hdr-btn-h);
+  padding: 0 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  line-height: 1;
+  min-width: 96px;               /* iPhoneでも押しやすい横幅 */
+  -webkit-tap-highlight-color: transparent;
+}
+.hdr-btn { background:#fff; border:1px solid #d1d5db; color:#111827; }
+.hdr-btn-primary { background:#6b7280; border:1px solid #6b7280; color:#fff; }
+.hdr-btn:active, .hdr-btn-primary:active { transform: scale(0.98); }
+
+/* PINは見た目をボタンと揃える（高さと丸み） */
+.pin-4ch {
+  height: var(--hdr-btn-h);
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 16px;
+  width: 6ch;                    /* 4桁＋余白 */
+  text-align: center;
+  letter-spacing: .06em;
+}
+
+/* 2行目（ジャンル/日付＋操作） */
+.hdr-row2 {
+  padding: 0 16px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #6b7280;
+  font-size: 12px;
+  gap: 12px;
+}
+
+/* モバイル優遇：右側ボタンが小さくならないよう横スクロールを避ける */
+html, body { overflow-x: hidden; }
