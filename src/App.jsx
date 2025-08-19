@@ -69,10 +69,11 @@ const DebouncedInput = React.memo(function DebouncedInput({
   rows = 1,
   debounceMs = 220,
   autoGrow = true,
+  flushOnBlur = true,     // ← 必要時OFFにできる
   ...rest
 }) {
   const [inner, setInner] = useState(value ?? "");
-  const composingRef = useRef(false);         // IME合成中フラグ
+  const composingRef = useRef(false);   // IME合成中
   const tRef = useRef(null);
   const elRef = useRef(null);
 
@@ -80,20 +81,19 @@ const DebouncedInput = React.memo(function DebouncedInput({
   useEffect(() => {
     if (composingRef.current) return;
     if (typeof document !== "undefined" && document.activeElement === elRef.current) return;
-    setInner(value ?? "");
-  }, [value]);
+    if ((value ?? "") !== inner) setInner(value ?? "");
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // flush: 親へ反映（デバウンス）
   const flush = useCallback((next) => {
     if (typeof onChange !== "function") return;
-    if (next === value) return;
+    if (next === value) return;     // 変化なしなら通知しない＝無駄リレンダー抑止
     onChange(next);
   }, [onChange, value]);
 
   const schedule = useCallback((next) => {
-    if (composingRef.current) return;        // 変換確定まで送らない
+    if (composingRef.current) return;      // 変換確定まで親に送らない
     if (tRef.current) clearTimeout(tRef.current);
-    tRef.current = setTimeout(() => flush(next), debounceMs);
+    tRef.current = setTimeout(() => { tRef.current = null; flush(next); }, debounceMs);
   }, [flush, debounceMs]);
 
   // オートリサイズ（textarea）
@@ -103,19 +103,23 @@ const DebouncedInput = React.memo(function DebouncedInput({
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   }, [autoGrow, multiline]);
-
   useEffect(() => { resize(); }, [inner, resize]);
 
-  // 重要：入力の見た目更新は onInput のみ（毎キーで内側だけ更新）
+  // 入力時：見た目は即反映、親通知はデバウンス
   const handleInput = (e) => {
     const v = e.currentTarget.value;
     setInner(v);
-    schedule(v);                // 親への通知はデバウンス
+    schedule(v);
   };
 
+  // iOSでまれに onChange が同時発火→二重通知になるのを避ける
+  const noopChange = () => {};
+
   const handleBlur = () => {
+    if (!flushOnBlur) return;
     if (tRef.current) { clearTimeout(tRef.current); tRef.current = null; }
-    flush(inner);               // フォーカス外れたら即反映
+    // ※ iOS で「勝手にキーボードが閉じる」原因になりにくいよう、blur時のみ即時flush
+    flush(inner);
   };
 
   const handleCompStart = () => { composingRef.current = true; };
@@ -123,11 +127,9 @@ const DebouncedInput = React.memo(function DebouncedInput({
     composingRef.current = false;
     const v = e.currentTarget.value;
     setInner(v);
-    flush(v);                   // 変換確定時に即反映
+    // 変換確定時は即反映（英語IMEでも安全）
+    flush(v);
   };
-
-  // 一部ブラウザは onInput 後に onChange も飛ぶので onChange は NO-OP にする
-  const noopChange = () => {};
 
   const commonProps = {
     ref: elRef,
@@ -144,6 +146,8 @@ const DebouncedInput = React.memo(function DebouncedInput({
     spellCheck: false,
     autoCapitalize: "none",
     inputMode: "text",
+    // iOS キーボードの不要な挙動を抑制
+    enterKeyHint: "done",
     ...rest,
   };
 
@@ -704,11 +708,14 @@ export default function App() {
     const isOk = mark === "ok";
 
     const onChangeWord = (v) =>
-      setWs((cur) => ({
-        ...cur, parts: { ...cur.parts,
-          part1: { ...cur.parts.part1, items: cur.parts.part1.items.map((x) => (x.id === it.id ? { ...x, en: v } : x)) }
-        }
-      }));
+  setWs((cur) => {
+    const idx = cur.parts.part1.items.findIndex(x => x.id === it.id);
+    if (idx < 0) return cur;
+    if (cur.parts.part1.items[idx].en === v) return cur; // ← 変化なしなら更新しない
+    const items = [...cur.parts.part1.items];
+    items[idx] = { ...items[idx], en: v };
+    return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items } } };
+  });
 
     const onChangeAnswer = (v) => { draftRef.current.p1[it.id] = v; scheduleFlush(); };
 
@@ -811,24 +818,20 @@ const Part2 = React.memo(function Part2() {
             {/* 1行目：出題 */}
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
               {mode === "trainer" ? (
-                <DebouncedInput
-                  className="input field-full"
-                  value={it.prompt}
-                  onChange={(v) =>
-                    setWs((cur) => ({
-                      ...cur,
-                      parts: {
-                        ...cur.parts,
-                        part2: {
-                          ...cur.parts.part2,
-                          items: cur.parts.part2.items.map((x) =>
-                            x.id === it.id ? { ...x, prompt: v } : x
-                          ),
-                        },
-                      },
-                    }))
-                  }
-                />
+               onChange={(v) =>
+  setWs((cur) => {
+    const items = cur.parts.part2.items;
+    const idx = items.findIndex((x) => x.id === it.id);
+    if (idx < 0) return cur;
+    if ((items[idx].prompt || "") === (v || "")) return cur; // 変化なしは更新しない
+    const nextItems = [...items];
+    nextItems[idx] = { ...nextItems[idx], prompt: v };
+    return {
+      ...cur,
+      parts: { ...cur.parts, part2: { ...cur.parts.part2, items: nextItems } },
+    };
+  })
+}
               ) : (
                 <p style={{ margin: 0, lineHeight: 1.6, flex: 1 }}>{it.prompt}</p>
               )}
@@ -962,10 +965,20 @@ const Part2 = React.memo(function Part2() {
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
               <div style={{ flex: 1 }}>
                 {mode === "trainer" ? (
-                  <DebouncedInput className="input field-full" style={{ marginBottom: 6 }}
-                    value={it.otherRole || ""} placeholder="相手役の名前（例：Coworker）"
-                    onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => x.id === it.id ? { ...x, otherRole: v } : x) } }}))}
-                  />
+                  onChange={(v) =>
+  setWs((cur) => {
+    const items = cur.parts.part3.items;
+    const idx = items.findIndex((x) => x.id === it.id);
+    if (idx < 0) return cur;
+    if ((items[idx].jp || "") === (v || "")) return cur; // 変化なしは更新しない
+    const nextItems = [...items];
+    nextItems[idx] = { ...nextItems[idx], jp: v };
+    return {
+      ...cur,
+      parts: { ...cur.parts, part3: { ...cur.parts.part3, items: nextItems } },
+    };
+  })
+}
                 ) : it.otherRole ? <div className="label" style={{ marginBottom: 6 }}>{it.otherRole}</div> : null}
 
                 {mode === "trainer" ? (
