@@ -166,3 +166,16 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 
 .answer-wrong  { background:#fee2e2; border-color:#fecaca; }
 .answer-correct{ background:#ecfdf5; border-color:#a7f3d0; }
+
+/* === Part1：iPhoneで語彙と日本語訳を上下配置 === */
+.p1-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
+.p1-word { min-width:88px; font-weight:600; }
+@media (max-width: 480px) {
+  .p1-row { flex-direction: column; align-items: stretch; }
+  .p1-word { width:100%; }
+}
+
+/* === 入力の横幅を優先（横にボタンがあっても縮み過ぎない） === */
+.flex-1 { flex:1; min-width:0; }     /* 入力側 */
+.mark-wrap { flex:0 0 auto; }        /* ボタン側は縮ませない */
+
