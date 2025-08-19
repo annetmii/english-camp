@@ -212,29 +212,66 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
-// ===================== Header (isolated) =====================
-const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInput, onPinChange, switchToTrainer, switchToStudent, showCal, setShowCal, doSync, submit, userId, markedDates, onPickDate }) {
+// ===================== Header (fixed) =====================
+const Header = React.memo(function Header({
+  genre,
+  dateISO,
+  status,
+  mode,
+  pinInput,
+  onPinChange,
+  switchToTrainer,
+  switchToStudent,
+  showCal,
+  setShowCal,
+  doSync,
+  submit,
+  userId,
+  markedDates,
+  onPickDate
+}) {
   return (
     <header className="sticky-header">
-       <div className="container" style={{padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-         <div style={{display:'flex', alignItems:'center', gap:8}}>
-           <img src="/logo.png" alt="annetmii" style={{height:24}} onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }} />
-           <h1 style={{fontSize:20, fontWeight:600, margin:0}}>English Camp</h1>
-         </div>
-         <div style={{display:'flex', alignItems:'center', gap:8}}>
-           <button className="btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
-           {mode === "student" ? (
-             <div style={{display:'flex', alignItems:'center', gap:6}}>
-      <div className="container" style={{padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-        <div style={{display:'flex', alignItems:'center', gap:8}}>
-          <img src="/logo.png" alt="annetmii" style={{height:24}} onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }} />
-          <h1 style={{fontSize:20, fontWeight:600, margin:0}}>English Camp</h1>
+      {/* 1段目：ロゴ／モードスイッチ */}
+      <div
+        className="container"
+        style={{
+          padding: "12px 16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img
+            src="/logo.png"
+            alt="annetmii"
+            style={{ height: 24 }}
+            onError={(e) => {
+              const s = document.createElement("span");
+              s.textContent = "annetmii";
+              e.currentTarget.replaceWith(s);
+            }}
+          />
+          <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
+            English Camp
+          </h1>
         </div>
-        <div style={{display:'flex', alignItems:'center', gap:8}}>
-          <button className="btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            className="btn"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              setShowCal((v) => !v);
+            }}
+          >
+            カレンダー
+          </button>
+
           {mode === "student" ? (
-            <div style={{display:'flex', alignItems:'center', gap:6}}>
-              {/* 4桁に合わせてコンパクト化＆数字のみ */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {/* PINは4桁幅、数字のみ */}
               <input
                 type="password"
                 inputMode="numeric"
@@ -242,28 +279,85 @@ const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInp
                 className="input pin-4ch"
                 placeholder="PIN"
                 value={pinInput}
-                onChange={(e)=>onPinChange(e.target.value.replace(/\D/g,''))}
+                onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
               />
-              <button className="btn-solid-gray" onClick={(ev)=>{ev.stopPropagation(); switchToTrainer();}}>講師モード</button>
+              <button
+                className="btn-solid-gray"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  switchToTrainer();
+                }}
+              >
+                講師モード
+              </button>
             </div>
           ) : (
-            <button className="btn" onClick={(ev)=>{ev.stopPropagation(); switchToStudent();}}>学習者モードへ</button>
+            <button
+              className="btn"
+              onClick={(ev) => {
+                ev.stopPropagation();
+                switchToStudent();
+              }}
+            >
+              学習者モードへ
+            </button>
           )}
         </div>
       </div>
-      <div className="container" style={{padding:'0 16px 8px', display:'flex', justifyContent:'space-between', color:'#6b7280', fontSize:11}}>
-        <span>{genre}｜{dateISO}</span>
-        <div style={{display:'flex', gap:12, alignItems:'center'}}>
-          <button className="btn-solid-gray" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
-          <button className="btn-solid-gray" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
+
+      {/* 2段目：日付／同期・提出 */}
+      <div
+        className="container"
+        style={{
+          padding: "0 16px 8px",
+          display: "flex",
+          justifyContent: "space-between",
+          color: "#6b7280",
+          fontSize: 11,
+        }}
+      >
+        <span>
+          {genre}｜{dateISO}
+        </span>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button
+            className="btn-solid-gray"
+            onClick={(e) => {
+              e.stopPropagation();
+              doSync("手動同期");
+            }}
+          >
+            同期
+          </button>
+          <button
+            className="btn-solid-gray"
+            onClick={(e) => {
+              e.stopPropagation();
+              submit();
+            }}
+          >
+            提出
+          </button>
           <span>状態：{status}</span>
         </div>
       </div>
-      {showCal && (
-        <div className="container" style={{padding:'0 16px 12px'}} onClick={(e)=>e.stopPropagation()}>
-          <MonthCalendar dateISO={dateISO} onSelect={(iso) => { onPickDate(iso); }} marked={markedDates} />
+
+      {/* 3段目：カレンダー（必要時のみ） */}
+      {showCal ? (
+        <div
+          className="container"
+          style={{ padding: "0 16px 12px" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MonthCalendar
+            dateISO={dateISO}
+            onSelect={(iso) => {
+              onPickDate(iso);
+            }}
+            marked={markedDates}
+          />
         </div>
-      )}
+      ) : null}
     </header>
   );
 });
