@@ -2,145 +2,125 @@
   "meta": {
     "app": "annetmii-english-camp",
     "version": 43,
-    "date": "2025-08-19",
-    "genre": "Compliance（勤怠・制度）",
+    "date": "2025-08-20",
+    "genre": "HQ（本国報告・ドキュメント作成）",
     "trainee": "Masayuki",
-    "theme": "Week 5｜Tue（Compliance）- 健康診断\nPicture Dictionaryの「Medical Care」（p.118）から学びましょう"
+    "theme": "Week 5｜Wed（Airport）- 海外出張に行く\nPicture Dictionaryの「An Airport」（p.160）から学びましょう"
   },
   "parts": {
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
-      "instructions": "英単語の日本語訳を入力してください。（8問）",
+      "instructions": "英単語の日本語訳を入力してください。",
       "items": [
         {
-          "id": "c7ba2088-8bc0-4440-98e2-46e78b88cae7",
-          "en": "appointment"
+          "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
+          "en": "check in"
         },
         {
-          "id": "c0e39871-6756-4da7-971a-e81effd5b929",
-          "en": "health insurance card"
+          "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
+          "en": "boarding pass"
         },
         {
-          "id": "9f8d4567-9930-4a05-ad55-1d4667065989",
-          "en": "health history form"
+          "id": "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005",
+          "en": "security check"
         },
         {
-          "id": "147423b0-529c-4479-b69e-eb6144b3fdb0",
-          "en": "doctor"
+          "id": "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11",
+          "en": "carry-on bag"
         },
         {
-          "id": "acab10f9-e939-4670-b3be-72ea53dcb2f2",
-          "en": "nurse"
+          "id": "7201e441-2b43-4eca-a11d-dd89150e818f",
+          "en": "claim baggage"
         },
         {
-          "id": "ce179415-72c1-4072-9054-1a2ead64d4e3",
-          "en": "blood pressure gauge"
+          "id": "3889d80f-c382-440b-8985-b73033f85b26",
+          "en": "seat belt"
         },
         {
-          "id": "7a6cfc1a-69a1-49ca-b244-bf5a5809e345",
-          "en": "thermometer"
+          "id": "2413f719-dd0f-4c05-bfcc-c9d1114ae843",
+          "en": "boarding gate"
         },
         {
-          "id": "65792442-8190-49ae-94ed-47c663ed56a0",
-          "en": "syringe"
-        }
-      ],
-      "answers": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "",
-        "c0e39871-6756-4da7-971a-e81effd5b929": "",
-        "9f8d4567-9930-4a05-ad55-1d4667065989": "",
-        "147423b0-529c-4479-b69e-eb6144b3fdb0": "",
-        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": ""
-      },
-      "trainerNotes": "",
-      "marks": {},
-      "answersUpdatedAt": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "2025-08-19T11:52:59.741Z",
-        "c0e39871-6756-4da7-971a-e81effd5b929": "2025-08-19T11:53:01.961Z",
-        "9f8d4567-9930-4a05-ad55-1d4667065989": "2025-08-19T11:53:04.131Z",
-        "147423b0-529c-4479-b69e-eb6144b3fdb0": "2025-08-19T11:53:06.284Z",
-        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "2025-08-19T11:53:08.969Z"
-      }
-    },
-    "part2": {
-      "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
-      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。（5問）",
-      "items": [
-        {
-          "id": "4f059020-5a55-426f-bf7a-b1c950762f21",
-          "prompt": "I made an ＿＿＿＿＿＿ for my annual health check."
-        },
-        {
-          "id": "05d5e2ef-15e0-4987-9ae3-a8b616489874",
-          "prompt": "Please bring your ＿＿＿＿＿＿ when you see the doctor."
-        },
-        {
-          "id": "de60e8d9-af4e-4dc7-a832-b9da6473e67e",
-          "prompt": "The nurse used a ＿＿＿＿＿＿ to check my blood pressure."
-        },
-        {
-          "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
-          "prompt": "The doctor asked me to fill out a ＿＿＿＿＿ before the examination."
-        },
-        {
-          "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
-          "prompt": "The patient was nervous when the nurse picked up the ＿＿＿＿＿＿."
-        }
-      ],
-      "answers": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {
-          "en": "",
-          "ja": ""
-        }
-      },
-      "trainerNotes": "",
-      "marks": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {}
-      },
-      "answersUpdatedAt": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {
-          "en": "2025-08-19T11:53:32.343Z",
-          "ja": "2025-08-19T11:53:32.343Z"
-        }
-      }
-    },
-    "part3": {
-      "label": "Part 3｜会話ロールプレイ（Masayukiの英語セリフを記入）",
-      "instructions": "相手役の英語セリフ（講師編集）＋Masayukiの日本語→学習者が英訳を入力（4問）",
-      "items": [
-        {
-          "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
-          "otherRole": "Nurse",
-          "otherEn": "Good morning, Masayuki. Do you have your health insurance card and health history form?",
-          "jp": "はい、こちらです。今日の予約に必要な資料全て持参しました。"
-        },
-        {
-          "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
-          "otherRole": "Nurse",
-          "otherEn": "Great. First, I’ll check your blood pressure and then take your temperature.",
-          "jp": "わかりました。自宅で測った時は、熱はありませんでした。"
-        },
-        {
-          "id": "30ab5fdb-9e4e-4c34-8551-0a382057e42e",
-          "otherRole": "Doctor",
-          "otherEn": "Hello, Masayuki. I’ll examine your throat.",
-          "jp": "特に喉の痛みや違和感はありません。"
-        },
-        {
-          "id": "ba514455-e224-4eb2-94b2-72dca770d876",
-          "otherRole": "Doctor",
-          "otherEn": "Great. Finally, we may need a blood test, so the nurse will draw your blood.",
-          "jp": "はい。注射は何度も経験していますが、苦手です。"
+          "id": "ea1d6e0f-d3bd-4489-b04b-e376d800638f",
+          "en": "screening area"
         }
       ],
       "answers": {},
-      "trainerNotes": "",
       "marks": {},
+      "trainerNotes": "",
       "answersUpdatedAt": {}
     },
+    "part2": {
+      "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
+      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
+      "items": [
+        {
+          "id": "554a0c3f-6d62-4a37-88f1-9fa53e5114d7",
+          "prompt": "I need to ＿＿＿＿＿ electronically before my flight."
+        },
+        {
+          "id": "a5cca132-f1ca-4d80-91e6-e679fe7f5a4c",
+          "prompt": "Please show your ＿＿＿＿＿ at the boarding gate."
+        },
+        {
+          "id": "d2acea31-ea3d-44e3-a283-224c17c381f9",
+          "prompt": "All passengers must go through the ＿＿＿＿＿ before boarding."
+        },
+        {
+          "id": "289fc96c-1b66-43a0-a87f-d70e08d677cc",
+          "prompt": "Don’t forget to fasten your ＿＿＿＿＿＿ before takeoff."
+        },
+        {
+          "id": "a2d7a6ae-f73a-4d19-8583-7f4ffaec2211",
+          "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
+        }
+      ],
+      "answers": {},
+      "marks": {},
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
+    },
+    "part3": {
+      "label": "Part 3｜会話ロールプレイ",
+      "instructions": "英文を入力して会話を完成させてください。",
+      "items": [
+        {
+          "id": "d8eb0673-f295-4cc9-83f8-dc62183994d5",
+          "otherRole": "Colleague",
+          "otherEn": "Masayuki, are you ready for your business trip abroad?",
+          "jp": "オンラインでチェックインして搭乗券を印刷しておいたよ。"
+        },
+        {
+          "id": "4f6c289e-58e8-4665-87e5-6d9967de8584",
+          "otherRole": "Colleague",
+          "otherEn": "That’s good. Don’t forget you’ll have to go through the security check at the screening area.",
+          "jp": "もちろん。ノートパソコンを手荷物から出しておかないとね。"
+        },
+        {
+          "id": "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7",
+          "otherRole": "Colleague",
+          "otherEn": "Once you arrive, how will you manage your schedule?",
+          "jp": "到着したら、ホテルへ直行だね。最初の会議に遅れないようにスケジュールを整理しておいた。"
+        },
+        {
+          "id": "d46248be-1671-4bab-8b81-ba8a2b014854",
+          "otherRole": "Colleague",
+          "otherEn": "That sounds well planned. Have a safe flight!",
+          "jp": "ありがとう。機内では眠れないので、プレゼン準備などで時間を潰すよ。"
+        }
+      ],
+      "answers": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": ""
+      },
+      "marks": {},
+      "trainerNotes": "",
+      "answersUpdatedAt": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": "2025-08-19T13:19:10.563Z"
+      }
+    },
     "part4": {
-      "label": "Part 4｜英作文 + 手書きパッド",
-      "instructions": "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。",
+      "label": "Part 4｜英作文",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
