@@ -199,7 +199,7 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 /* 提出ボタン：他と同じサイズを維持して色だけ変更 */
 .hdr-btn.submit-btn {
   background: #000;   /* 黒背景 */
-  color: #fff;        /* 白文字 */
+  color: #ef4444;     /* 赤文字 */
   border: 1px solid #000;
 }
 .hdr-btn.submit-btn:active {
