@@ -1,178 +1,33 @@
-/* ====== 横揺れ防止（iPhone含む） ====== */
+/* =================== グローバル：横揺れ防止・基本 =================== */
 html, body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;      /* 横スクロール禁止 */
   width: 100%;
+  overflow-x: hidden;        /* 横スクロール禁止 */
 }
-html, body, #root {
-  touch-action: pan-y;     /* 縦パンのみ */
+html, body, #root {          /* iPhoneで縦スクロールのみ */
+  touch-action: pan-y;
   overscroll-behavior-x: none;
 }
-* { min-width: 0; }        /* flex子のはみ出し防止 */
-textarea { resize: none; } /* オートリサイズで横ズレしない */
+* { min-width: 0; }          /* flex子のはみ出し防止 */
+textarea { resize: none; }   /* オートリサイズで横ズレしない */
 
-/* ====== 固定ヘッダーの安定化 ====== */
-.sticky-header {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  backdrop-filter: blur(4px);
-  background: rgba(255,255,255,0.7);
-  border-bottom: 1px solid #e5e7eb;
+/* =================== 中央カラム幅（各Partと統一） =================== */
+.container {
+  max-width: 960px;          /* 必要なら 880〜1040pxで微調整可 */
+  margin: 0 auto;
 }
 
-/* ====== 見た目ユーティリティ ====== */
-.btn-solid-gray {
-  background: #6b7280;     /* Tailwindのgray-600相当 */
-  color: #fff;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-}
-.btn-solid-gray:active { transform: scale(0.98); }
-.btn-solid-gray:disabled { opacity: .5; pointer-events: none; }
-
-/* PINを4桁分にコンパクト化（等幅フォントで4ch） */
-.pin-4ch {
-  width: 4ch;
-  text-align: center;
-  letter-spacing: .06em;
-}
-
-/* 入力欄の幅を統一（カード内いっぱい） */
-.fullwide {
-  width: 100%;
-  max-width: 52rem;  /* 画面の狭い端末では100%で縮む */
-}
-
-/* === 入力欄を外枠にピッタリ合わせるための共通クラス === */
+/* =================== カード内側の共通余白/幅 =================== */
+.content-pad { padding: 16px; }
 .field-full {
   width: 100%;
   max-width: 100%;
   display: block;
-  box-sizing: border-box; /* 枠線/内余白を幅に含める */
-  min-width: 0;           /* iOS の収縮時はみ出し防止 */
+  box-sizing: border-box;
 }
 
-/* Card 内側のパディングを統一名で管理（JSX側で使う） */
-.content-pad {
-  padding: 16px;
-}
-
-/* 横揺れ対策（既に入れていなければ） */
-html, body { overflow-x: hidden; width: 100%; }
-html, body, #root { touch-action: pan-y; overscroll-behavior-x: none; }
-* { min-width: 0; }
-textarea { resize: none; }
-
-/* ===== Header layout & buttons (iPhone最適化) ===== */
-:root {
-  --hdr-btn-h: 44px;      /* ボタン高さを統一 */
-  --hdr-gap: 8px;         /* ボタン同士の間隔 */
-}
-
-/* 1行目：ロゴ＋タイトル／右側操作の横並び */
-.header-bar {
-  padding: 12px 16px;
-}
-.hdr-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;              /* 画面が狭い時は折り返す */
-}
-
-/* 左側のブランド */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.header-logo {
-  height: 32px;                 /* iPhoneで見出しとバランス良い大きさ */
-}
-@media (min-width: 480px) {
-  .header-logo { height: 36px; }/* 画面が広ければ少し大きく */
-}
-.brand-title {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.1;
-  margin: 0;
-}
-
-/* 右側操作ブロック（カレンダー/PIN/講師モード） */
-.hdr-controls {
-  display: flex;
-  align-items: center;
-  gap: var(--hdr-gap);
-  flex-wrap: wrap;              /* 狭い時も崩れない */
-}
-
-/* ボタンの共通（高さ・角丸・フォント） */
-.hdr-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--hdr-btn-h);
-  padding: 0 14px;
-  border-radius: 14px;
-  font-size: 16px;
-  line-height: 1;
-  border: 1px solid #d1d5db;
-  background: #fff;
-}
-.hdr-btn:active { transform: scale(0.98); }
-
-/* 塗りつぶし（同期/提出/講師モードに使用） */
-.hdr-btn-primary {
-  background: #6b7280;           /* gray-600 */
-  color: #fff;
-  border-color: transparent;
-}
-
-/* PINは4桁幅でも高さはボタンと同じ */
-.pin-4ch {
-  height: var(--hdr-btn-h);
-  padding: 0 10px;
-  border-radius: 14px;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  font-size: 16px;
-  width: 5ch;                    /* 4桁ちょうど＋余白 */
-  text-align: center;
-  letter-spacing: .06em;
-}
-
-/* 2行目（ジャンル/日付/同期/提出/状態） */
-.hdr-row2 {
-  padding: 0 16px 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #6b7280;
-  font-size: 11px;
-  gap: 12px;
-}
-.hdr-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* ====== 共通：中央カラム幅（各Partと同じ） ====== */
-.container {
-  max-width: 960px;         /* 必要なら 880～1040px で微調整可 */
-  margin: 0 auto;
-}
-
-/* ====== Sticky Header（背景ぼかし＋枠線） ====== */
+/* =================== 固定ヘッダー（背景ぼかし＋境界線） =================== */
 .sticky-header {
   position: sticky;
   top: 0;
@@ -182,147 +37,74 @@ textarea { resize: none; }
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* ====== iPhoneでも触りやすい大きさに統一 ====== */
-:root {
-  --hdr-btn-h: 48px;    /* タップ領域 44px 以上を確保 */
-  --hdr-gap: 10px;
-}
-.header-bar { padding: 12px 16px; }
-.hdr-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;                /* 狭い画面で自然に折返し */
-}
+/* =================== ヘッダー：行とブランド =================== */
+.header-bar { padding: 12px 16px 8px; }
+.header-row { padding: 0 16px 8px; }
+.hstack { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-/* 左側：ロゴ＋タイトル */
 .brand { display: flex; align-items: center; gap: 10px; }
-.header-logo { height: 36px; }
-@media (min-width: 480px) { .header-logo { height: 40px; } }
+.header-logo { height: 34px; }
 .brand-title { font-size: 24px; font-weight: 800; margin: 0; line-height: 1.1; }
 
-/* 右側：ボタン群 */
-.hdr-controls, .hdr-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--hdr-gap);
-  flex-wrap: wrap;
+/* 4行目：ジャンル｜日付（iPhoneでも改行させない） */
+.hdr-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #6b7280;
+  font-size: 13px;
 }
 
-/* ボタンのベース（塗りあり/なし共通の箱） */
+/* =================== ヘッダー：ボタンとPINを“少し小さめ”に完全統一 =================== */
+:root {
+  --hdr-btn-h: 36px;   /* 高さ（少し小さめ／押しやすさ維持） */
+  --hdr-btn-w: 88px;   /* 横幅固定で統一 */
+  --hdr-font: 14px;    /* フォントサイズ */
+  --hdr-gap: 8px;      /* ボタン間隔 */
+}
+
+/* 共通ボタン（塗りなし/あり） */
 .hdr-btn, .hdr-btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: var(--hdr-btn-h);
-  padding: 0 16px;
-  border-radius: 14px;
-  font-size: 16px;
+  min-width: var(--hdr-btn-w);
+  font-size: var(--hdr-font);
   line-height: 1;
-  min-width: 96px;               /* iPhoneでも押しやすい横幅 */
+  border-radius: 10px;
+  padding: 0 12px;
   -webkit-tap-highlight-color: transparent;
 }
-.hdr-btn { background:#fff; border:1px solid #d1d5db; color:#111827; }
-.hdr-btn-primary { background:#6b7280; border:1px solid #6b7280; color:#fff; }
+.hdr-btn {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+.hdr-btn-primary {
+  background: #6b7280;      /* gray-600 */
+  border: 1px solid #6b7280;
+  color: #fff;
+}
 .hdr-btn:active, .hdr-btn-primary:active { transform: scale(0.98); }
 
-/* PINは見た目をボタンと揃える（高さと丸み） */
+/* PINも同じ箱サイズに合わせて完全一致 */
 .pin-4ch {
   height: var(--hdr-btn-h);
-  padding: 0 12px;
-  border-radius: 14px;
+  min-width: var(--hdr-btn-w);
+  border-radius: 10px;
   border: 1px solid #d1d5db;
   background: #fff;
-  font-size: 16px;
-  width: 6ch;                    /* 4桁＋余白 */
+  font-size: var(--hdr-font);
   text-align: center;
   letter-spacing: .06em;
+  padding: 0 10px;
 }
 
-/* 2行目（ジャンル/日付＋操作） */
-.hdr-row2 {
-  padding: 0 16px 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #6b7280;
-  font-size: 12px;
-  gap: 12px;
-}
-
-/* モバイル優遇：右側ボタンが小さくならないよう横スクロールを避ける */
-html, body { overflow-x: hidden; }
-
-/* ===== ヘッダー：サイズを“少し小さめ”に統一 ===== */
-:root{
-  --hdr-btn-h: 40px;         /* 以前より少し小さめ（iOS推奨44px近辺） */
-  --hdr-gap: 8px;
-  --hdr-font: 15px;
-}
-
-.sticky-header{
-  position: sticky; top:0; z-index:20;
-  backdrop-filter: blur(4px);
-  background: rgba(255,255,255,.85);
-  border-bottom:1px solid #e5e7eb;
-}
-
-/* 共通中央幅（各Partと同じ幅） */
-.container{ max-width:960px; margin:0 auto; }
-
-/* 1行目 ロゴ＋タイトル */
-.header-bar{ padding:12px 16px 8px; }
-.brand{ display:flex; align-items:center; gap:10px; }
-.header-logo{ height:34px; }
-.brand-title{ font-size:24px; font-weight:800; margin:0; line-height:1.1; }
-
-/* ボタンの箱（見た目そろえる） */
-.hstack{ display:flex; align-items:center; gap:var(--hdr-gap); }
-.hdr-btn, .hdr-btn-primary{
-  display:inline-flex; align-items:center; justify-content:center;
-  height:var(--hdr-btn-h); min-width:88px; /* 小さめ */
-  padding:0 14px; border-radius:12px; font-size:var(--hdr-font);
-  line-height:1; -webkit-tap-highlight-color:transparent;
-}
-.hdr-btn{ background:#fff; border:1px solid #d1d5db; color:#111827; }
-.hdr-btn-primary{ background:#6b7280; border:1px solid #6b7280; color:#fff; }
-.hdr-btn:active, .hdr-btn-primary:active{ transform:scale(.98); }
-
-/* PIN：見た目をボタンと同じ高さに */
-.pin-4ch{
-  height:var(--hdr-btn-h); border-radius:12px; border:1px solid #d1d5db;
-  background:#fff; width:6ch; text-align:center; font-size:var(--hdr-font);
-  padding:0 10px; letter-spacing:.06em;
-}
-
-/* 2〜4行目レイアウト */
-.header-row{ padding:0 16px 8px; }
-.header-row .hstack{ flex-wrap:wrap; }
-
-/* 4行目：ジャンル＋日付は改行禁止（iPhoneでも1行死守） */
-.hdr-meta{
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  color:#6b7280; font-size:13px;
-}
-
-/* かなり狭い端末用の微調整（SE等） */
-@media (max-width:380px){
-  :root{ --hdr-btn-h: 38px; --hdr-gap: 6px; --hdr-font: 14px; }
-  .header-logo{ height:32px; }
-  .brand-title{ font-size:22px; }
-  .hdr-meta{ font-size:12px; }
-}
-
-/* 全ボタン共通のスタイル */
-.header-button {
-  min-width: 90px;   /* 横幅を固定（少し小さめ） */
-  height: 40px;      /* 高さも揃える */
-  font-size: 14px;   /* 文字サイズ調整 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  padding: 0 8px;    /* 横の余白を少し減らす */
-  margin: 4px;
+/* =================== 端末幅が狭いときの微調整（iPhone SE等） =================== */
+@media (max-width: 380px) {
+  :root { --hdr-btn-h: 34px; --hdr-btn-w: 84px; --hdr-font: 13px; --hdr-gap: 6px; }
+  .header-logo { height: 32px; }
+  .brand-title { font-size: 22px; }
+  .hdr-meta { font-size: 12px; }
 }
