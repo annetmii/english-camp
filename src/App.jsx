@@ -212,7 +212,7 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
-// ===================== Header (fixed) =====================
+// ===================== Header (uniform buttons & larger logo) =====================
 const Header = React.memo(function Header({
   genre,
   dateISO,
@@ -232,96 +232,78 @@ const Header = React.memo(function Header({
 }) {
   return (
     <header className="sticky-header">
-      {/* 1段目：ロゴ／モードスイッチ */}
-      <div
-        className="container"
-        style={{
-          padding: "12px 16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <img
-            src="/logo.png"
-            alt="annetmii"
-            style={{ height: 24 }}
-            onError={(e) => {
-              const s = document.createElement("span");
-              s.textContent = "annetmii";
-              e.currentTarget.replaceWith(s);
-            }}
-          />
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
-            English Camp
-          </h1>
-        </div>
+      {/* 1行目：ロゴ＋タイトル／カレンダー・PIN・講師モード */}
+      <div className="header-bar">
+        <div className="hdr-row">
+          <div className="brand">
+            <img
+              src="/logo.png"
+              alt="annetmii"
+              className="header-logo"
+              onError={(e) => {
+                const s = document.createElement("span");
+                s.textContent = "annetmii";
+                e.currentTarget.replaceWith(s);
+              }}
+            />
+            <h1 className="brand-title">English Camp</h1>
+          </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button
-            className="btn"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              setShowCal((v) => !v);
-            }}
-          >
-            カレンダー
-          </button>
-
-          {mode === "student" ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              {/* PINは4桁幅、数字のみ */}
-              <input
-                type="password"
-                inputMode="numeric"
-                maxLength={4}
-                className="input pin-4ch"
-                placeholder="PIN"
-                value={pinInput}
-                onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
-              />
-              <button
-                className="btn-solid-gray"
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  switchToTrainer();
-                }}
-              >
-                講師モード
-              </button>
-            </div>
-          ) : (
+          <div className="hdr-controls">
             <button
-              className="btn"
+              className="hdr-btn"
               onClick={(ev) => {
                 ev.stopPropagation();
-                switchToStudent();
+                setShowCal((v) => !v);
               }}
             >
-              学習者モードへ
+              カレンダー
             </button>
-          )}
+
+            {mode === "student" ? (
+              <>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  className="pin-4ch"
+                  placeholder="PIN"
+                  value={pinInput}
+                  onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
+                />
+                <button
+                  className="hdr-btn-primary"
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    switchToTrainer();
+                  }}
+                >
+                  講師モード
+                </button>
+              </>
+            ) : (
+              <button
+                className="hdr-btn"
+                onClick={(ev) => {
+                  ev.stopPropagation();
+                  switchToStudent();
+                }}
+              >
+                学習者モードへ
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 2段目：日付／同期・提出 */}
-      <div
-        className="container"
-        style={{
-          padding: "0 16px 8px",
-          display: "flex",
-          justifyContent: "space-between",
-          color: "#6b7280",
-          fontSize: 11,
-        }}
-      >
+      {/* 2行目：ジャンル/日付／同期・提出・状態 */}
+      <div className="hdr-row2">
         <span>
           {genre}｜{dateISO}
         </span>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="hdr-actions">
           <button
-            className="btn-solid-gray"
+            className="hdr-btn-primary"
             onClick={(e) => {
               e.stopPropagation();
               doSync("手動同期");
@@ -330,7 +312,7 @@ const Header = React.memo(function Header({
             同期
           </button>
           <button
-            className="btn-solid-gray"
+            className="hdr-btn-primary"
             onClick={(e) => {
               e.stopPropagation();
               submit();
@@ -342,7 +324,7 @@ const Header = React.memo(function Header({
         </div>
       </div>
 
-      {/* 3段目：カレンダー（必要時のみ） */}
+      {/* 3行目：カレンダー（必要時のみ表示） */}
       {showCal ? (
         <div
           className="container"
@@ -361,6 +343,7 @@ const Header = React.memo(function Header({
     </header>
   );
 });
+
 
 // ===================== App =====================
 export default function App() {
