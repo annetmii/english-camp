@@ -14,7 +14,7 @@
       "items": [
         {
           "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
-          "en": "Drink"
+          "en": "drink"
         },
         {
           "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
@@ -46,14 +46,12 @@
         }
       ],
       "answers": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "ドリンク",
-        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "搭乗券"
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "あああああああ"
       },
       "marks": {},
       "trainerNotes": "",
       "answersUpdatedAt": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-19T16:49:04.372Z",
-        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "2025-08-19T16:49:13.869Z"
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-19T16:30:43.614Z"
       }
     },
     "part2": {
@@ -81,20 +79,10 @@
           "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
         }
       ],
-      "answers": {
-        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
-          "en": "",
-          "ja": ""
-        }
-      },
+      "answers": {},
       "marks": {},
       "trainerNotes": "",
-      "answersUpdatedAt": {
-        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
-          "en": "2025-08-19T16:50:41.469Z",
-          "ja": "2025-08-19T16:50:41.469Z"
-        }
-      }
+      "answersUpdatedAt": {}
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
