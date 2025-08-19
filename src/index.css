@@ -68,3 +68,101 @@ html, body { overflow-x: hidden; width: 100%; }
 html, body, #root { touch-action: pan-y; overscroll-behavior-x: none; }
 * { min-width: 0; }
 textarea { resize: none; }
+
+/* ===== Header layout & buttons (iPhone最適化) ===== */
+:root {
+  --hdr-btn-h: 44px;      /* ボタン高さを統一 */
+  --hdr-gap: 8px;         /* ボタン同士の間隔 */
+}
+
+/* 1行目：ロゴ＋タイトル／右側操作の横並び */
+.header-bar {
+  padding: 12px 16px;
+}
+.hdr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;              /* 画面が狭い時は折り返す */
+}
+
+/* 左側のブランド */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-logo {
+  height: 32px;                 /* iPhoneで見出しとバランス良い大きさ */
+}
+@media (min-width: 480px) {
+  .header-logo { height: 36px; }/* 画面が広ければ少し大きく */
+}
+.brand-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+}
+
+/* 右側操作ブロック（カレンダー/PIN/講師モード） */
+.hdr-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--hdr-gap);
+  flex-wrap: wrap;              /* 狭い時も崩れない */
+}
+
+/* ボタンの共通（高さ・角丸・フォント） */
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--hdr-btn-h);
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  line-height: 1;
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+.hdr-btn:active { transform: scale(0.98); }
+
+/* 塗りつぶし（同期/提出/講師モードに使用） */
+.hdr-btn-primary {
+  background: #6b7280;           /* gray-600 */
+  color: #fff;
+  border-color: transparent;
+}
+
+/* PINは4桁幅でも高さはボタンと同じ */
+.pin-4ch {
+  height: var(--hdr-btn-h);
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 16px;
+  width: 5ch;                    /* 4桁ちょうど＋余白 */
+  text-align: center;
+  letter-spacing: .06em;
+}
+
+/* 2行目（ジャンル/日付/同期/提出/状態） */
+.hdr-row2 {
+  padding: 0 16px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #6b7280;
+  font-size: 11px;
+  gap: 12px;
+}
+.hdr-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
