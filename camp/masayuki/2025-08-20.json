@@ -46,12 +46,14 @@
         }
       ],
       "answers": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "あああああああ"
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "ドリンク",
+        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "搭乗券"
       },
       "marks": {},
       "trainerNotes": "",
       "answersUpdatedAt": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-19T16:30:43.614Z"
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-19T16:49:04.372Z",
+        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "2025-08-19T16:49:13.869Z"
       }
     },
     "part2": {
