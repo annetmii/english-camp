@@ -108,6 +108,7 @@ const DebouncedInput = React.memo(function DebouncedInput({
 });
 
 // ===================== Calendar helpers =====================
+// ① ローカル保存されている日付（何か作業した日）を集める
 function listLocalDatesForUser(userId) {
   const prefix = `${LS_PREFIX}${userId}:`;
   const dates = new Set();
@@ -120,13 +121,35 @@ function listLocalDatesForUser(userId) {
   }
   return dates;
 }
-function MonthCalendar({ dateISO, onSelect, marked }) {
+
+// ② 「提出済み(submittedAtあり)」の日付だけを集める
+function listLocalSubmittedDatesForUser(userId) {
+  const prefix = `${LS_PREFIX}${userId}:`;
+  const dates = new Set();
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (!k.startsWith(prefix)) continue;
+    try {
+      const raw = localStorage.getItem(k);
+      const obj = JSON.parse(raw || "{}");
+      if (obj && obj.submittedAt) {
+        const d = k.substring(prefix.length, prefix.length + 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.add(d);
+      }
+    } catch {}
+  }
+  return dates;
+}
+
+function MonthCalendar({ dateISO, onSelect, marked, submitted }) {
   const d = new Date(`${dateISO}T00:00:00`);
   const y = d.getFullYear();
   const m = d.getMonth();
   const first = new Date(y, m, 1);
-  const start = new Date(first); start.setDate(1 - ((first.getDay() + 6) % 7));
+  const start = new Date(first);
+  start.setDate(1 - ((first.getDay() + 6) % 7));
   const days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+
   return (
     <div className="card" style={{padding:'12px', background:'white'}}>
       <div className="flex items-center justify-between mb-2" style={{display:'flex', justifyContent:'space-between', marginBottom:8}}>
@@ -134,19 +157,32 @@ function MonthCalendar({ dateISO, onSelect, marked }) {
         <div className="text-sm font-medium">{y}年{String(m + 1).padStart(2, "0")}月</div>
         <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m + 1, 1)))}>▶</button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1" style={{display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:4, textAlign:'center', fontSize:11, color:'#6b7280', marginBottom:4}}>{"月火水木金土日".split("").map(w => <div key={w}>{w}</div>)}</div>
+      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1" style={{display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:4, textAlign:'center', fontSize:11, color:'#6b7280', marginBottom:4}}>
+        {"月火水木金土日".split("").map(w => <div key={w}>{w}</div>)}
+      </div>
       <div className="grid grid-cols-7 gap-1" style={{display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:4}}>
         {days.map(dt => {
           const iso = todayISO(dt);
           const inMonth = dt.getMonth() === m;
           const selected = iso === dateISO;
-          const has = marked.has(iso);
+          const hasAny = marked.has(iso);
+          const hasSubmit = submitted && submitted.has(iso);
           return (
-            <button key={iso} onClick={() => onSelect(iso)}
+            <button
+              key={iso}
+              onClick={() => onSelect(iso)}
               className="btn"
-              style={{height:36, borderRadius:12, position:'relative', background:selected?'black':'white', color:selected?'white':'#111827', opacity: inMonth ? 1 : .45}}>
+              style={{
+                height:36, borderRadius:12, position:'relative',
+                background:selected?'black':'white',
+                color:selected?'white':'#111827',
+                opacity: inMonth ? 1 : .45
+              }}
+            >
               {String(dt.getDate())}
-              {has && <span style={{position:'absolute', bottom:6, width:6, height:6, borderRadius:9999, background:selected?'white':'black'}} />}
+              {hasAny && (
+                <span className={`cal-dot ${hasSubmit ? 'cal-submit' : 'cal-any'}`} />
+              )}
             </button>
           );
         })}
@@ -180,6 +216,7 @@ const defaultWorksheet = (dateISO) => ({
         { id: crypto.randomUUID(), en: "take cover" },
       ],
       answers: {},
+      marks: {},
       trainerNotes: "",
     },
     part2: {
@@ -193,6 +230,7 @@ const defaultWorksheet = (dateISO) => ({
         { id: crypto.randomUUID(), prompt: "After the storm, we need to ______ the power lines." },
       ],
       answers: {},
+      marks: {},
       trainerNotes: "",
     },
     part3: {
@@ -205,6 +243,7 @@ const defaultWorksheet = (dateISO) => ({
         { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Do you need any help with your bag?", jp: "いいえ。一緒に安全を確保しましょう。" },
       ],
       answers: {},
+      marks: {},
       trainerNotes: "",
     },
     part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
@@ -217,7 +256,7 @@ const defaultWorksheet = (dateISO) => ({
 const Header = React.memo(function Header({
   genre, dateISO, status, mode, pinInput, onPinChange,
   switchToTrainer, switchToStudent, showCal, setShowCal,
-  doSync, submit, userId, markedDates, onPickDate
+  doSync, submit, userId, markedDates, submittedDates, onPickDate
 }) {
   return (
     <header className="sticky-header">
@@ -283,6 +322,7 @@ const Header = React.memo(function Header({
             dateISO={dateISO}
             onSelect={(iso)=>{ onPickDate(iso); }}
             marked={markedDates}
+            submitted={submittedDates}
           />
         </div>
       )}
@@ -348,6 +388,9 @@ export default function App() {
     cloudDates.forEach(d => set.add(d));
     return set;
   }, [userId, cloudDates]);
+const submittedDates = useMemo(() => {
+  return listLocalSubmittedDatesForUser(userId);
+}, [userId, ws]); // ws が更新されたら提出済みも再判定
 
   // ============= Input batching for Parts answers =============
   const draftRef = useRef({ p1: {}, p2: {}, p3: {} });
@@ -608,6 +651,7 @@ export default function App() {
         submit={submit}
         userId={userId}
         markedDates={markedDates}
+        submittedDates={submittedDates}
         onPickDate={(iso)=>{ setDateISO(iso); setShowCal(false); }}
       />
       <ThemeBar />
