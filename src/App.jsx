@@ -359,7 +359,7 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
-function ensureMaps(ws) {
+function ensureMaps(ws, curDate) {
   try {
     ws.parts.part1.answers = ws.parts.part1.answers || {};
     ws.parts.part1.marks   = ws.parts.part1.marks   || {};
@@ -368,9 +368,10 @@ function ensureMaps(ws) {
     ws.parts.part3.answers = ws.parts.part3.answers || {};
     ws.parts.part3.marks   = ws.parts.part3.marks   || {};
   } catch (_) {
-    const d = todayISO();
-    ws = defaultWorksheet(d);
+    ws = defaultWorksheet(curDate || todayISO());
   }
+  // 日付を選択中に正規化
+  if (ws?.meta) ws.meta.date = curDate || ws.meta.date || todayISO();
   return ws;
 }
 
@@ -378,12 +379,11 @@ function ensureMaps(ws) {
 const nowISO = () => new Date().toISOString();
 
 // === ローカルにスナップショット（最新5個） ===
-function snapshotLocal(userId, ws) {
+function snapshotLocal(userId, dateISO, ws) {
   try {
-    const keyPrefix = `${LS_PREFIX}${userId}:${ws.meta.date}:bak:`;
+    const keyPrefix = `${LS_PREFIX}${userId}:${dateISO}:bak:`;
     const snapKey = keyPrefix + nowISO();
     localStorage.setItem(snapKey, JSON.stringify({ at: nowISO(), ws }));
-    // 掃除（最大5）
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -599,7 +599,7 @@ export default function App() {
   // worksheet state
   const [ws, setWs] = useState(() => {
     const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${todayISO()}`);
-    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()));
+    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()), todayISO());
   });
 
   // genre
@@ -618,8 +618,12 @@ export default function App() {
     saveTimerRef.current = setTimeout(() =>
       idle(() => {
         try {
-          localStorage.setItem(`${LS_PREFIX}${userId}:${ws.meta.date}`, JSON.stringify(ws));
-          snapshotLocal(userId, ws);
+         const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+localStorage.setItem(
+  `${LS_PREFIX}${userId}:${dateISO}`,
+  JSON.stringify(normalized)
+);
+snapshotLocal(userId, dateISO, normalized);
         } catch {}
       }), 500);
     return () => clearTimeout(saveTimerRef.current);
@@ -648,12 +652,12 @@ useEffect(() => {
 
         if (remote && remote.data) {
           setWs(prev => mergeWs(
-            ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO)),
-            ensureMaps(remote.data)
-          ));
+  ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO), dateISO),
+  ensureMaps(remote.data, dateISO)
+));
           setStatus("クラウドから読み込みました");
         } else {
-          setWs((cur) => (cur?.meta?.date === dateISO ? ensureMaps(cur) : ensureMaps(defaultWorksheet(dateISO))));
+          setWs((cur) => mergeWs(ensureMaps(cur, dateISO), ensureMaps(remote.data, dateISO)));
           setStatus("本日のワークシートを作成しました");
         }
       } catch { setStatus("オフライン：ローカル保存のみ"); }
@@ -746,7 +750,8 @@ useEffect(() => {
       if (idleFor >= 60000) {
         try {
           setStatus("自動同期中…");
-          await cloudSave({ userId, dateISO, data: ws, asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
+          await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
+  asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
           setStatus("自動同期完了");
           refreshCloudDates();
         } catch {
@@ -761,7 +766,8 @@ useEffect(() => {
   const doSync = useCallback(async (reason = "同期") => {
     try {
       setStatus(`${reason}中…`);
-      await cloudSave({ userId, dateISO, data: ws, asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
+      await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
+  asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
       setStatus(`${reason}完了`);
       refreshCloudDates();
     } catch {
@@ -778,7 +784,7 @@ useEffect(() => {
       await cloudSave({
         userId,
         dateISO,
-        data: ws,
+        data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
         asTrainer: true,
         pin: pinInput
       });
@@ -1262,8 +1268,9 @@ const resetQuestions = useCallback(() => {
   useEffect(() => {
     const flushNow = () => {
       try {
-        localStorage.setItem(`${LS_PREFIX}${userId}:${ws.meta.date}`, JSON.stringify(ws));
-        snapshotLocal(userId, ws);
+        const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+localStorage.setItem(`${LS_PREFIX}${userId}:${dateISO}`, JSON.stringify(normalized));
+snapshotLocal(userId, dateISO, normalized);
       } catch {}
     };
     const onVis = () => { if (document.visibilityState === "hidden") flushNow(); };
