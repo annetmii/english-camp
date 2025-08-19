@@ -179,3 +179,14 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .flex-1 { flex:1; min-width:0; }     /* 入力側 */
 .mark-wrap { flex:0 0 auto; }        /* ボタン側は縮ませない */
 
+/* === Part3：Masayuki 入力の横幅を確保 === */
+.p3-answer-row { display:flex; gap:8px; align-items:center; }
+.p3-answer { flex: 1 1 auto; min-width: 0; }  /* 入力側を広げる */
+.mark-wrap { flex: 0 0 auto; }                 /* ボタン側は縮ませない */
+
+/* === 講師コメントを赤で表示（入力中も） === */
+.teacher-comment {
+  color: #b91c1c;               /* 赤 */
+}
+.teacher-comment::placeholder { color: #ef9a9a; } /* 薄い赤 */
+
