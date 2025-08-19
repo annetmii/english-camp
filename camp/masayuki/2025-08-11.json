@@ -43,7 +43,14 @@
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
-      "items": [],
+      "items": [
+        {
+          "id": "a1284f99-12b2-4e1e-a4e8-d5f8b219ca8e",
+          "otherRole": "",
+          "otherEn": "",
+          "jp": ""
+        }
+      ],
       "answers": {},
       "marks": {},
       "trainerNotes": "",
