@@ -2,7 +2,7 @@
   "meta": {
     "app": "annetmii-english-camp",
     "version": 43,
-    "date": "2025-08-19",
+    "date": "2025-08-12",
     "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
     "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう"
@@ -47,7 +47,8 @@
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -76,7 +77,8 @@
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
@@ -109,7 +111,8 @@
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part4": {
       "label": "Part 4｜英作文",
