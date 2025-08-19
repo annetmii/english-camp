@@ -5,7 +5,7 @@
     "date": "2025-08-20",
     "genre": "HQ（本国報告・ドキュメント作成）",
     "trainee": "Masayuki",
-    "theme": ""
+    "theme": "Week 5｜Wed（Airport）- 海外出張に行く\nPicture Dictionaryの「An Airport」（p.160）から学びましょう"
   },
   "parts": {
     "part1": {
@@ -14,40 +14,41 @@
       "items": [
         {
           "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
-          "en": "warning"
+          "en": "check in"
         },
         {
           "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
-          "en": "shelter"
+          "en": "boarding pass"
         },
         {
           "id": "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005",
-          "en": "evacuate"
+          "en": "security check"
         },
         {
           "id": "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11",
-          "en": "calm"
+          "en": "carry-on bag"
         },
         {
           "id": "7201e441-2b43-4eca-a11d-dd89150e818f",
-          "en": "debris"
+          "en": "claim baggage"
         },
         {
           "id": "3889d80f-c382-440b-8985-b73033f85b26",
-          "en": "inspect"
+          "en": "seat belt"
         },
         {
           "id": "2413f719-dd0f-4c05-bfcc-c9d1114ae843",
-          "en": "help"
+          "en": "boarding gate"
         },
         {
           "id": "ea1d6e0f-d3bd-4489-b04b-e376d800638f",
-          "en": "take cover"
+          "en": "screening area"
         }
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -55,28 +56,29 @@
       "items": [
         {
           "id": "554a0c3f-6d62-4a37-88f1-9fa53e5114d7",
-          "prompt": "We need to follow the ______ from the radio."
+          "prompt": "I need to ＿＿＿＿＿ electronically before my flight."
         },
         {
           "id": "a5cca132-f1ca-4d80-91e6-e679fe7f5a4c",
-          "prompt": "Please stay ______ until we know it’s safe."
+          "prompt": "Please show your ＿＿＿＿＿ at the boarding gate."
         },
         {
           "id": "d2acea31-ea3d-44e3-a283-224c17c381f9",
-          "prompt": "Let’s ______ the area before it’s too dangerous."
+          "prompt": "All passengers must go through the ＿＿＿＿＿ before boarding."
         },
         {
           "id": "289fc96c-1b66-43a0-a87f-d70e08d677cc",
-          "prompt": "The city sent volunteers to ______ the elderly."
+          "prompt": "Don’t forget to fasten your ＿＿＿＿＿＿ before takeoff."
         },
         {
           "id": "a2d7a6ae-f73a-4d19-8583-7f4ffaec2211",
-          "prompt": "After the storm, we need to ______ the power lines."
+          "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
         }
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
@@ -84,32 +86,37 @@
       "items": [
         {
           "id": "d8eb0673-f295-4cc9-83f8-dc62183994d5",
-          "otherRole": "Coworker",
-          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
-          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
+          "otherRole": "Colleague",
+          "otherEn": "Masayuki, are you ready for your business trip abroad?",
+          "jp": "オンラインでチェックインして搭乗券を印刷しておいたよ。"
         },
         {
           "id": "4f6c289e-58e8-4665-87e5-6d9967de8584",
-          "otherRole": "Coworker",
-          "otherEn": "Please stay calm and follow the official instructions.",
-          "jp": "まずは警告を確認して指示に従いましょう。"
+          "otherRole": "Colleague",
+          "otherEn": "That’s good. Don’t forget you’ll have to go through the security check at the screening area.",
+          "jp": "もちろん。ノートパソコンを手荷物から出しておかないとね。"
         },
         {
           "id": "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7",
-          "otherRole": "Coworker",
-          "otherEn": "Shall we evacuate to higher ground now?",
-          "jp": "はい。急いで準備をして高台に行きましょう。"
+          "otherRole": "Colleague",
+          "otherEn": "Once you arrive, how will you manage your schedule?",
+          "jp": "到着したら、ホテルへ直行だね。最初の会議に遅れないようにスケジュールを整理しておいた。"
         },
         {
           "id": "d46248be-1671-4bab-8b81-ba8a2b014854",
-          "otherRole": "Coworker",
-          "otherEn": "Do you need any help with your bag?",
-          "jp": "いいえ。一緒に安全を確保しましょう。"
+          "otherRole": "Colleague",
+          "otherEn": "That sounds well planned. Have a safe flight!",
+          "jp": "ありがとう。機内では眠れないので、プレゼン準備などで時間を潰すよ。"
         }
       ],
-      "answers": {},
+      "answers": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": ""
+      },
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": "2025-08-19T13:19:10.563Z"
+      }
     },
     "part4": {
       "label": "Part 4｜英作文",
