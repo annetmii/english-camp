@@ -483,14 +483,14 @@ export default function App() {
           <h2 style={{fontSize:16, fontWeight:600, margin:'0 0 4px'}}>{title}</h2>
           {instructions ? <div className="label" style={{lineHeight:1.6}}>{instructions}</div> : null}
         </div>
-        <div style={{padding:'16px'}}>{children}</div>
+        <div className="content-pad">{children}</div>
       </div>
     </section>
   );
 
   const ThemeBar = React.memo(() => (
     <Card title="本日のテーマ">
-      <DebouncedInput multiline rows={2} autoGrow className="input fullwide" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
+      <DebouncedInput multiline rows={2} autoGrow className="input field-full" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
     </Card>
   ));
 
@@ -596,7 +596,7 @@ export default function App() {
           </div>
           <div style={{paddingLeft:32, marginTop:8}}>
             <div className="label">Masayuki</div>
-            <DebouncedInput multiline rows={2} autoGrow className="input fullwide" placeholder="英語：ここに英訳を入力" value={ws.parts.part3.answers[it.id] ?? ""} onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }} />
+            <DebouncedInput multiline rows={2} autoGrow className="input field-full" placeholder="英語：ここに英訳を入力" value={ws.parts.part3.answers[it.id] ?? ""} onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }} />
             <div className="label" style={{marginTop:8}}>日本語</div>
             {mode === "trainer" ? (
               <DebouncedInput multiline rows={2} autoGrow className="input" value={it.jp} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)) } } }))} />
@@ -640,7 +640,7 @@ export default function App() {
 
   const Part4 = React.memo(() => (
     <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-      <DebouncedInput multiline rows={3} autoGrow className="input fullwide" placeholder="ここに英作文を入力してください" value={ws.parts.part4.answer} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
+      <DebouncedInput multiline rows={3} autoGrow className="input field-full" placeholder="ここに英作文を入力してください" value={ws.parts.part4.answer} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
       <div style={{marginTop:12}}>
         <div className="label">iPad手書き（PNG保存）</div>
         <canvas ref={canvasRef} width={800} height={240} style={{border:'1px solid #e5e7eb', borderRadius:8, width:'100%', touchAction:'none'}}></canvas>
