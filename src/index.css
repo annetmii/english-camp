@@ -253,3 +253,63 @@ textarea { resize: none; }
 
 /* モバイル優遇：右側ボタンが小さくならないよう横スクロールを避ける */
 html, body { overflow-x: hidden; }
+
+/* ===== ヘッダー：サイズを“少し小さめ”に統一 ===== */
+:root{
+  --hdr-btn-h: 40px;         /* 以前より少し小さめ（iOS推奨44px近辺） */
+  --hdr-gap: 8px;
+  --hdr-font: 15px;
+}
+
+.sticky-header{
+  position: sticky; top:0; z-index:20;
+  backdrop-filter: blur(4px);
+  background: rgba(255,255,255,.85);
+  border-bottom:1px solid #e5e7eb;
+}
+
+/* 共通中央幅（各Partと同じ幅） */
+.container{ max-width:960px; margin:0 auto; }
+
+/* 1行目 ロゴ＋タイトル */
+.header-bar{ padding:12px 16px 8px; }
+.brand{ display:flex; align-items:center; gap:10px; }
+.header-logo{ height:34px; }
+.brand-title{ font-size:24px; font-weight:800; margin:0; line-height:1.1; }
+
+/* ボタンの箱（見た目そろえる） */
+.hstack{ display:flex; align-items:center; gap:var(--hdr-gap); }
+.hdr-btn, .hdr-btn-primary{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:var(--hdr-btn-h); min-width:88px; /* 小さめ */
+  padding:0 14px; border-radius:12px; font-size:var(--hdr-font);
+  line-height:1; -webkit-tap-highlight-color:transparent;
+}
+.hdr-btn{ background:#fff; border:1px solid #d1d5db; color:#111827; }
+.hdr-btn-primary{ background:#6b7280; border:1px solid #6b7280; color:#fff; }
+.hdr-btn:active, .hdr-btn-primary:active{ transform:scale(.98); }
+
+/* PIN：見た目をボタンと同じ高さに */
+.pin-4ch{
+  height:var(--hdr-btn-h); border-radius:12px; border:1px solid #d1d5db;
+  background:#fff; width:6ch; text-align:center; font-size:var(--hdr-font);
+  padding:0 10px; letter-spacing:.06em;
+}
+
+/* 2〜4行目レイアウト */
+.header-row{ padding:0 16px 8px; }
+.header-row .hstack{ flex-wrap:wrap; }
+
+/* 4行目：ジャンル＋日付は改行禁止（iPhoneでも1行死守） */
+.hdr-meta{
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  color:#6b7280; font-size:13px;
+}
+
+/* かなり狭い端末用の微調整（SE等） */
+@media (max-width:380px){
+  :root{ --hdr-btn-h: 38px; --hdr-gap: 6px; --hdr-font: 14px; }
+  .header-logo{ height:32px; }
+  .brand-title{ font-size:22px; }
+  .hdr-meta{ font-size:12px; }
+}
