@@ -220,7 +220,7 @@ const Header = React.memo(function Header({
 }) {
   return (
     <header className="sticky-header">
-      {/* 1行目：ロゴ＋English Camp */}
+      {/* 1行目：ロゴ＋annetmii English Camp */}
       <div className="header-bar">
         <div className="container">
           <div className="brand">
@@ -228,7 +228,7 @@ const Header = React.memo(function Header({
               src="/logo.png" alt="annetmii" className="header-logo"
               onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }}
             />
-            <h1 className="brand-title">English Camp</h1>
+            <h1 className="brand-title">annetmii English Camp</h1>
           </div>
         </div>
       </div>
