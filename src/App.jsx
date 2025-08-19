@@ -552,7 +552,7 @@ export default function App() {
   // worksheet state
   const [ws, setWs] = useState(() => {
     const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${todayISO()}`);
-    return ls ? JSON.parse(ls) : defaultWorksheet(todayISO());
+    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()));
   });
 
   // genre
@@ -594,9 +594,7 @@ export default function App() {
       try {
         setStatus("クラウド読込中…");
         const remote = await cloudLoad({ userId, dateISO });
-        if (remote && remote.data) {
-          setWs(remote.data);
-          setStatus("クラウドから読み込みました");
+        if (remote && remote.data) { setWs(ensureMaps(remote.data)); setStatus("クラウドから読み込みました");
         } else {
           setWs((cur) =>
             cur && cur.meta && cur.meta.date === dateISO
@@ -775,7 +773,7 @@ export default function App() {
   const Part1Row = React.memo(function Part1Row({ it, idx }) {
     const answerMap = ws.parts.part1.answers || {};
     const answer = answerMap[it.id] !== undefined ? answerMap[it.id] : "";
-    const mark = ws.parts.part1.marks[it.id]; // 'ok' | 'wrong' | undefined
+    const mark = (ws.parts.part1.marks || {})[it.id];   // 'ok' | 'wrong' | undefined
     const isWrong = mark === "wrong";
     const isOk = mark === "ok";
 
@@ -803,14 +801,13 @@ export default function App() {
         ...cur,
         parts: {
           ...cur.parts,
-          part1: { ...cur.parts.part1, marks: { ...cur.parts.part1.marks, [it.id]: val } },
+          part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } },
         },
       }));
 
     const clearMark = () =>
       setWs((cur) => {
-        const m = { ...cur.parts.part1.marks };
-        delete m[it.id];
+        const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id];
         return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } };
       });
 
