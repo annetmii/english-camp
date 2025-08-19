@@ -1,41 +1,50 @@
-/* 横スクロールを防止（iPhone対応） */
+/* ====== 横揺れ防止（iPhone含む） ====== */
 html, body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;  /* 横スクロール禁止 */
+  overflow-x: hidden;      /* 横スクロール禁止 */
+  width: 100%;
 }
+html, body, #root {
+  touch-action: pan-y;     /* 縦パンのみ */
+  overscroll-behavior-x: none;
+}
+* { min-width: 0; }        /* flex子のはみ出し防止 */
+textarea { resize: none; } /* オートリサイズで横ズレしない */
 
-/* トップバナー固定 */
-.top-banner {
-  position: fixed;
+/* ====== 固定ヘッダーの安定化 ====== */
+.sticky-header {
+  position: sticky;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+  background: rgba(255,255,255,0.7);
+  border-bottom: 1px solid #e5e7eb;
 }
 
-/* PIN入力ボックスを4桁分に短く */
-.pin-input {
+/* ====== 見た目ユーティリティ ====== */
+.btn-solid-gray {
+  background: #6b7280;     /* Tailwindのgray-600相当 */
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
+.btn-solid-gray:active { transform: scale(0.98); }
+.btn-solid-gray:disabled { opacity: .5; pointer-events: none; }
+
+/* PINを4桁分にコンパクト化（等幅フォントで4ch） */
+.pin-4ch {
   width: 4ch;
   text-align: center;
+  letter-spacing: .06em;
 }
 
-/* ボタンのスタイル（白文字＋グレー背景） */
-.custom-button {
-  background-color: #555;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.custom-button:hover {
-  background-color: #333;
-}
-
-/* 入力欄の幅を統一（Part2の翻訳ボックスと同じ長さに） */
-.wide-input {
-  width: 100%; 
-  max-width: 600px; /* 必要に応じて調整 */
+/* 入力欄の幅を統一（カード内いっぱい） */
+.fullwide {
+  width: 100%;
+  max-width: 52rem;  /* 画面の狭い端末では100%で縮む */
 }
