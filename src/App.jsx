@@ -49,6 +49,7 @@ async function cloudListDates({ userId }) {
 
 // ===================== Input (IME-safe, iOS-stable, autosize) =====================
 const DebouncedInput = React.memo(function DebouncedInput({
+  id,
   value,
   onChange,
   className = "",
@@ -417,7 +418,7 @@ export default function App() {
 
   const ThemeBar = React.memo(() => (
     <Card title="本日のテーマ">
-      <DebouncedInput multiline rows={2} autoGrow className="input field-full" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
+      <DebouncedInput id="theme" key="theme" multiline rows={2} autoGrow className="input field-full" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
     </Card>
   ));
 
@@ -459,7 +460,7 @@ export default function App() {
       {mode === "trainer" ? (
         <div style={{marginTop:12}}>
           <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input" value={ws.parts.part1.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } }))} />
+          <DebouncedInput id="p1-notes" key="p1-notes" multiline rows={3} autoGrow className="input field-full" value={ws.parts.part1.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } }))} />
         </div>
       ) : (ws.parts.part1.trainerNotes ? (
         <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8}}>
@@ -478,7 +479,7 @@ export default function App() {
             <div style={{display:'flex', gap:8, alignItems:'flex-start'}}>
               <span className="label" style={{width:24}}>{idx + 1}.</span>
               {mode === "trainer" ? (
-                <DebouncedInput className="input" style={{flex:1}} value={it.prompt} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => (x.id === it.id ? { ...x, prompt: v } : x)) } } }))} />
+                <<DebouncedInput id={`p2-q-${it.id}`} key={`p2-q-${it.id}`} className="input field-full" value={it.prompt} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => (x.id === it.id ? { ...x, prompt: v } : x)) } } }))} />
               ) : (
                 <p style={{margin:0, lineHeight:1.6, flex:1}}>{it.prompt}</p>
               )}
@@ -494,7 +495,7 @@ export default function App() {
       {mode === "trainer" ? (
         <div style={{marginTop:12}}>
           <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input" value={ws.parts.part2.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))} />
+          <DebouncedInput id="p2-notes" key="p2-notes" multiline rows={3} autoGrow className="input field-full" value={ws.parts.part2.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))} />
         </div>
       ) : (ws.parts.part2.trainerNotes ? (
         <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8}}>
@@ -515,7 +516,7 @@ export default function App() {
                 <DebouncedInput className="input" style={{width:160, marginBottom:6}} value={it.otherRole || ""} placeholder="相手役の名前（例：Coworker）" onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherRole: v } : x)) } } }))} />
               ) : (it.otherRole ? <div className="label" style={{marginBottom:6}}>{it.otherRole}</div> : null)}
               {mode === "trainer" ? (
-                <DebouncedInput className="input" placeholder="相手の英語セリフ" value={it.otherEn} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherEn: v } : x)) } } }))} />
+                <DebouncedInput id={`p3-en-${it.id}`} key={`p3-en-${it.id}`} className="input field-full" placeholder="相手の英語セリフ" value={it.otherEn} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherEn: v } : x)) } } }))} />
               ) : (
                 <p style={{margin:0, lineHeight:1.6}}>{it.otherEn}</p>
               )}
@@ -526,7 +527,7 @@ export default function App() {
             <DebouncedInput multiline rows={2} autoGrow className="input field-full" placeholder="英語：ここに英訳を入力" value={ws.parts.part3.answers[it.id] ?? ""} onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }} />
             <div className="label" style={{marginTop:8}}>日本語</div>
             {mode === "trainer" ? (
-              <DebouncedInput multiline rows={2} autoGrow className="input" value={it.jp} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)) } } }))} />
+              <DebouncedInput id={`p3-jp-${it.id}`} key={`p3-jp-${it.id}`} multiline rows={2} autoGrow className="input field-full" value={it.jp} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)) } } }))} />
             ) : (
               <p style={{margin:0, lineHeight:1.6}}>{it.jp}</p>
             )}
@@ -542,7 +543,7 @@ export default function App() {
       {mode === "trainer" ? (
         <div style={{marginTop:12}}>
           <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input" value={ws.parts.part3.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, trainerNotes: v } } }))} />
+          <DebouncedInput id="p3-notes" key="p3-notes" multiline rows={3} autoGrow className="input field-full" value={ws.parts.part3.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, trainerNotes: v } } }))} />
         </div>
       ) : (ws.parts.part3.trainerNotes ? (
         <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8}}>
@@ -580,7 +581,7 @@ export default function App() {
       {mode === "trainer" ? (
         <div style={{marginTop:12}}>
           <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input" value={ws.parts.part4.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))} />
+          <DebouncedInput id="p4-notes" key="p4-notes" multiline rows={3} autoGrow className="input field-full" value={ws.parts.part4.trainerNotes} onChange={(v) => setWs(cur => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))} />
         </div>
       ) : (ws.parts.part4.trainerNotes ? (
         <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8}}>
@@ -619,7 +620,7 @@ export default function App() {
         <section className="container" style={{padding:'12px 16px'}}>
           <div className="card" style={{padding:'16px'}}>
             <h2 style={{fontSize:16, fontWeight:600, margin:'0 0 6px'}}>全体フィードバック</h2>
-            <DebouncedInput multiline rows={4} autoGrow className="input" placeholder="今日のまとめコメントを入力" value={ws.trainerFeedback} onChange={(v)=> setWs(cur => ({ ...cur, trainerFeedback: v }))} />
+            <DebouncedInput id="global-notes" key="global-notes" multiline rows={4} autoGrow className="input field-full" placeholder="今日のまとめコメントを入力" value={ws.trainerFeedback} onChange={(v)=> setWs(cur => ({ ...cur, trainerFeedback: v }))} />
           </div>
         </section>
       ) : (ws.trainerFeedback ? (
