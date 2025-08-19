@@ -212,7 +212,7 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
-// ===================== Header (uniform buttons & larger logo) =====================
+// ===================== Header (uniform buttons, centered layout) =====================
 const Header = React.memo(function Header({
   genre,
   dateISO,
@@ -232,118 +232,99 @@ const Header = React.memo(function Header({
 }) {
   return (
     <header className="sticky-header">
-      {/* 1行目：ロゴ＋タイトル／カレンダー・PIN・講師モード */}
+      {/* 1行目：ブランド／カレンダー・PIN・モード */}
       <div className="header-bar">
-        <div className="hdr-row">
-          <div className="brand">
-            <img
-              src="/logo.png"
-              alt="annetmii"
-              className="header-logo"
-              onError={(e) => {
-                const s = document.createElement("span");
-                s.textContent = "annetmii";
-                e.currentTarget.replaceWith(s);
-              }}
-            />
-            <h1 className="brand-title">English Camp</h1>
-          </div>
+        <div className="container">
+          <div className="hdr-row">
+            <div className="brand">
+              <img
+                src="/logo.png"
+                alt="annetmii"
+                className="header-logo"
+                onError={(e) => {
+                  const s = document.createElement('span');
+                  s.textContent = 'annetmii';
+                  e.currentTarget.replaceWith(s);
+                }}
+              />
+              <h1 className="brand-title">English Camp</h1>
+            </div>
 
-          <div className="hdr-controls">
-            <button
-              className="hdr-btn"
-              onClick={(ev) => {
-                ev.stopPropagation();
-                setShowCal((v) => !v);
-              }}
-            >
-              カレンダー
-            </button>
-
-            {mode === "student" ? (
-              <>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  className="pin-4ch"
-                  placeholder="PIN"
-                  value={pinInput}
-                  onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
-                />
-                <button
-                  className="hdr-btn-primary"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    switchToTrainer();
-                  }}
-                >
-                  講師モード
-                </button>
-              </>
-            ) : (
+            <div className="hdr-controls">
               <button
                 className="hdr-btn"
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  switchToStudent();
-                }}
+                onClick={(ev) => { ev.stopPropagation(); setShowCal(v => !v); }}
               >
-                学習者モードへ
+                カレンダー
               </button>
-            )}
+
+              {mode === "student" ? (
+                <>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    className="pin-4ch"
+                    placeholder="PIN"
+                    value={pinInput}
+                    onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
+                    aria-label="講師PIN"
+                  />
+                  <button
+                    className="hdr-btn-primary"
+                    onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}
+                  >
+                    講師モード
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="hdr-btn"
+                  onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}
+                >
+                  学習者モードへ
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 2行目：ジャンル/日付／同期・提出・状態 */}
-      <div className="hdr-row2">
-        <span>
-          {genre}｜{dateISO}
-        </span>
-        <div className="hdr-actions">
-          <button
-            className="hdr-btn-primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              doSync("手動同期");
-            }}
-          >
-            同期
-          </button>
-          <button
-            className="hdr-btn-primary"
-            onClick={(e) => {
-              e.stopPropagation();
-              submit();
-            }}
-          >
-            提出
-          </button>
-          <span>状態：{status}</span>
+      {/* 2行目：情報／同期・提出・状態（すべて中央カラムに収める） */}
+      <div className="container">
+        <div className="hdr-row2">
+          <span>{genre}｜{dateISO}</span>
+          <div className="hdr-actions">
+            <button
+              className="hdr-btn-primary"
+              onClick={(e) => { e.stopPropagation(); doSync("手動同期"); }}
+            >
+              同期
+            </button>
+            <button
+              className="hdr-btn-primary"
+              onClick={(e) => { e.stopPropagation(); submit(); }}
+            >
+              提出
+            </button>
+            <span>状態：{status}</span>
+          </div>
         </div>
       </div>
 
-      {/* 3行目：カレンダー（必要時のみ表示） */}
-      {showCal ? (
-        <div
-          className="container"
-          style={{ padding: "0 16px 12px" }}
-          onClick={(e) => e.stopPropagation()}
-        >
+      {/* 3行目：カレンダー（必要な時だけ） */}
+      {showCal && (
+        <div className="container" style={{ padding: "0 16px 12px" }} onClick={(e)=>e.stopPropagation()}>
           <MonthCalendar
             dateISO={dateISO}
-            onSelect={(iso) => {
-              onPickDate(iso);
-            }}
+            onSelect={(iso) => { onPickDate(iso); }}
             marked={markedDates}
           />
         </div>
-      ) : null}
+      )}
     </header>
   );
 });
-
 
 // ===================== App =====================
 export default function App() {
