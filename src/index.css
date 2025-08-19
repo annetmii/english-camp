@@ -231,10 +231,6 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
 
-/* Part1 は縦並びを維持しつつ、入力幅を他と揃えて100%に */
-.p1-row { display: flex; gap: 12px; align-items: center; }
-.p1-word { font-weight: 600; min-width: 88px; }
-
 /* モバイルでは縦並び＋入力は常に100%幅（Part2と同じ見た目） */
 @media (max-width: 480px) {
   .p1-row { flex-direction: column; align-items: stretch; }
