@@ -48,3 +48,23 @@ textarea { resize: none; } /* オートリサイズで横ズレしない */
   width: 100%;
   max-width: 52rem;  /* 画面の狭い端末では100%で縮む */
 }
+
+/* === 入力欄を外枠にピッタリ合わせるための共通クラス === */
+.field-full {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  box-sizing: border-box; /* 枠線/内余白を幅に含める */
+  min-width: 0;           /* iOS の収縮時はみ出し防止 */
+}
+
+/* Card 内側のパディングを統一名で管理（JSX側で使う） */
+.content-pad {
+  padding: 16px;
+}
+
+/* 横揺れ対策（既に入れていなければ） */
+html, body { overflow-x: hidden; width: 100%; }
+html, body, #root { touch-action: pan-y; overscroll-behavior-x: none; }
+* { min-width: 0; }
+textarea { resize: none; }
