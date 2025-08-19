@@ -5,115 +5,142 @@
     "date": "2025-08-19",
     "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
-    "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう"
+    "theme": "Week 5｜Tue（Compliance）- 健康診断\nPicture Dictionaryの「Medical Care」（p.118）から学びましょう"
   },
   "parts": {
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
-      "instructions": "英単語の日本語訳を入力してください。",
+      "instructions": "英単語の日本語訳を入力してください。（8問）",
       "items": [
         {
-          "id": "db259d53-39f2-4094-b03b-7aaf6de12e4d",
-          "en": "Internet listing"
+          "id": "c7ba2088-8bc0-4440-98e2-46e78b88cae7",
+          "en": "appointment"
         },
         {
-          "id": "56aea00c-ed29-4da9-ac2e-9a86198c948b",
-          "en": "classified ad"
+          "id": "c0e39871-6756-4da7-971a-e81effd5b929",
+          "en": "health insurance card"
         },
         {
-          "id": "6723e4db-14d7-439e-85f3-974d0cecf672",
-          "en": "furnished apartment"
+          "id": "9f8d4567-9930-4a05-ad55-1d4667065989",
+          "en": "health history form"
         },
         {
-          "id": "139d9018-6137-49a5-98ce-d8a825927b07",
-          "en": "unfurnished apartment"
+          "id": "147423b0-529c-4479-b69e-eb6144b3fdb0",
+          "en": "doctor"
         },
         {
-          "id": "75921428-8b66-4894-9201-93aa7ec6caea",
-          "en": "utilities"
+          "id": "acab10f9-e939-4670-b3be-72ea53dcb2f2",
+          "en": "nurse"
         },
         {
-          "id": "5991d395-7ba4-4f98-a798-c3f7083495f4",
-          "en": "call the manager"
+          "id": "ce179415-72c1-4072-9054-1a2ead64d4e3",
+          "en": "blood pressure gauge"
         },
         {
-          "id": "ac9557ac-2466-47b5-805a-8f5028d1b468",
-          "en": "submit an application"
+          "id": "7a6cfc1a-69a1-49ca-b244-bf5a5809e345",
+          "en": "thermometer"
         },
         {
-          "id": "dbfcfac3-50ca-4734-a98c-be68c6a89461",
-          "en": "sign the rental agreement"
+          "id": "65792442-8190-49ae-94ed-47c663ed56a0",
+          "en": "syringe"
         }
       ],
-      "answers": {},
+      "answers": {
+        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "",
+        "c0e39871-6756-4da7-971a-e81effd5b929": "",
+        "9f8d4567-9930-4a05-ad55-1d4667065989": "",
+        "147423b0-529c-4479-b69e-eb6144b3fdb0": "",
+        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": ""
+      },
+      "trainerNotes": "",
       "marks": {},
-      "trainerNotes": ""
+      "answersUpdatedAt": {
+        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "2025-08-19T11:52:59.741Z",
+        "c0e39871-6756-4da7-971a-e81effd5b929": "2025-08-19T11:53:01.961Z",
+        "9f8d4567-9930-4a05-ad55-1d4667065989": "2025-08-19T11:53:04.131Z",
+        "147423b0-529c-4479-b69e-eb6144b3fdb0": "2025-08-19T11:53:06.284Z",
+        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "2025-08-19T11:53:08.969Z"
+      }
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
-      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
+      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。（5問）",
       "items": [
         {
-          "id": "5c55dfd7-c952-43e1-a4d9-bd1c84e5c8e2",
-          "prompt": "I found a nice apartment on the ＿＿＿＿＿."
+          "id": "4f059020-5a55-426f-bf7a-b1c950762f21",
+          "prompt": "I made an ＿＿＿＿＿＿ for my annual health check."
         },
         {
-          "id": "166cc319-7354-4cb9-9103-0f9e34c6b652",
-          "prompt": ""
+          "id": "05d5e2ef-15e0-4987-9ae3-a8b616489874",
+          "prompt": "Please bring your ＿＿＿＿＿＿ when you see the doctor."
         },
         {
-          "id": "0d45afb9-02bf-4eea-a641-7ca424efc1d0",
-          "prompt": ""
+          "id": "de60e8d9-af4e-4dc7-a832-b9da6473e67e",
+          "prompt": "The nurse used a ＿＿＿＿＿＿ to check my blood pressure."
         },
         {
-          "id": "0f956843-dbd4-4fc2-9a1d-f5252cb93a38",
-          "prompt": ""
+          "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
+          "prompt": "The doctor asked me to fill out a ＿＿＿＿＿ before the examination."
         },
         {
-          "id": "9f0fcb60-0498-4af2-af9d-a3b2a3c3b0a4",
-          "prompt": ""
+          "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
+          "prompt": "The patient was nervous when the nurse picked up the ＿＿＿＿＿＿."
         }
       ],
-      "answers": {},
-      "marks": {},
-      "trainerNotes": ""
+      "answers": {
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {
+          "en": "",
+          "ja": ""
+        }
+      },
+      "trainerNotes": "",
+      "marks": {
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {}
+      },
+      "answersUpdatedAt": {
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {
+          "en": "2025-08-19T11:53:32.343Z",
+          "ja": "2025-08-19T11:53:32.343Z"
+        }
+      }
     },
     "part3": {
-      "label": "Part 3｜会話ロールプレイ",
-      "instructions": "英文を入力して会話を完成させてください。",
+      "label": "Part 3｜会話ロールプレイ（Masayukiの英語セリフを記入）",
+      "instructions": "相手役の英語セリフ（講師編集）＋Masayukiの日本語→学習者が英訳を入力（4問）",
       "items": [
         {
-          "id": "ac6ec5f6-40df-4d5c-808b-317a46a66da6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
+          "otherRole": "Nurse",
+          "otherEn": "Good morning, Masayuki. Do you have your health insurance card and health history form?",
+          "jp": "はい、こちらです。今日の予約に必要な資料全て持参しました。"
         },
         {
-          "id": "91fb9574-bada-436c-b661-fa71df61f8ca",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
+          "otherRole": "Nurse",
+          "otherEn": "Great. First, I’ll check your blood pressure and then take your temperature.",
+          "jp": "わかりました。自宅で測った時は、熱はありませんでした。"
         },
         {
-          "id": "0daeda1b-8bdc-48ef-a660-b27694c68af6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "30ab5fdb-9e4e-4c34-8551-0a382057e42e",
+          "otherRole": "Doctor",
+          "otherEn": "Hello, Masayuki. I’ll examine your throat.",
+          "jp": "特に喉の痛みや違和感はありません。"
         },
         {
-          "id": "55675cd4-683a-4982-8493-0597a4de9576",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "ba514455-e224-4eb2-94b2-72dca770d876",
+          "otherRole": "Doctor",
+          "otherEn": "Great. Finally, we may need a blood test, so the nurse will draw your blood.",
+          "jp": "はい。注射は何度も経験していますが、苦手です。"
         }
       ],
       "answers": {},
+      "trainerNotes": "",
       "marks": {},
-      "trainerNotes": ""
+      "answersUpdatedAt": {}
     },
     "part4": {
-      "label": "Part 4｜英作文",
-      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "label": "Part 4｜英作文 + 手書きパッド",
+      "instructions": "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
