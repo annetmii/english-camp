@@ -215,7 +215,16 @@ const defaultWorksheet = (dateISO) => ({
 // ===================== Header (isolated) =====================
 const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInput, onPinChange, switchToTrainer, switchToStudent, showCal, setShowCal, doSync, submit, userId, markedDates, onPickDate }) {
   return (
-    <header style={{position:'sticky', top:0, zIndex:10, backdropFilter:'blur(4px)', background:'rgba(255,255,255,0.7)', borderBottom:'1px solid #e5e7eb'}}>
+    <header className="sticky-header">
+       <div className="container" style={{padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+         <div style={{display:'flex', alignItems:'center', gap:8}}>
+           <img src="/logo.png" alt="annetmii" style={{height:24}} onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }} />
+           <h1 style={{fontSize:20, fontWeight:600, margin:0}}>English Camp</h1>
+         </div>
+         <div style={{display:'flex', alignItems:'center', gap:8}}>
+           <button className="btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
+           {mode === "student" ? (
+             <div style={{display:'flex', alignItems:'center', gap:6}}>
       <div className="container" style={{padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
         <div style={{display:'flex', alignItems:'center', gap:8}}>
           <img src="/logo.png" alt="annetmii" style={{height:24}} onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }} />
@@ -225,8 +234,17 @@ const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInp
           <button className="btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
           {mode === "student" ? (
             <div style={{display:'flex', alignItems:'center', gap:6}}>
-              <input type="password" className="input" style={{width:96}} placeholder="PIN" value={pinInput} onChange={(e)=>onPinChange(e.target.value)} />
-              <button className="btn btn-primary" onClick={(ev)=>{ev.stopPropagation(); switchToTrainer();}}>講師モード</button>
+              {/* 4桁に合わせてコンパクト化＆数字のみ */}
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={4}
+                className="input pin-4ch"
+                placeholder="PIN"
+                value={pinInput}
+                onChange={(e)=>onPinChange(e.target.value.replace(/\D/g,''))}
+              />
+              <button className="btn-solid-gray" onClick={(ev)=>{ev.stopPropagation(); switchToTrainer();}}>講師モード</button>
             </div>
           ) : (
             <button className="btn" onClick={(ev)=>{ev.stopPropagation(); switchToStudent();}}>学習者モードへ</button>
@@ -236,8 +254,8 @@ const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInp
       <div className="container" style={{padding:'0 16px 8px', display:'flex', justifyContent:'space-between', color:'#6b7280', fontSize:11}}>
         <span>{genre}｜{dateISO}</span>
         <div style={{display:'flex', gap:12, alignItems:'center'}}>
-          <button className="btn" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
-          <button className="btn" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
+          <button className="btn-solid-gray" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
+          <button className="btn-solid-gray" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
           <span>状態：{status}</span>
         </div>
       </div>
@@ -378,7 +396,7 @@ export default function App() {
 
   const ThemeBar = React.memo(() => (
     <Card title="本日のテーマ">
-      <DebouncedInput multiline rows={2} autoGrow className="input" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
+      <DebouncedInput multiline rows={2} autoGrow className="input fullwide" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
     </Card>
   ));
 
@@ -484,7 +502,7 @@ export default function App() {
           </div>
           <div style={{paddingLeft:32, marginTop:8}}>
             <div className="label">Masayuki</div>
-            <DebouncedInput multiline rows={2} autoGrow className="input" placeholder="英語：ここに英訳を入力" value={ws.parts.part3.answers[it.id] ?? ""} onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }} />
+            <DebouncedInput multiline rows={2} autoGrow className="input fullwide" placeholder="英語：ここに英訳を入力" value={ws.parts.part3.answers[it.id] ?? ""} onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }} />
             <div className="label" style={{marginTop:8}}>日本語</div>
             {mode === "trainer" ? (
               <DebouncedInput multiline rows={2} autoGrow className="input" value={it.jp} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)) } } }))} />
@@ -528,12 +546,12 @@ export default function App() {
 
   const Part4 = React.memo(() => (
     <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-      <DebouncedInput multiline rows={3} autoGrow className="input" placeholder="ここに英作文を入力してください" value={ws.parts.part4.answer} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
+      <DebouncedInput multiline rows={3} autoGrow className="input fullwide" placeholder="ここに英作文を入力してください" value={ws.parts.part4.answer} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
       <div style={{marginTop:12}}>
         <div className="label">iPad手書き（PNG保存）</div>
         <canvas ref={canvasRef} width={800} height={240} style={{border:'1px solid #e5e7eb', borderRadius:8, width:'100%', touchAction:'none'}}></canvas>
         <div style={{marginTop:8, display:'flex', gap:8}}>
-          <button className="btn" onClick={() => { const dataUrl = canvasRef.current?.toDataURL("image/png"); if (!dataUrl) return; setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, handwriting: dataUrl } } })); }}>手書きを保存</button>
+          <button className="btn-solid-gray" onClick={() => { const dataUrl = canvasRef.current?.toDataURL("image/png"); if (!dataUrl) return; setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, handwriting: dataUrl } } })); }}>手書きを保存</button>
           {ws.parts.part4.handwriting && (<a className="btn" href={ws.parts.part4.handwriting} download="part4-writing.png">PNGをダウンロード</a>)}
         </div>
       </div>
