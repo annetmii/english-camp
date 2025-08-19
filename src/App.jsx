@@ -631,6 +631,21 @@ export default function App() {
       try {
         setStatus("クラウド読込中…");
         const remote = await cloudLoad({ userId, dateISO });
+        
+        // === 定期取り込み：10秒ごと＋タブが再度アクティブになったら即取り込み ===
+useEffect(() => {
+  const id = setInterval(fetchAndMerge, 10000); // 10秒
+  const onVis = () => {
+    if (document.visibilityState === "visible") fetchAndMerge();
+  };
+  document.addEventListener("visibilitychange", onVis);
+
+  return () => {
+    clearInterval(id);
+    document.removeEventListener("visibilitychange", onVis);
+  };
+}, [fetchAndMerge]);
+
         if (remote && remote.data) {
           setWs(prev => mergeWs(
             ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO)),
@@ -753,6 +768,40 @@ export default function App() {
       setStatus(`${reason}失敗：後で再試行`);
     }
   }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates]);
+
+  // === 講師モードの高速自動保存（1.5秒デバウンス） ===
+useEffect(() => {
+  if (mode !== "trainer") return;
+  const t = setTimeout(async () => {
+    try {
+      // “保存中”のちらつきを避けるためステータスは控えめに
+      await cloudSave({
+        userId,
+        dateISO,
+        data: ws,
+        asTrainer: true,
+        pin: pinInput
+      });
+      refreshCloudDates();
+    } catch {
+      // 失敗しても既存の60秒アイドル保存がフォローする
+    }
+  }, 1500); // 1.5秒デバウンス
+  return () => clearTimeout(t);
+}, [ws, mode, userId, dateISO, pinInput, refreshCloudDates]);
+
+  // === クラウドから取得してマージ（学習者回答は上書きしない） ===
+const fetchAndMerge = useCallback(async () => {
+  try {
+    const remote = await cloudLoad({ userId, dateISO });
+    if (remote && remote.data) {
+      // ここで学習者の回答は mergeWs が守る、講師の出題・採点・コメントは反映される
+      setWs((cur) => mergeWs(ensureMaps(cur), ensureMaps(remote.data)));
+    }
+  } catch {
+    // オフライン等は無視
+  }
+}, [userId, dateISO]);
 
   const submit = useCallback(() => {
     setWs((c) => ({ ...c, submittedAt: new Date().toISOString() }));
