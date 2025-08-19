@@ -766,124 +766,57 @@ export default function App() {
 
   const Part3 = React.memo(() => (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
-      {ws.parts.part3.items.map((it, idx) => {
-  const m3 = (ws.parts.part3.marks || {})[it.id];            // ★ 修正
-  const wrong3 = m3 === 'wrong';
-  const ok3    = m3 === 'ok';
+     {ws.parts.part3.items.map((it, idx) => {
+  // ▼ ここで宣言（タグの外）
+  const ans3Map = ws.parts.part3.answers || {};
+  const m3 = (ws.parts.part3.marks || {})[it.id];
+  const wrong3 = m3 === "wrong";
+  const ok3 = m3 === "ok";
 
   const setMark3 = (val) =>
     setWs(c => ({
       ...c,
-      parts:{ ...c.parts,
-        part3:{ ...c.parts.part3,
-          marks:{ ...(c.parts.part3.marks || {}), [it.id]: val }   // ★ 修正
+      parts: { ...c.parts,
+        part3: { ...c.parts.part3,
+          marks: { ...(c.parts.part3.marks || {}), [it.id]: val }
         }
       }
     }));
+
   const clearMark3 = () =>
     setWs(c => {
-      const m = { ...(c.parts.part3.marks || {}) };               // ★ 修正
+      const m = { ...(c.parts.part3.marks || {}) };
       delete m[it.id];
-      return { ...c, parts:{ ...c.parts, part3:{ ...c.parts.part3, marks:m }}};
+      return { ...c, parts: { ...c.parts, part3: { ...c.parts.part3, marks: m } } };
     });
 
-        return (
-          <div key={it.id} style={{marginBottom:12}}>
-            <div style={{display:'flex', gap:8, alignItems:'flex-start'}}>
-              <span className="label" style={{width:24}}>{idx + 1}.</span>
-              <div style={{flex:1}}>
-                {mode === "trainer" ? (
-                  <DebouncedInput
-                    className="input field-full"
-                    style={{marginBottom:6}}
-                    value={it.otherRole || ""}
-                    placeholder="相手役の名前（例：Coworker）"
-                    onChange={(v) =>
-                      setWs((cur) => ({
-                        ...cur,
-                        parts: {
-                          ...cur.parts,
-                          part3: {
-                            ...cur.parts.part3,
-                            items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherRole: v } : x)),
-                          },
-                        },
-                      }))
-                    }
-                  />
-                ) : (it.otherRole ? <div className="label" style={{marginBottom:6}}>{it.otherRole}</div> : null)}
-
-                {mode === "trainer" ? (
-                  <DebouncedInput
-                    className="input field-full"
-                    placeholder="相手の英語セリフ"
-                    value={it.otherEn}
-                    onChange={(v) =>
-                      setWs((cur) => ({
-                        ...cur,
-                        parts: {
-                          ...cur.parts,
-                          part3: {
-                            ...cur.parts.part3,
-                            items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherEn: v } : x)),
-                          },
-                        },
-                      }))
-                    }
-                  />
-                ) : (
-                  <p style={{margin:0, lineHeight:1.6}}>{it.otherEn}</p>
-                )}
-              </div>
+  return (
+    <div key={it.id} style={{ marginBottom: 12 }}>
+      <div style={{ paddingLeft: 32, marginTop: 8 }}>
+        <div className="label">Masayuki</div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <DebouncedInput
+            multiline
+            rows={2}
+            autoGrow
+            className={`input ${wrong3 ? "answer-wrong" : ""} ${ok3 ? "answer-correct" : ""}`}
+            placeholder="英語：ここに英訳を入力"
+            value={ans3Map[it.id] ?? ""}               {/* ← 参照だけ */}
+            onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }}
+          />
+          {mode === "trainer" && (
+            <div className="mark-wrap">
+              <button type="button" className="mark-btn ok" onClick={() => setMark3("ok")}>○</button>
+              <button type="button" className="mark-btn wrong" onClick={() => setMark3("wrong")}>×</button>
+              <button type="button" className="mark-btn clear" onClick={clearMark3}>消</button>
             </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+})}
 
-            <div style={{paddingLeft:32, marginTop:8}}>
-              <div className="label">Masayuki</div>
-              <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                <DebouncedInput
-                  multiline rows={2} autoGrow
-                  className={`input ${wrong3 ? 'answer-wrong' : ''} ${ok3 ? 'answer-correct' : ''}`}
-                  placeholder="英語：ここに英訳を入力"
-                  const ans3Map = ws.parts.part3.answers || {};
-...
-value={ans3Map[it.id] ?? ""}
-                  onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }}
-                />
-                {mode === "trainer" && (
-                  <div className="mark-wrap">
-                    <button type="button" className="mark-btn ok" onClick={()=>setMark3('ok')}>○</button>
-                    <button type="button" className="mark-btn wrong" onClick={()=>setMark3('wrong')}>×</button>
-                    <button type="button" className="mark-btn clear" onClick={clearMark3}>消</button>
-                  </div>
-                )}
-              </div>
-
-              <div className="label" style={{marginTop:8}}>日本語</div>
-              {mode === "trainer" ? (
-                <DebouncedInput
-                  multiline rows={2} autoGrow
-                  className="input field-full"
-                  value={it.jp}
-                  onChange={(v) =>
-                    setWs((cur) => ({
-                      ...cur,
-                      parts: {
-                        ...cur.parts,
-                        part3: {
-                          ...cur.parts.part3,
-                          items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)),
-                        },
-                      },
-                    }))
-                  }
-                />
-              ) : (
-                <p style={{margin:0, lineHeight:1.6}}>{it.jp}</p>
-              )}
-            </div>
-          </div>
-        );
-      })}
       {mode === "trainer" && (
         <div style={{paddingTop:8, display:'flex', gap:8}}>
           <button className="btn btn-primary" onClick={() => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } } }))}>セリフを追加</button>
