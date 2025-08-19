@@ -178,47 +178,15 @@ const defaultWorksheet = (dateISO) => ({
     part1: {
       label: "Part 1｜語彙チェック（英単語→日本語訳）",
       instructions: "英単語の日本語訳を入力してください。",
-      items: [
-        { id: genId(), en: "warning" },
-        { id: genId(), en: "shelter" },
-        { id: genId(), en: "evacuate" },
-        { id: genId(), en: "calm" },
-        { id: genId(), en: "debris" },
-        { id: genId(), en: "inspect" },
-        { id: genId(), en: "help" },
-        { id: genId(), en: "take cover" },
-      ],
-      answers: {},
-      marks: {},
-      trainerNotes: "",
-    },
+      items: [], answers: {}, marks: {}, trainerNotes: "" },
     part2: {
       label: "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
-      items: [
-        { id: genId(), prompt: "We need to follow the ______ from the radio." },
-        { id: genId(), prompt: "Please stay ______ until we know it’s safe." },
-        { id: genId(), prompt: "Let’s ______ the area before it’s too dangerous." },
-        { id: genId(), prompt: "The city sent volunteers to ______ the elderly." },
-        { id: genId(), prompt: "After the storm, we need to ______ the power lines." },
-      ],
-      answers: {},
-      marks: {},
-      trainerNotes: "",
-    },
+      items: [], answers: {}, marks: {}, trainerNotes: "" },
     part3: {
       label: "Part 3｜会話ロールプレイ",
       instructions: "英文を入力して会話を完成させてください。",
-      items: [
-        { id: genId(), otherRole: "Coworker", otherEn: "Hey Masayuki, did you hear they issued a tsunami warning?", jp: "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。" },
-        { id: genId(), otherRole: "Coworker", otherEn: "Please stay calm and follow the official instructions.", jp: "まずは警告を確認して指示に従いましょう。" },
-        { id: genId(), otherRole: "Coworker", otherEn: "Shall we evacuate to higher ground now?", jp: "はい。急いで準備をして高台に行きましょう。" },
-        { id: genId(), otherRole: "Coworker", otherEn: "Do you need any help with your bag?", jp: "いいえ。一緒に安全を確保しましょう。" },
-      ],
-      answers: {},
-      marks: {},
-      trainerNotes: "",
-    },
+      items: [], answers: {}, marks: {}, trainerNotes: "" },
     part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
   },
   trainerFeedback: "",
@@ -659,13 +627,14 @@ export default function App() {
     <Card title="本日のテーマ">
       {mode === "trainer" ? (
         <DebouncedInput
-          multiline rows={2} autoGrow className="input field-full"
+          multiline rows={2} autoGrow className="input field-full theme-input"
           placeholder="Week 4｜Tuesday（Emergency）- ..."
           value={ws.meta.theme}
           onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))}
         />
       ) : (
-        <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>{ws.meta.theme || "（未設定）"}</p>
+        <p className="theme-text" style={{ margin: 0, whiteSpace: "pre-line" }}>
+        {ws.meta.theme || "（未設定）"}</p>
       )}
     </Card>
   ));
@@ -758,87 +727,168 @@ export default function App() {
     </Card>
   ));
 
-  /* ===== Part 2 ===== */
-  const Part2 = React.memo(function Part2() {
-    return (
-      <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
-        {ws.parts.part2.items.map((it) => {
-          const ans = (ws.parts.part2.answers || {})[it.id] || { en: "", ja: "" };
-          const m = ((ws.parts.part2.marks || {})[it.id]) || {};
-          const enWrong = m.en === "wrong", enOk = m.en === "ok";
-          const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
+ /* ===== Part 2 ===== */
+const Part2 = React.memo(function Part2() {
+  return (
+    <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
+      {ws.parts.part2.items.map((it) => {
+        const ans = (ws.parts.part2.answers || {})[it.id] || { en: "", ja: "" };
+        const m = ((ws.parts.part2.marks || {})[it.id]) || {};
+        const enWrong = m.en === "wrong", enOk = m.en === "ok";
+        const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
 
-          const setMark2 = (field, val) =>
-            setWs((c) => ({ ...c, parts: { ...c.parts, part2: {
-              ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), [field]: val } }
-            }}}));
-          const clearMark2 = (field) =>
-            setWs((c) => { const base = { ...(c.parts.part2.marks || {}) }; const rec = { ...(base[it.id] || {}) }; delete rec[field]; base[it.id] = rec;
-              return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
-            });
+        const setMark2 = (field, val) =>
+          setWs((c) => ({ ...c, parts: { ...c.parts, part2: {
+            ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), [field]: val } }
+          }}}));
 
-          return (
-            <div key={it.id} style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                {mode === "trainer" ? (
-                  <DebouncedInput className="input field-full" value={it.prompt}
-                    onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => x.id === it.id ? { ...x, prompt: v } : x) } }}))}
-                  />
-                ) : (
-                  <p style={{ margin: 0, lineHeight: 1.6, flex: 1 }}>{it.prompt}</p>
-                )}
-              </div>
+        const clearMark2 = (field) =>
+          setWs((c) => {
+            const base = { ...(c.parts.part2.marks || {}) };
+            const rec = { ...(base[it.id] || {}) };
+            delete rec[field];
+            base[it.id] = rec;
+            return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
+          });
 
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <DebouncedInput className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
-                    placeholder="英語の答え（穴埋め）" value={ans.en ?? ""}
-                    onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v }; scheduleFlush(); }}
-                  />
-                </div>
-                {mode === "trainer" && (
-                  <div className="mark-wrap">
-                    <button className="mark-btn ok" onClick={() => setMark2("en", "ok")}>○</button>
-                    <button className="mark-btn wrong" onClick={() => setMark2("en", "wrong")}>×</button>
-                    <button className="mark-btn clear" onClick={() => clearMark2("en")}>消</button>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <DebouncedInput className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
-                    placeholder="日本語訳" value={ans.ja ?? ""}
-                    onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v }; scheduleFlush(); }}
-                  />
-                </div>
-                {mode === "trainer" && (
-                  <div className="mark-wrap">
-                    <button className="mark-btn ok" onClick={() => setMark2("ja", "ok")}>○</button>
-                    <button className="mark-btn wrong" onClick={() => setMark2("ja", "wrong")}>×</button>
-                    <button className="mark-btn clear" onClick={() => clearMark2("ja")}>消</button>
-                  </div>
-                )}
-              </div>
+        return (
+          <div key={it.id} style={{ marginBottom: 12 }}>
+            {/* 1行目：出題 */}
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              {mode === "trainer" ? (
+                <DebouncedInput
+                  className="input field-full"
+                  value={it.prompt}
+                  onChange={(v) =>
+                    setWs((cur) => ({
+                      ...cur,
+                      parts: {
+                        ...cur.parts,
+                        part2: {
+                          ...cur.parts.part2,
+                          items: cur.parts.part2.items.map((x) =>
+                            x.id === it.id ? { ...x, prompt: v } : x
+                          ),
+                        },
+                      },
+                    }))
+                  }
+                />
+              ) : (
+                <p style={{ margin: 0, lineHeight: 1.6, flex: 1 }}>{it.prompt}</p>
+              )}
             </div>
-          );
-        })}
 
-        {mode === "trainer" ? (
-          <div style={{ marginTop: 12 }}>
-            <div className="label">講師コメント</div>
-            <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
-              value={ws.parts.part2.trainerNotes || ""}
-              onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))} />
+            {/* 2行目：英語＋採点 */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+              <div style={{ flex: 1 }}>
+                <DebouncedInput
+                  className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
+                  placeholder="英語の答え（穴埋め）"
+                  value={ans.en ?? ""}
+                  onChange={(v) => {
+                    draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v };
+                    scheduleFlush();
+                  }}
+                />
+              </div>
+              {mode === "trainer" && (
+                <div className="mark-wrap">
+                  <button className="mark-btn ok" onClick={() => setMark2("en", "ok")}>○</button>
+                  <button className="mark-btn wrong" onClick={() => setMark2("en", "wrong")}>×</button>
+                  <button className="mark-btn clear" onClick={() => clearMark2("en")}>消</button>
+                </div>
+              )}
+            </div>
+
+            {/* 3行目：日本語＋採点 */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+              <div style={{ flex: 1 }}>
+                <DebouncedInput
+                  className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
+                  placeholder="日本語訳"
+                  value={ans.ja ?? ""}
+                  onChange={(v) => {
+                    draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v };
+                    scheduleFlush();
+                  }}
+                />
+              </div>
+              {mode === "trainer" && (
+                <div className="mark-wrap">
+                  <button className="mark-btn ok" onClick={() => setMark2("ja", "ok")}>○</button>
+                  <button className="mark-btn wrong" onClick={() => setMark2("ja", "wrong")}>×</button>
+                  <button className="mark-btn clear" onClick={() => clearMark2("ja")}>消</button>
+                </div>
+              )}
+            </div>
           </div>
-        ) : ws.parts.part2.trainerNotes ? (
-          <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
-            <strong>講師コメント：</strong><br />{ws.parts.part2.trainerNotes}
-          </div>
-        ) : null}
-      </Card>
-    );
-  });
+        );
+      })}
+
+      {/* ←★★ ここが “map の直後／講師コメントの前”：問題を追加ボタンを差し込み ★★→ */}
+      {mode === "trainer" && (
+        <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
+          <button
+            className="btn btn-primary"
+            onClick={() =>
+              setWs((cur) => ({
+                ...cur,
+                parts: {
+                  ...cur.parts,
+                  part2: {
+                    ...cur.parts.part2,
+                    items: [
+                      ...cur.parts.part2.items,
+                      { id: genId(), prompt: "" }, // 空で1問追加
+                    ],
+                  },
+                },
+              }))
+            }
+          >
+            問題を追加
+          </button>
+        </div>
+      )}
+      {/* ←★★ ここまで挿入 ★★→ */}
+
+      {/* 講師コメント */}
+      {mode === "trainer" ? (
+        <div style={{ marginTop: 12 }}>
+          <div className="label">講師コメント</div>
+          <DebouncedInput
+            multiline
+            rows={3}
+            autoGrow
+            className="input field-full teacher-comment"
+            value={ws.parts.part2.trainerNotes || ""}
+            onChange={(v) =>
+              setWs((cur) => ({
+                ...cur,
+                parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } },
+              }))
+            }
+          />
+        </div>
+      ) : ws.parts.part2.trainerNotes ? (
+        <div
+          style={{
+            marginTop: 12,
+            background: "#f9fafb",
+            borderLeft: "4px solid #e5e7eb",
+            padding: "8px 12px",
+            borderRadius: 8,
+            color: "#b91c1c",
+          }}
+        >
+          <strong>講師コメント：</strong><br />
+          {ws.parts.part2.trainerNotes}
+        </div>
+      ) : null}
+    </Card>
+  );
+});
 
   /* ===== Part 3 ===== */
   const Part3 = React.memo(() => (
