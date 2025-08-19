@@ -117,3 +117,11 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   appearance: none;
   padding-right: 10px;                    /* 右端のアイコン余白で押し出されないように */
 }
+
+/* 入力文字は常に黒、placeholder は薄グレー */
+.input, .input[type="text"], .input[type="password"], .input textarea, textarea.input {
+  color: #111827;  /* black */
+}
+.input::placeholder, textarea.input::placeholder {
+  color: #9ca3af;  /* gray-400 */
+}
