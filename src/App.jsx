@@ -1004,7 +1004,7 @@ export default function App() {
       </div>
 
       {/* 2行目：学習者回答（英語）＋ 採点（英語用） */}
-      <div style={{ paddingLeft: 32, display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <div className="flex-1">
           <DebouncedInput
             className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
@@ -1026,7 +1026,7 @@ export default function App() {
       </div>
 
       {/* 3行目：学習者回答（日本語）＋ 採点（日本語用） */}
-      <div style={{ paddingLeft: 32, display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <div className="flex-1">
           <DebouncedInput
             className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
@@ -1058,7 +1058,7 @@ export default function App() {
               multiline
               rows={3}
               autoGrow
-              className="input field-full trainer-note"
+              className="input field-full teacher-comment"
               value={ws.parts.part2.trainerNotes || ""}
               onChange={(v) =>
                 setWs((cur) => ({
@@ -1169,37 +1169,28 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ paddingLeft: 32, marginTop: 8 }}>
-              <div className="label">Masayuki</div>
-              <div className="p3-answer-row">>
-                <div className="p3-answer">
-                <DebouncedInput
-                  multiline
-                  rows={2}
-                  autoGrow
-                  className={`input ${wrong3 ? "answer-wrong" : ""} ${ok3 ? "answer-correct" : ""}`}
-                  placeholder="英語：ここに英訳を入力"
-                  value={
-                    ans3Map[it.id] !== undefined && ans3Map[it.id] !== null
-                      ? ans3Map[it.id]
-                      : ""
-                  }
-                  onChange={(v) => {
-                    draftRef.current.p3[it.id] = v;
-                    scheduleFlush();
-                  }}
-                />
-                  </div>
-                {mode === "trainer" && (
-                  <div className="mark-wrap">
-                    <button type="button" className="mark-btn ok" onClick={() => setMark3("ok")}>○</button>
-                    <button type="button" className="mark-btn wrong" onClick={() => setMark3("wrong")}>×</button>
-                    <button type="button" className="mark-btn clear" onClick={clearMark3}>消</button>
-                  </div>
-                )}
-              </div>
+            <div style={{marginTop:8}}>               {/* ← 左端を1行目に揃える：paddingLeft削除 */}
+   <div className="label">Masayuki</div>
+   <div className="row">                    {/* 横並びレイアウト */}
+     <div className="col-grow">             {/* 入力はフル幅で確保 */}
+       <DebouncedInput
+         multiline rows={2} autoGrow
+         className={`input field-full ${wrong3 ? 'answer-wrong' : ''} ${ok3 ? 'answer-correct' : ''}`}
+         placeholder="英語：ここに英訳を入力"
+         value={ws.parts.part3.answers[it.id] ?? ""}
+         onChange={(v) => { draftRef.current.p3[it.id] = v; scheduleFlush(); }}
+       />
+     </div>
+     {mode === "trainer" && (
+       <div className="mark-wrap">
+         <button type="button" className="mark-btn ok" onClick={()=>setMark3('ok')}>○</button>
+         <button type="button" className="mark-btn wrong" onClick={()=>setMark3('wrong')}>×</button>
+         <button type="button" className="mark-btn clear" onClick={clearMark3}>消</button>
+       </div>
+     )}
+   </div>
 
-              <div className="label" style={{ marginTop: 8 }}>日本語</div>
+              <div className="label" style={{marginTop:8}}>日本語</div>
               {mode === "trainer" ? (
                 <DebouncedInput
                   multiline
