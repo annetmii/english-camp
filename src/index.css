@@ -231,12 +231,14 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
 
-/* === Part1 レイアウト（Part2と同じロジック：横並びで入力は残り幅） === */
-.p1-row { display:flex; gap:12px; align-items:center; }
-.p1-word { font-weight:600; min-width:88px; }
+/* Part1 は縦並びを維持しつつ、入力幅を他と揃えて100%に */
+.p1-row { display: flex; gap: 12px; align-items: center; }
+.p1-word { font-weight: 600; min-width: 88px; }
 
-/* 以前いれた“モバイルで縦積み”を撤回：常に横並びで、入力は flex:1 に */
+/* モバイルでは縦並び＋入力は常に100%幅（Part2と同じ見た目） */
 @media (max-width: 480px) {
-  .p1-row { flex-direction: row; align-items: center; }
-  .p1-row .input { flex: 1; width: auto; }
+  .p1-row { flex-direction: column; align-items: stretch; }
+  .p1-word { min-width: 0; width: 100%; display: block; }
+  .p1-row .p1-answer { width: 100%; }        /* ← これでPart2と同じ幅に */
+  .p1-row .input.field-full { width: 100%; }  /* 念のための保険 */
 }
