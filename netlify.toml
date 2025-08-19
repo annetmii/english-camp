@@ -1,9 +1,19 @@
+# netlify.toml（置き換え）
 [build]
   command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
+# Functions の配置（/.netlify/functions/* に対応）
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# SPA ルーティング
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# ビルド環境を固定（Vite 5 は Node 18+ 必須）
+[build.environment]
+  NODE_VERSION = "20"
