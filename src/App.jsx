@@ -212,112 +212,75 @@ const defaultWorksheet = (dateISO) => ({
   submittedAt: null,
 });
 
-// ===================== Header (uniform buttons, centered layout) =====================
+// ===================== Header (4-lines compact layout) =====================
 const Header = React.memo(function Header({
-  genre,
-  dateISO,
-  status,
-  mode,
-  pinInput,
-  onPinChange,
-  switchToTrainer,
-  switchToStudent,
-  showCal,
-  setShowCal,
-  doSync,
-  submit,
-  userId,
-  markedDates,
-  onPickDate
+  genre, dateISO, status, mode, pinInput, onPinChange,
+  switchToTrainer, switchToStudent, showCal, setShowCal,
+  doSync, submit, userId, markedDates, onPickDate
 }) {
   return (
     <header className="sticky-header">
-      {/* 1行目：ブランド／カレンダー・PIN・モード */}
+      {/* 1行目：ロゴ＋English Camp */}
       <div className="header-bar">
         <div className="container">
-          <div className="hdr-row">
-            <div className="brand">
-              <img
-                src="/logo.png"
-                alt="annetmii"
-                className="header-logo"
-                onError={(e) => {
-                  const s = document.createElement('span');
-                  s.textContent = 'annetmii';
-                  e.currentTarget.replaceWith(s);
-                }}
-              />
-              <h1 className="brand-title">English Camp</h1>
-            </div>
-
-            <div className="hdr-controls">
-              <button
-                className="hdr-btn"
-                onClick={(ev) => { ev.stopPropagation(); setShowCal(v => !v); }}
-              >
-                カレンダー
-              </button>
-
-              {mode === "student" ? (
-                <>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={4}
-                    className="pin-4ch"
-                    placeholder="PIN"
-                    value={pinInput}
-                    onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
-                    aria-label="講師PIN"
-                  />
-                  <button
-                    className="hdr-btn-primary"
-                    onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}
-                  >
-                    講師モード
-                  </button>
-                </>
-              ) : (
-                <button
-                  className="hdr-btn"
-                  onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}
-                >
-                  学習者モードへ
-                </button>
-              )}
-            </div>
+          <div className="brand">
+            <img
+              src="/logo.png" alt="annetmii" className="header-logo"
+              onError={(e)=>{ const s=document.createElement('span'); s.textContent='annetmii'; e.currentTarget.replaceWith(s); }}
+            />
+            <h1 className="brand-title">English Camp</h1>
           </div>
         </div>
       </div>
 
-      {/* 2行目：情報／同期・提出・状態（すべて中央カラムに収める） */}
-      <div className="container">
-        <div className="hdr-row2">
-          <span>{genre}｜{dateISO}</span>
-          <div className="hdr-actions">
-            <button
-              className="hdr-btn-primary"
-              onClick={(e) => { e.stopPropagation(); doSync("手動同期"); }}
-            >
-              同期
-            </button>
-            <button
-              className="hdr-btn-primary"
-              onClick={(e) => { e.stopPropagation(); submit(); }}
-            >
-              提出
-            </button>
-            <span>状態：{status}</span>
+      {/* 2行目：カレンダー／PIN／講師モード */}
+      <div className="header-row">
+        <div className="container">
+          <div className="hstack">
+            <button className="hdr-btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
+            {mode === "student" ? (
+              <>
+                <input
+                  type="password" inputMode="numeric" maxLength={4}
+                  className="pin-4ch" placeholder="PIN"
+                  value={pinInput} onChange={(e)=>onPinChange(e.target.value.replace(/\D/g,''))}
+                  aria-label="講師PIN"
+                />
+                <button className="hdr-btn-primary" onClick={(ev)=>{ev.stopPropagation(); switchToTrainer();}}>講師モード</button>
+              </>
+            ) : (
+              <button className="hdr-btn" onClick={(ev)=>{ev.stopPropagation(); switchToStudent();}}>学習者モードへ</button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 3行目：カレンダー（必要な時だけ） */}
+      {/* 3行目：同期／提出／状態 */}
+      <div className="header-row">
+        <div className="container">
+          <div className="hstack" style={{justifyContent:'space-between'}}>
+            <div className="hstack">
+              <button className="hdr-btn-primary" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
+              <button className="hdr-btn-primary" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
+            </div>
+            <span style={{color:'#6b7280', fontSize:13}}>状態：{status}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4行目：ジャンル｜日付（改行禁止） */}
+      <div className="header-row">
+        <div className="container">
+          <div className="hdr-meta">{genre}｜{dateISO}</div>
+        </div>
+      </div>
+
+      {/* カレンダー（必要時） */}
       {showCal && (
-        <div className="container" style={{ padding: "0 16px 12px" }} onClick={(e)=>e.stopPropagation()}>
+        <div className="container" style={{ padding:"0 16px 12px" }} onClick={(e)=>e.stopPropagation()}>
           <MonthCalendar
             dateISO={dateISO}
-            onSelect={(iso) => { onPickDate(iso); }}
+            onSelect={(iso)=>{ onPickDate(iso); }}
             marked={markedDates}
           />
         </div>
