@@ -545,7 +545,7 @@ const Header = React.memo(function Header({
               >
                 同期
               </button>
-              <button className="hdr-btn-submit" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
+              <button className="hdr-btn submit-btn" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
           </div>
