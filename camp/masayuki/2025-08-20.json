@@ -2,10 +2,10 @@
   "meta": {
     "app": "annetmii-english-camp",
     "version": 43,
-    "date": "2025-08-19",
-    "genre": "Compliance（勤怠・制度）",
+    "date": "2025-08-20",
+    "genre": "HQ（本国報告・ドキュメント作成）",
     "trainee": "Masayuki",
-    "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう"
+    "theme": "Week 5｜Wed（Airport）- 海外出張に行く\nPicture Dictionaryの「An Airport」（p.160）から学びましょう"
   },
   "parts": {
     "part1": {
@@ -13,103 +13,110 @@
       "instructions": "英単語の日本語訳を入力してください。",
       "items": [
         {
-          "id": "db259d53-39f2-4094-b03b-7aaf6de12e4d",
-          "en": "Internet listing"
+          "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
+          "en": "check in"
         },
         {
-          "id": "56aea00c-ed29-4da9-ac2e-9a86198c948b",
-          "en": "classified ad"
+          "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
+          "en": "boarding pass"
         },
         {
-          "id": "6723e4db-14d7-439e-85f3-974d0cecf672",
-          "en": "furnished apartment"
+          "id": "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005",
+          "en": "security check"
         },
         {
-          "id": "139d9018-6137-49a5-98ce-d8a825927b07",
-          "en": "unfurnished apartment"
+          "id": "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11",
+          "en": "carry-on bag"
         },
         {
-          "id": "75921428-8b66-4894-9201-93aa7ec6caea",
-          "en": "utilities"
+          "id": "7201e441-2b43-4eca-a11d-dd89150e818f",
+          "en": "claim baggage"
         },
         {
-          "id": "5991d395-7ba4-4f98-a798-c3f7083495f4",
-          "en": "call the manager"
+          "id": "3889d80f-c382-440b-8985-b73033f85b26",
+          "en": "seat belt"
         },
         {
-          "id": "ac9557ac-2466-47b5-805a-8f5028d1b468",
-          "en": "submit an application"
+          "id": "2413f719-dd0f-4c05-bfcc-c9d1114ae843",
+          "en": "boarding gate"
         },
         {
-          "id": "dbfcfac3-50ca-4734-a98c-be68c6a89461",
-          "en": "sign the rental agreement"
+          "id": "ea1d6e0f-d3bd-4489-b04b-e376d800638f",
+          "en": "screening area"
         }
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
       "items": [
         {
-          "id": "5c55dfd7-c952-43e1-a4d9-bd1c84e5c8e2",
-          "prompt": "I found a nice apartment on the ＿＿＿＿＿."
+          "id": "554a0c3f-6d62-4a37-88f1-9fa53e5114d7",
+          "prompt": "I need to ＿＿＿＿＿ electronically before my flight."
         },
         {
-          "id": "166cc319-7354-4cb9-9103-0f9e34c6b652",
-          "prompt": ""
+          "id": "a5cca132-f1ca-4d80-91e6-e679fe7f5a4c",
+          "prompt": "Please show your ＿＿＿＿＿ at the boarding gate."
         },
         {
-          "id": "0d45afb9-02bf-4eea-a641-7ca424efc1d0",
-          "prompt": ""
+          "id": "d2acea31-ea3d-44e3-a283-224c17c381f9",
+          "prompt": "All passengers must go through the ＿＿＿＿＿ before boarding."
         },
         {
-          "id": "0f956843-dbd4-4fc2-9a1d-f5252cb93a38",
-          "prompt": ""
+          "id": "289fc96c-1b66-43a0-a87f-d70e08d677cc",
+          "prompt": "Don’t forget to fasten your ＿＿＿＿＿＿ before takeoff."
         },
         {
-          "id": "9f0fcb60-0498-4af2-af9d-a3b2a3c3b0a4",
-          "prompt": ""
+          "id": "a2d7a6ae-f73a-4d19-8583-7f4ffaec2211",
+          "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
         }
       ],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
       "items": [
         {
-          "id": "ac6ec5f6-40df-4d5c-808b-317a46a66da6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "d8eb0673-f295-4cc9-83f8-dc62183994d5",
+          "otherRole": "Colleague",
+          "otherEn": "Masayuki, are you ready for your business trip abroad?",
+          "jp": "オンラインでチェックインして搭乗券を印刷しておいたよ。"
         },
         {
-          "id": "91fb9574-bada-436c-b661-fa71df61f8ca",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "4f6c289e-58e8-4665-87e5-6d9967de8584",
+          "otherRole": "Colleague",
+          "otherEn": "That’s good. Don’t forget you’ll have to go through the security check at the screening area.",
+          "jp": "もちろん。ノートパソコンを手荷物から出しておかないとね。"
         },
         {
-          "id": "0daeda1b-8bdc-48ef-a660-b27694c68af6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7",
+          "otherRole": "Colleague",
+          "otherEn": "Once you arrive, how will you manage your schedule?",
+          "jp": "到着したら、ホテルへ直行だね。最初の会議に遅れないようにスケジュールを整理しておいた。"
         },
         {
-          "id": "55675cd4-683a-4982-8493-0597a4de9576",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
+          "id": "d46248be-1671-4bab-8b81-ba8a2b014854",
+          "otherRole": "Colleague",
+          "otherEn": "That sounds well planned. Have a safe flight!",
+          "jp": "ありがとう。機内では眠れないので、プレゼン準備などで時間を潰すよ。"
         }
       ],
-      "answers": {},
+      "answers": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": ""
+      },
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {
+        "4f6c289e-58e8-4665-87e5-6d9967de8584": "2025-08-19T13:19:10.563Z"
+      }
     },
     "part4": {
       "label": "Part 4｜英作文",
