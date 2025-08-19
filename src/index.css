@@ -151,3 +151,18 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 }
 .cal-any   { background:#111827; } /* 何か保存あり：黒点 */
 .cal-submit{ background:#16a34a; } /* 提出済み：緑点（優先表示） */
+
+/* === 採点マーク（○/×/消）UI === */
+.mark-wrap { display:inline-flex; gap:6px; margin-left:8px; vertical-align:middle; }
+.mark-btn {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:8px; font-size:14px; line-height:1;
+  border:1px solid #d1d5db; background:#fff; color:#111827; cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mark-btn.ok     { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; } /* 薄緑 */
+.mark-btn.wrong  { background:#fee2e2; border-color:#fecaca; color:#991b1b; } /* 薄赤 */
+.mark-btn.clear  { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
+
+.answer-wrong  { background:#fee2e2; border-color:#fecaca; }
+.answer-correct{ background:#ecfdf5; border-color:#a7f3d0; }
