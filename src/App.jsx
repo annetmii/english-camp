@@ -1,22 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
-// ===================== Utils =====================
-// Vite/Netlify の古い Node/ブラウザでも動くよう、replaceAll は使わない
+/* ===================== Utils ===================== */
 const tz = "Asia/Tokyo";
 const ENDPOINT_STORAGE = "/.netlify/functions/storage";
 const ENDPOINT_LIST = "/.netlify/functions/listDates";
 const LS_PREFIX = "aec:v4.3:";
+const DEFAULT_PIN = "1202";
 
-// UUID フォールバック（crypto.randomUUID が無い環境で白画面防止）
 const genId = () => {
   const g = typeof globalThis !== "undefined" ? globalThis : window;
-  if (g && g.crypto && typeof g.crypto.randomUUID === "function") {
-    return g.crypto.randomUUID();
-  }
+  if (g && g.crypto && typeof g.crypto.randomUUID === "function") return g.crypto.randomUUID();
   return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
 };
 
-// アイドル時実行（requestIdleCallback が無い環境に対応）
 const idle = (fn) =>
   typeof window !== "undefined" && "requestIdleCallback" in window
     ? window.requestIdleCallback(fn)
@@ -24,13 +20,8 @@ const idle = (fn) =>
 
 function todayISO(d = new Date()) {
   const z = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(d)
-    .replace(/\//g, "-"); // replaceAll の代替
+    timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(d).replace(/\//g, "-");
   return z;
 }
 
@@ -43,9 +34,8 @@ const DAY_GENRE = {
   5: "Small Talk（雑談・会食）",
   6: "Writing（書き言葉・メール・案内）",
 };
-const DEFAULT_PIN = "1202"; // Functions側でTRAINER_PIN検証
 
-// ===================== Cloud I/O =====================
+/* ===================== Cloud I/O ===================== */
 async function cloudLoad({ userId, dateISO }) {
   const url = `${ENDPOINT_STORAGE}?user=${encodeURIComponent(userId)}&date=${dateISO}`;
   const res = await fetch(url);
@@ -68,48 +58,33 @@ async function cloudListDates({ userId }) {
   return res.json();
 }
 
-// ===================== Input (IME-safe, iOS-stable, autosize) =====================
+/* ===================== Input (IME-safe, autosize) ===================== */
 const DebouncedInput = React.memo(function DebouncedInput({
-  id,
-  value,
-  onChange,
-  className = "",
-  placeholder = "",
-  multiline = false,
-  rows = 1,
-  debounceMs = 220,
-  autoGrow = true,
-  ...rest // ← 末尾にカンマは付けない
+  value, onChange, className = "", placeholder = "",
+  multiline = false, rows = 1, debounceMs = 220, autoGrow = true, ...rest
 }) {
   const [inner, setInner] = useState(value ?? "");
-  const compRef = useRef(false); // IME合成中
+  const compRef = useRef(false);
   const tRef = useRef(null);
   const inputRef = useRef(null);
 
-  // 親->子 同期（フォーカス中は上書きしない）
   useEffect(() => {
     if (compRef.current) return;
     if (typeof document !== "undefined" && document.activeElement === inputRef.current) return;
     setInner(value ?? "");
   }, [value]);
 
-  const flush = useCallback(
-    (next) => {
-      if (typeof onChange !== "function") return;
-      if (next === value) return;
-      onChange(next);
-    },
-    [onChange, value]
-  );
+  const flush = useCallback((next) => {
+    if (typeof onChange !== "function") return;
+    if (next === value) return;
+    onChange(next);
+  }, [onChange, value]);
 
-  const schedule = useCallback(
-    (next) => {
-      if (compRef.current) return;
-      if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => flush(next), debounceMs);
-    },
-    [flush, debounceMs]
-  );
+  const schedule = useCallback((next) => {
+    if (compRef.current) return;
+    if (tRef.current) clearTimeout(tRef.current);
+    tRef.current = setTimeout(() => flush(next), debounceMs);
+  }, [flush, debounceMs]);
 
   const resize = useCallback(() => {
     if (!autoGrow || !multiline || !inputRef.current) return;
@@ -117,52 +92,21 @@ const DebouncedInput = React.memo(function DebouncedInput({
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   }, [autoGrow, multiline]);
-  useEffect(() => {
-    resize();
-  }, [inner, resize]);
+  useEffect(() => { resize(); }, [inner, resize]);
 
   const common = {
-    ref: inputRef,
-    className,
-    placeholder,
-    value: inner,
-    onChange: (e) => {
-      const v = e.target.value;
-      setInner(v);
-      schedule(v);
-    },
+    ref: inputRef, className, placeholder, value: inner,
+    onChange: (e) => { const v = e.target.value; setInner(v); schedule(v); },
     onBlur: () => flush(inner),
-    onCompositionStart: () => {
-      compRef.current = true;
-    },
-    onCompositionEnd: (e) => {
-      compRef.current = false;
-      const v = e.currentTarget.value;
-      setInner(v);
-      flush(v);
-    },
-    autoComplete: "off",
-    autoCorrect: "off",
-    spellCheck: false,
-    inputMode: "text",
-    ...rest,
+    onCompositionStart: () => { compRef.current = true; },
+    onCompositionEnd: (e) => { compRef.current = false; const v = e.currentTarget.value; setInner(v); flush(v); },
+    autoComplete: "off", autoCorrect: "off", spellCheck: false, inputMode: "text", ...rest,
   };
   if (!multiline) return <input {...common} />;
-  return (
-    <textarea
-      {...common}
-      rows={rows}
-      style={{
-        resize: "none",
-        overflow: "hidden",
-        ...(rest && rest.style ? rest.style : {}),
-      }}
-    />
-  );
+  return <textarea {...common} rows={rows} style={{ resize: "none", overflow: "hidden", ...(rest.style || {}) }} />;
 });
 
-// ===================== Calendar helpers =====================
-// ① ローカル保存されている日付（何か作業した日）を集める
+/* ===================== Calendar helpers ===================== */
 function listLocalDatesForUser(userId) {
   const prefix = `${LS_PREFIX}${userId}:`;
   const dates = new Set();
@@ -175,8 +119,6 @@ function listLocalDatesForUser(userId) {
   }
   return dates;
 }
-
-// ② 「提出済み(submittedAtあり)」の日付だけを集める
 function listLocalSubmittedDatesForUser(userId) {
   const prefix = `${LS_PREFIX}${userId}:`;
   const dates = new Set();
@@ -194,76 +136,6 @@ function listLocalSubmittedDatesForUser(userId) {
   }
   return dates;
 }
-
-function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
-  const d = new Date(`${dateISO}T00:00:00`);
-  const y = d.getFullYear();
-  const m = d.getMonth();
-  const first = new Date(y, m, 1);
-  const start = new Date(first);
-  start.setDate(1 - ((first.getDay() + 6) % 7));
-  const days = Array.from(
-    { length: 42 },
-    (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
-  );
-
-  return (
-    <div className="card" style={{ padding: "12px", background: "white" }}>
-      <div
-        className="flex items-center justify-between mb-2"
-        style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}
-      >
-        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m - 1, 1)))}>◀</button>
-        <div className="text-sm font-medium">
-          {y}年{String(m + 1).padStart(2, "0")}月
-        </div>
-        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m + 1, 1)))}>▶</button>
-      </div>
-
-      <div
-        className="grid grid-cols-7 gap-1 text-center text-[11px] text-gray-500 mb-1"
-        style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, textAlign: "center", fontSize: 11, color: "#6b7280", marginBottom: 4 }}
-      >
-        {"月火水木金土日".split("").map((w) => <div key={w}>{w}</div>)}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1" style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
-        {days.map((dt) => {
-          const iso = todayISO(dt);
-          const inMonth = dt.getMonth() === m;
-          const selected = iso === dateISO;
-          const hasAny = marked.has(iso);
-          const hasSubmit = submitted && submitted.has(iso);
-          const hasTrainer = trainer && trainer.has(iso);
-          return (
-            <button
-              key={iso}
-              onClick={() => onSelect(iso)}
-              className="btn"
-              style={{
-                height: 36,
-                borderRadius: 12,
-                position: "relative",
-                background: selected ? "black" : "white",
-                color: selected ? "white" : "#111827",
-                opacity: inMonth ? 1 : 0.45,
-              }}
-            >
-              {String(dt.getDate())}
-              {hasAny && (
-                <span
-                  className={`cal-dot ${hasTrainer ? "cal-trainer" : hasSubmit ? "cal-submit" : "cal-any"}`}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ③ 講師が採点/コメントした日（marks or trainerNotes or trainerFeedback が存在）を集める
 function listLocalTrainerDatesForUser(userId) {
   const prefix = `${LS_PREFIX}${userId}:`;
   const dates = new Set();
@@ -292,7 +164,7 @@ function listLocalTrainerDatesForUser(userId) {
   return dates;
 }
 
-// ===================== Data Model =====================
+/* ===================== Data Model ===================== */
 const defaultWorksheet = (dateISO) => ({
   meta: {
     app: "annetmii-english-camp",
@@ -347,13 +219,7 @@ const defaultWorksheet = (dateISO) => ({
       marks: {},
       trainerNotes: "",
     },
-    part4: {
-      label: "Part 4｜英作文",
-      instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
-      answer: "",
-      handwriting: null,
-      trainerNotes: "",
-    },
+    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
   },
   trainerFeedback: "",
   submittedAt: null,
@@ -370,15 +236,11 @@ function ensureMaps(ws, curDate) {
   } catch (_) {
     ws = defaultWorksheet(curDate || todayISO());
   }
-  // 日付を選択中に正規化
   if (ws?.meta) ws.meta.date = curDate || ws.meta.date || todayISO();
   return ws;
 }
-
-// === 時刻ユーティリティ ===
 const nowISO = () => new Date().toISOString();
 
-// === ローカルにスナップショット（最新5個） ===
 function snapshotLocal(userId, dateISO, ws) {
   try {
     const keyPrefix = `${LS_PREFIX}${userId}:${dateISO}:bak:`;
@@ -394,13 +256,12 @@ function snapshotLocal(userId, dateISO, ws) {
   } catch {}
 }
 
-// === クラウドとローカルを“マージ”（LWW：項目ごと） ===
+/* ====== Merge (newer wins; Part2 per-field) ====== */
 function newer(a, b) { return a && b ? (a > b ? a : b) : (a || b || null); }
-
 function mergeWs(local, remote) {
   const out = JSON.parse(JSON.stringify(remote || local));
 
-  // Part1
+  // Part1 answers
   const l1a = local.parts.part1.answers || {}, r1a = remote.parts.part1.answers || {};
   const l1t = local.parts.part1.answersUpdatedAt || {}, r1t = remote.parts.part1.answersUpdatedAt || {};
   const m1a = { ...r1a }, m1t = { ...r1t };
@@ -410,7 +271,7 @@ function mergeWs(local, remote) {
   }
   out.parts.part1.answers = m1a; out.parts.part1.answersUpdatedAt = m1t;
 
-  // Part2
+  // Part2 answers (per-field)
   const l2a = local.parts.part2.answers || {}, r2a = remote.parts.part2.answers || {};
   const l2t = local.parts.part2.answersUpdatedAt || {}, r2t = remote.parts.part2.answersUpdatedAt || {};
   const m2a = JSON.parse(JSON.stringify(r2a)), m2t = JSON.parse(JSON.stringify(r2t));
@@ -425,7 +286,7 @@ function mergeWs(local, remote) {
   }
   out.parts.part2.answers = m2a; out.parts.part2.answersUpdatedAt = m2t;
 
-  // Part3
+  // Part3 answers
   const l3a = local.parts.part3.answers || {}, r3a = remote.parts.part3.answers || {};
   const l3t = local.parts.part3.answersUpdatedAt || {}, r3t = remote.parts.part3.answersUpdatedAt || {};
   const m3a = { ...r3a }, m3t = { ...r3t };
@@ -435,127 +296,108 @@ function mergeWs(local, remote) {
   }
   out.parts.part3.answers = m3a; out.parts.part3.answersUpdatedAt = m3t;
 
-  // 提出は既提出を優先
+  // submitted: keep any submitted
   out.submittedAt = remote.submittedAt || local.submittedAt || null;
   return out;
 }
 
-// ===================== Header (4-lines compact layout) =====================
+/* ===================== Calendar ===================== */
+function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
+  const d = new Date(`${dateISO}T00:00:00`);
+  const y = d.getFullYear(), m = d.getMonth();
+  const first = new Date(y, m, 1);
+  const start = new Date(first);
+  start.setDate(1 - ((first.getDay() + 6) % 7));
+  const days = Array.from({ length: 42 }, (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i));
+
+  return (
+    <div className="card" style={{ padding: "12px", background: "white" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m - 1, 1)))}>◀</button>
+        <div className="text-sm font-medium">{y}年{String(m + 1).padStart(2, "0")}月</div>
+        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m + 1, 1)))}>▶</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, textAlign: "center", fontSize: 11, color: "#6b7280", marginBottom: 4 }}>
+        {"月火水木金土日".split("").map((w) => <div key={w}>{w}</div>)}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {days.map((dt) => {
+          const iso = todayISO(dt);
+          const inMonth = dt.getMonth() === m;
+          const selected = iso === dateISO;
+          const hasAny = marked.has(iso);
+          const hasSubmit = submitted && submitted.has(iso);
+          const hasTrainer = trainer && trainer.has(iso);
+          return (
+            <button
+              key={iso}
+              onClick={() => onSelect(iso)}
+              className="btn"
+              style={{
+                height: 36, borderRadius: 12, position: "relative",
+                background: selected ? "black" : "white",
+                color: selected ? "white" : "#111827",
+                opacity: inMonth ? 1 : 0.45,
+              }}
+            >
+              {String(dt.getDate())}
+              {hasAny && (
+                <span
+                  className={`cal-dot ${hasTrainer ? "cal-trainer" : (hasSubmit ? "cal-submit" : "cal-any")}`}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ===================== Header ===================== */
 const Header = React.memo(function Header({
-  genre,
-  dateISO,
-  status,
-  mode,
-  pinInput,
-  onPinChange,
-  switchToTrainer,
-  switchToStudent,
-  showCal,
-  setShowCal,
-  doSync,
-  submit,
-  userId,
-  markedDates,
-  submittedDates,
-  trainerDates,
-  onPickDate,
-  resetQuestions,
+  genre, dateISO, status, mode, pinInput, onPinChange,
+  switchToTrainer, switchToStudent, showCal, setShowCal,
+  doSync, submit, userId, markedDates, submittedDates, trainerDates,
+  onPickDate, resetQuestions,
 }) {
   return (
     <header className="sticky-header">
-      {/* 1行目：ロゴ＋annetmii English Camp */}
       <div className="header-bar">
         <div className="container">
           <div className="brand">
-            <img
-              src="/logo.png"
-              alt="annetmii"
-              className="header-logo"
-              onError={(e) => {
-                const s = document.createElement("span");
-                s.textContent = "annetmii";
-                e.currentTarget.replaceWith(s);
-              }}
-            />
+            <img src="/logo.png" alt="annetmii" className="header-logo"
+              onError={(e) => { const s = document.createElement("span"); s.textContent = "annetmii"; e.currentTarget.replaceWith(s); }} />
             <h1 className="brand-title">annetmii English Camp</h1>
           </div>
         </div>
       </div>
 
-      {/* 2行目：カレンダー／PIN／講師モード */}
       <div className="header-row">
         <div className="container">
           <div className="hstack">
-            <button
-              className="hdr-btn"
-              onClick={(ev) => {
-                ev.stopPropagation();
-                setShowCal((v) => !v);
-              }}
-            >
-              カレンダー
-            </button>
+            <button className="hdr-btn" onClick={(ev) => { ev.stopPropagation(); setShowCal((v) => !v); }}>カレンダー</button>
             {mode === "student" ? (
               <>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  className="pin-4ch"
-                  placeholder="PIN"
-                  value={pinInput}
-                  onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
-                  aria-label="講師PIN"
-                />
-                <button
-                  className="hdr-btn-primary"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    switchToTrainer();
-                  }}
-                >
-                  講師モード
-                </button>
+                <input type="password" inputMode="numeric" maxLength={4} className="pin-4ch" placeholder="PIN"
+                       value={pinInput} onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))} aria-label="講師PIN" />
+                <button className="hdr-btn-primary" onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}>講師モード</button>
               </>
             ) : (
-              <button
-                className="hdr-btn"
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  switchToStudent();
-                }}
-              >
-                学習者モードへ
-              </button>
+              <button className="hdr-btn" onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}>学習者モードへ</button>
             )}
           </div>
         </div>
       </div>
 
-      {/* 3行目：同期／提出／ステータス */}
       <div className="header-row">
         <div className="container">
           <div className="hstack" style={{ justifyContent: "space-between" }}>
             <div className="hstack">
-              <button
-                className="hdr-btn-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  doSync("手動同期");
-                }}
-              >
-                同期
-              </button>
-              {/* ← ここに講師専用リセット */}
-          {mode === "trainer" && (
-            <button
-              className="hdr-btn danger-btn"
-              onClick={(e)=>{ e.stopPropagation(); resetQuestions(); }}
-              title="この日の出題を初期化"
-            >
-              出題リセット
-            </button>
-          )}
+              <button className="hdr-btn-primary" onClick={(e) => { e.stopPropagation(); doSync("手動同期"); }}>同期</button>
+              {mode === "trainer" && (
+                <button className="hdr-btn danger-btn" onClick={(e) => { e.stopPropagation(); resetQuestions(); }} title="この日の出題を初期化">出題リセット</button>
+              )}
               <button className="hdr-btn submit-btn" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
@@ -563,14 +405,12 @@ const Header = React.memo(function Header({
         </div>
       </div>
 
-      {/* 4行目：ジャンル｜日付（改行禁止） */}
       <div className="header-row">
         <div className="container">
           <div className="hdr-meta">{genre}｜{dateISO}</div>
         </div>
       </div>
 
-      {/* カレンダー（必要時） */}
       {showCal && (
         <div className="container" style={{ padding: "0 16px 12px" }} onClick={(e) => e.stopPropagation()}>
           <MonthCalendar
@@ -586,7 +426,7 @@ const Header = React.memo(function Header({
   );
 });
 
-// ===================== App =====================
+/* ===================== App ===================== */
 export default function App() {
   const [userId] = useState("masayuki");
   const [dateISO, setDateISO] = useState(todayISO());
@@ -596,80 +436,55 @@ export default function App() {
   const [showCal, setShowCal] = useState(false);
   const [cloudDates, setCloudDates] = useState(new Set());
 
-  // worksheet state
   const [ws, setWs] = useState(() => {
-    const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${todayISO()}`);
-    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(todayISO()), todayISO());
+    const d = todayISO();
+    const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${d}`);
+    return ensureMaps(ls ? JSON.parse(ls) : defaultWorksheet(d), d);
   });
 
-  // genre
   const genre = useMemo(() => DAY_GENRE[new Date(`${dateISO}T00:00:00`).getDay()], [dateISO]);
 
-  // expose setter for header calendar selection
-  useEffect(() => {
-    window.__aec_setDate = (iso) => setDateISO(iso);
-    return () => { delete window.__aec_setDate; };
-  }, []);
+  useEffect(() => { window.__aec_setDate = (iso) => setDateISO(iso); return () => { delete window.__aec_setDate; }; }, []);
 
-  // localStorage save (batched 500ms + idle)
+  /* ===== Local save (500ms + idle), always keyed by dateISO ===== */
   const saveTimerRef = useRef(null);
   useEffect(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() =>
-      idle(() => {
-        try {
-         const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
-localStorage.setItem(
-  `${LS_PREFIX}${userId}:${dateISO}`,
-  JSON.stringify(normalized)
-);
-snapshotLocal(userId, dateISO, normalized);
-        } catch {}
-      }), 500);
+    saveTimerRef.current = setTimeout(() => idle(() => {
+      try {
+        const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+        localStorage.setItem(`${LS_PREFIX}${userId}:${dateISO}`, JSON.stringify(normalized));
+        snapshotLocal(userId, dateISO, normalized);
+      } catch {}
+    }), 500);
     return () => clearTimeout(saveTimerRef.current);
-  }, [ws, userId]);
+  }, [ws, userId, dateISO]);
 
-  // load cloud on start/date change
+  /* ===== Load remote on start/date change ===== */
   useEffect(() => {
     (async () => {
       try {
         setStatus("クラウド読込中…");
         const remote = await cloudLoad({ userId, dateISO });
-        
-        // === 定期取り込み：10秒ごと＋タブが再度アクティブになったら即取り込み ===
-useEffect(() => {
-  const id = setInterval(fetchAndMerge, 10000); // 10秒
-  const onVis = () => {
-    if (document.visibilityState === "visible") fetchAndMerge();
-  };
-  document.addEventListener("visibilitychange", onVis);
-
-  return () => {
-    clearInterval(id);
-    document.removeEventListener("visibilitychange", onVis);
-  };
-}, [fetchAndMerge]);
-
         if (remote && remote.data) {
           setWs(prev => mergeWs(
-  ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO), dateISO),
-  ensureMaps(remote.data, dateISO)
-));
+            ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO), dateISO),
+            ensureMaps(remote.data, dateISO)
+          ));
           setStatus("クラウドから読み込みました");
         } else {
-          setWs((cur) => mergeWs(ensureMaps(cur, dateISO), ensureMaps(remote.data, dateISO)));
+          setWs(cur => (cur?.meta?.date === dateISO ? ensureMaps(cur, dateISO) : ensureMaps(defaultWorksheet(dateISO), dateISO)));
           setStatus("本日のワークシートを作成しました");
         }
-      } catch { setStatus("オフライン：ローカル保存のみ"); }
+      } catch {
+        setStatus("オフライン：ローカル保存のみ");
+      }
     })();
   }, [userId, dateISO]);
 
-  // fetch cloud dates (for ◎ marking)
+  /* ===== Calendar dots (cloud dates) ===== */
   const refreshCloudDates = useCallback(async () => {
-    try {
-      const res = await cloudListDates({ userId });
-      setCloudDates(new Set(res.dates || []));
-    } catch {}
+    try { const res = await cloudListDates({ userId }); setCloudDates(new Set(res.dates || [])); } catch {}
   }, [userId]);
   useEffect(() => { refreshCloudDates(); }, [refreshCloudDates]);
 
@@ -678,26 +493,22 @@ useEffect(() => {
     cloudDates.forEach((d) => set.add(d));
     return set;
   }, [userId, cloudDates]);
-
   const submittedDates = useMemo(() => listLocalSubmittedDatesForUser(userId), [userId, ws]);
-
   const trainerDates = useMemo(() => listLocalTrainerDatesForUser(userId), [userId, ws]);
 
-  // ============= Input batching for Parts answers =============
+  /* ===== Batched input → ws (sets timestamps and status) ===== */
   const draftRef = useRef({ p1: {}, p2: {}, p3: {} });
   const flushTimerRef = useRef(null);
   const scheduleFlush = useCallback(() => {
     if (flushTimerRef.current) return;
     flushTimerRef.current = setTimeout(() => {
-      const d = draftRef.current;
-      draftRef.current = { p1: {}, p2: {}, p3: {} };
-
+      const d = draftRef.current; draftRef.current = { p1: {}, p2: {}, p3: {} };
       if (Object.keys(d.p1).length || Object.keys(d.p2).length || Object.keys(d.p3).length) {
+        setStatus("変更あり（未同期）");
         setWs((cur) => {
           const ts = nowISO();
           const next = { ...cur, parts: { ...cur.parts } };
 
-          // Part1
           if (Object.keys(d.p1).length) {
             const prevAns = cur.parts.part1.answers || {};
             const prevTs  = cur.parts.part1.answersUpdatedAt || {};
@@ -706,8 +517,6 @@ useEffect(() => {
             for (const id in d.p1) { newAns[id] = d.p1[id]; newTs[id] = ts; }
             next.parts.part1 = { ...cur.parts.part1, answers: newAns, answersUpdatedAt: newTs };
           }
-
-          // Part2
           if (Object.keys(d.p2).length) {
             const prevAns = cur.parts.part2.answers || {};
             const prevTs  = cur.parts.part2.answersUpdatedAt || {};
@@ -721,8 +530,6 @@ useEffect(() => {
             }
             next.parts.part2 = { ...cur.parts.part2, answers: newAns, answersUpdatedAt: newTs };
           }
-
-          // Part3
           if (Object.keys(d.p3).length) {
             const prevAns = cur.parts.part3.answers || {};
             const prevTs  = cur.parts.part3.answersUpdatedAt || {};
@@ -731,43 +538,63 @@ useEffect(() => {
             for (const id in d.p3) { newAns[id] = d.p3[id]; newTs[id] = ts; }
             next.parts.part3 = { ...cur.parts.part3, answers: newAns, answersUpdatedAt: newTs };
           }
-
           return next;
         });
       }
-      clearTimeout(flushTimerRef.current);
-      flushTimerRef.current = null;
+      clearTimeout(flushTimerRef.current); flushTimerRef.current = null;
     }, 300);
   }, []);
 
-  // ============= Cloud auto-sync =============
+  /* ===== 60s idle autosave to cloud ===== */
   const lastChangeRef = useRef(Date.now());
-  useEffect(() => { lastChangeRef.current = Date.now(); }, [ws]); // update timestamp on any ws change
-
+  useEffect(() => { lastChangeRef.current = Date.now(); }, [ws]);
   useEffect(() => {
     const id = setInterval(async () => {
       const idleFor = Date.now() - lastChangeRef.current;
       if (idleFor >= 60000) {
         try {
           setStatus("自動同期中…");
-          await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
-  asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
+          await cloudSave({
+            userId, dateISO,
+            data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+            asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
+          });
           setStatus("自動同期完了");
           refreshCloudDates();
         } catch {
           setStatus("自動同期失敗：後で再試行");
         }
-        lastChangeRef.current = Date.now(); // reset
+        lastChangeRef.current = Date.now();
       }
     }, 5000);
     return () => clearInterval(id);
   }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates]);
 
+  /* ===== Trainer fast autosave (1.5s debounce) ===== */
+  useEffect(() => {
+    if (mode !== "trainer") return;
+    const t = setTimeout(async () => {
+      try {
+        await cloudSave({
+          userId, dateISO,
+          data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+          asTrainer: true, pin: pinInput,
+        });
+        refreshCloudDates();
+      } catch {}
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [ws, mode, userId, dateISO, pinInput, refreshCloudDates]);
+
+  /* ===== Manual sync ===== */
   const doSync = useCallback(async (reason = "同期") => {
     try {
       setStatus(`${reason}中…`);
-      await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
-  asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
+      await cloudSave({
+        userId, dateISO,
+        data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+        asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
+      });
       setStatus(`${reason}完了`);
       refreshCloudDates();
     } catch {
@@ -775,66 +602,47 @@ useEffect(() => {
     }
   }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates]);
 
-  // === 講師モードの高速自動保存（1.5秒デバウンス） ===
-useEffect(() => {
-  if (mode !== "trainer") return;
-  const t = setTimeout(async () => {
-    try {
-      // “保存中”のちらつきを避けるためステータスは控えめに
-      await cloudSave({
-        userId,
-        dateISO,
-        data: { ...ws, meta: { ...ws.meta, date: dateISO } },   // ★ここ
-        asTrainer: true,
-        pin: pinInput
-      });
-      refreshCloudDates();
-    } catch {
-      // 失敗しても既存の60秒アイドル保存がフォローする
-    }
-  }, 1500); // 1.5秒デバウンス
-  return () => clearTimeout(t);
-}, [ws, mode, userId, dateISO, pinInput, refreshCloudDates]);
-
-  // === クラウドから取得してマージ（学習者回答は上書きしない） ===
-const fetchAndMerge = useCallback(async () => {
-  try {
-    const remote = await cloudLoad({ userId, dateISO });
-    if (remote && remote.data) {
-      // ここで学習者の回答は mergeWs が守る、講師の出題・採点・コメントは反映される
-      setWs((cur) => mergeWs(ensureMaps(cur), ensureMaps(remote.data)));
-    }
-  } catch {
-    // オフライン等は無視
-  }
-}, [userId, dateISO]);
-
+  /* ===== Submit ===== */
   const submit = useCallback(() => {
     setWs((c) => ({ ...c, submittedAt: new Date().toISOString() }));
     doSync("提出");
   }, [doSync]);
 
-  const switchToTrainer = useCallback(() => {
-    if (pinInput === DEFAULT_PIN) { setMode("trainer"); } else { alert("PINが違います。"); }
-  }, [pinInput]);
+  const switchToTrainer = useCallback(() => { if (pinInput === DEFAULT_PIN) setMode("trainer"); else alert("PINが違います。"); }, [pinInput]);
   const switchToStudent = useCallback(() => setMode("student"), []);
 
-  // === 出題を初期状態へリセット（講師モード専用） ===
-const resetQuestions = useCallback(() => {
-  if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
+  /* ===== Fetch & merge loop (for other devices) ===== */
+  const fetchAndMerge = useCallback(async () => {
+    try {
+      const remote = await cloudLoad({ userId, dateISO });
+      if (remote && remote.data) {
+        setWs((cur) => mergeWs(ensureMaps(cur, dateISO), ensureMaps(remote.data, dateISO)));
+      }
+    } catch {}
+  }, [userId, dateISO]);
+  useEffect(() => {
+    const id = setInterval(fetchAndMerge, 10000);
+    const onVis = () => { if (document.visibilityState === "visible") fetchAndMerge(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
+  }, [fetchAndMerge]);
 
-  setWs((cur) => {
-    const next = defaultWorksheet(cur.meta.date); // 同じ日付のデフォルトに戻す
-    // テーマは維持（Aki要望）
-    next.meta.theme = cur.meta.theme || "";
-    return next;
-  });
+  /* ===== Flush on unload/hidden ===== */
+  useEffect(() => {
+    const flushNow = () => {
+      try {
+        const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+        localStorage.setItem(`${LS_PREFIX}${userId}:${dateISO}`, JSON.stringify(normalized));
+        snapshotLocal(userId, dateISO, normalized);
+      } catch {}
+    };
+    const onVis = () => { if (document.visibilityState === "hidden") flushNow(); };
+    window.addEventListener("beforeunload", flushNow);
+    document.addEventListener("visibilitychange", onVis);
+    return () => { window.removeEventListener("beforeunload", flushNow); document.removeEventListener("visibilitychange", onVis); };
+  }, [userId, dateISO, ws]);
 
-  setStatus("出題を初期化しました");
-  doSync("出題リセット"); // 即座に同期
-}, [doSync]);
-
-  // ===================== UI Shell =====================
+  /* ===== UI Shell ===== */
   const Card = ({ title, children, instructions }) => (
     <section className="container" style={{ padding: "12px 16px" }}>
       <div className="card">
@@ -848,63 +656,42 @@ const resetQuestions = useCallback(() => {
   );
 
   const ThemeBar = React.memo(() => (
-  <Card title="本日のテーマ">
-    {mode === "trainer" ? (
-      <DebouncedInput
-        id="theme"
-        key="theme"
-        multiline
-        rows={2}
-        autoGrow
-        className="input field-full"
-        placeholder="Week 4｜Tuesday（Emergency）- ..."
-        value={ws.meta.theme}
-        onChange={(v) =>
-          setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))
-        }
-      />
-    ) : (
-      // 学習者：プレーンテキスト表示のみ（編集不可）
-      <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>
-        {ws.meta.theme || "（未設定）"}
-      </p>
-    )}
-  </Card>
-));
+    <Card title="本日のテーマ">
+      {mode === "trainer" ? (
+        <DebouncedInput
+          multiline rows={2} autoGrow className="input field-full"
+          placeholder="Week 4｜Tuesday（Emergency）- ..."
+          value={ws.meta.theme}
+          onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))}
+        />
+      ) : (
+        <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>{ws.meta.theme || "（未設定）"}</p>
+      )}
+    </Card>
+  ));
 
-  // Part1 Row
+  /* ===== Part 1 ===== */
   const Part1Row = React.memo(function Part1Row({ it }) {
     const answerMap = ws.parts.part1.answers || {};
-    const answer = answerMap[it.id] !== undefined ? answerMap[it.id] : "";
-    const mark = (ws.parts.part1.marks || {})[it.id];   // 'ok' | 'wrong' | undefined
+    const answer = answerMap[it.id] ?? "";
+    const mark = (ws.parts.part1.marks || {})[it.id];
     const isWrong = mark === "wrong";
     const isOk = mark === "ok";
 
     const onChangeWord = (v) =>
       setWs((cur) => ({
-        ...cur,
-        parts: {
-          ...cur.parts,
-          part1: {
-            ...cur.parts.part1,
-            items: cur.parts.part1.items.map((x) => (x.id === it.id ? { ...x, en: v } : x)),
-          },
-        },
+        ...cur, parts: { ...cur.parts,
+          part1: { ...cur.parts.part1, items: cur.parts.part1.items.map((x) => (x.id === it.id ? { ...x, en: v } : x)) }
+        }
       }));
 
     const onChangeAnswer = (v) => { draftRef.current.p1[it.id] = v; scheduleFlush(); };
 
     const setMark = (val) =>
-      setWs((cur) => ({
-        ...cur,
-        parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } } },
-      }));
+      setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } } }}));
 
     const clearMark = () =>
-      setWs((cur) => {
-        const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id];
-        return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } };
-      });
+      setWs((cur) => { const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id]; return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } }; });
 
     const removeItem = () =>
       setWs((cur) => {
@@ -915,11 +702,11 @@ const resetQuestions = useCallback(() => {
       });
 
     return (
-      <div className="p1-row">
+      <div className="p1-row" style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
         {mode === "trainer" ? (
           <DebouncedInput className="input p1-word" value={it.en} onChange={onChangeWord} />
         ) : (
-          <span className="p1-word">{it.en}</span>
+          <span className="p1-word" style={{ fontWeight: 600, minWidth: 88 }}>{it.en}</span>
         )}
 
         <DebouncedInput
@@ -951,138 +738,83 @@ const resetQuestions = useCallback(() => {
       </div>
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button
-            className="btn btn-primary"
-            onClick={() =>
-              setWs((cur) => ({
-                ...cur,
-                parts: {
-                  ...cur.parts,
-                  part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "new word" }] },
-                },
-              }))
-            }
-          >
-            語彙を追加
-          </button>
+          <button className="btn btn-primary" onClick={() =>
+            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "new word" }] } }}))
+          }>語彙を追加</button>
         </div>
       )}
-      {/* Trainer notes for Part1 */}
       {mode === "trainer" ? (
         <div style={{ marginTop: 12 }}>
           <div className="label">講師コメント</div>
-          <DebouncedInput
-            id="p1-notes" key="p1-notes" multiline rows={3} autoGrow
-            className="input field-full teacher-comment"
+          <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
             value={ws.parts.part1.trainerNotes || ""}
-            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } }))}
-          />
+            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } }))} />
         </div>
       ) : ws.parts.part1.trainerNotes ? (
-        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
+        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
           <strong>講師コメント：</strong><br />{ws.parts.part1.trainerNotes}
         </div>
       ) : null}
     </Card>
   ));
 
-  // ===================== Part 2 =====================
+  /* ===== Part 2 ===== */
   const Part2 = React.memo(function Part2() {
     return (
       <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
         {ws.parts.part2.items.map((it) => {
-          const ansMap = ws.parts.part2.answers || {};
-          const ans = ansMap[it.id] || { en: "", ja: "" };
-
-          const rawMarks = ws.parts.part2.marks || {};
-          const m = rawMarks[it.id] || {};
-          const enWrong = m.en === "wrong";
-          const enOk    = m.en === "ok";
-          const jaWrong = m.ja === "wrong";
-          const jaOk    = m.ja === "ok";
+          const ans = (ws.parts.part2.answers || {})[it.id] || { en: "", ja: "" };
+          const m = ((ws.parts.part2.marks || {})[it.id]) || {};
+          const enWrong = m.en === "wrong", enOk = m.en === "ok";
+          const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
 
           const setMark2 = (field, val) =>
-            setWs((c) => ({
-              ...c,
-              parts: {
-                ...c.parts,
-                part2: {
-                  ...c.parts.part2,
-                  marks: {
-                    ...(c.parts.part2.marks || {}),
-                    [it.id]: { ...((c.parts.part2.marks || {})[it.id]), [field]: val },
-                  },
-                },
-              },
-            }));
-
+            setWs((c) => ({ ...c, parts: { ...c.parts, part2: {
+              ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), [field]: val } }
+            }}}));
           const clearMark2 = (field) =>
-            setWs((c) => {
-              const base = { ...(c.parts.part2.marks || {}) };
-              const rec = { ...(base[it.id] || {}) };
-              delete rec[field];
-              base[it.id] = rec;
+            setWs((c) => { const base = { ...(c.parts.part2.marks || {}) }; const rec = { ...(base[it.id] || {}) }; delete rec[field]; base[it.id] = rec;
               return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
             });
 
           return (
             <div key={it.id} style={{ marginBottom: 12 }}>
-              {/* 1行目：出題 */}
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 {mode === "trainer" ? (
-                  <DebouncedInput
-                    className="input field-full"
-                    value={it.prompt}
-                    onChange={(v) =>
-                      setWs((cur) => ({
-                        ...cur,
-                        parts: {
-                          ...cur.parts,
-                          part2: {
-                            ...cur.parts.part2,
-                            items: cur.parts.part2.items.map((x) => (x.id === it.id ? { ...x, prompt: v } : x)),
-                          },
-                        },
-                      }))
-                    }
+                  <DebouncedInput className="input field-full" value={it.prompt}
+                    onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => x.id === it.id ? { ...x, prompt: v } : x) } }}))}
                   />
                 ) : (
                   <p style={{ margin: 0, lineHeight: 1.6, flex: 1 }}>{it.prompt}</p>
                 )}
               </div>
 
-              {/* 2行目：学習者回答（英語）＋ 採点（英語用） */}
-              <div className="row" style={{ marginTop: 8 }}>
-                <div className="flex-1">
-                  <DebouncedInput
-                    className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
-                    placeholder="英語の答え（穴埋め）"
-                    value={ans.en ?? ""}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <DebouncedInput className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
+                    placeholder="英語の答え（穴埋め）" value={ans.en ?? ""}
                     onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v }; scheduleFlush(); }}
                   />
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    <button className="mark-btn ok"    onClick={() => setMark2("en", "ok")}>○</button>
+                    <button className="mark-btn ok" onClick={() => setMark2("en", "ok")}>○</button>
                     <button className="mark-btn wrong" onClick={() => setMark2("en", "wrong")}>×</button>
                     <button className="mark-btn clear" onClick={() => clearMark2("en")}>消</button>
                   </div>
                 )}
               </div>
 
-              {/* 3行目：学習者回答（日本語）＋ 採点（日本語用） */}
-              <div className="row" style={{ marginTop: 8 }}>
-                <div className="flex-1">
-                  <DebouncedInput
-                    className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
-                    placeholder="日本語訳"
-                    value={ans.ja ?? ""}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <DebouncedInput className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
+                    placeholder="日本語訳" value={ans.ja ?? ""}
                     onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v }; scheduleFlush(); }}
                   />
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    <button className="mark-btn ok"    onClick={() => setMark2("ja", "ok")}>○</button>
+                    <button className="mark-btn ok" onClick={() => setMark2("ja", "ok")}>○</button>
                     <button className="mark-btn wrong" onClick={() => setMark2("ja", "wrong")}>×</button>
                     <button className="mark-btn clear" onClick={() => clearMark2("ja")}>消</button>
                   </div>
@@ -1092,19 +824,15 @@ const resetQuestions = useCallback(() => {
           );
         })}
 
-        {/* 講師コメント */}
         {mode === "trainer" ? (
           <div style={{ marginTop: 12 }}>
             <div className="label">講師コメント</div>
-            <DebouncedInput
-              multiline rows={3} autoGrow
-              className="input field-full teacher-comment"
+            <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
               value={ws.parts.part2.trainerNotes || ""}
-              onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))}
-            />
+              onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))} />
           </div>
         ) : ws.parts.part2.trainerNotes ? (
-          <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
+          <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
             <strong>講師コメント：</strong><br />{ws.parts.part2.trainerNotes}
           </div>
         ) : null}
@@ -1112,70 +840,32 @@ const resetQuestions = useCallback(() => {
     );
   });
 
-  // ===================== Part 3 =====================
+  /* ===== Part 3 ===== */
   const Part3 = React.memo(() => (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
       {ws.parts.part3.items.map((it) => {
         const m3 = (ws.parts.part3.marks || {})[it.id];
-        const wrong3 = m3 === "wrong";
-        const ok3 = m3 === "ok";
+        const wrong3 = m3 === "wrong", ok3 = m3 === "ok";
 
         const setMark3 = (val) =>
-          setWs((c) => ({
-            ...c,
-            parts: { ...c.parts, part3: { ...c.parts.part3, marks: { ...(c.parts.part3.marks || {}), [it.id]: val } } },
-          }));
+          setWs((c) => ({ ...c, parts: { ...c.parts, part3: { ...c.parts.part3, marks: { ...(c.parts.part3.marks || {}), [it.id]: val } } }}));
         const clearMark3 = () =>
-          setWs((c) => {
-            const m = { ...(c.parts.part3.marks || {}) };
-            delete m[it.id];
-            return { ...c, parts: { ...c.parts, part3: { ...c.parts.part3, marks: m } } };
-          });
+          setWs((c) => { const m = { ...(c.parts.part3.marks || {}) }; delete m[it.id]; return { ...c, parts: { ...c.parts, part3: { ...c.parts.part3, marks: m } } }; });
 
         return (
           <div key={it.id} style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
               <div style={{ flex: 1 }}>
                 {mode === "trainer" ? (
-                  <DebouncedInput
-                    className="input field-full"
-                    style={{ marginBottom: 6 }}
-                    value={it.otherRole || ""}
-                    placeholder="相手役の名前（例：Coworker）"
-                    onChange={(v) =>
-                      setWs((cur) => ({
-                        ...cur,
-                        parts: {
-                          ...cur.parts,
-                          part3: {
-                            ...cur.parts.part3,
-                            items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherRole: v } : x)),
-                          },
-                        },
-                      }))
-                    }
+                  <DebouncedInput className="input field-full" style={{ marginBottom: 6 }}
+                    value={it.otherRole || ""} placeholder="相手役の名前（例：Coworker）"
+                    onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => x.id === it.id ? { ...x, otherRole: v } : x) } }}))}
                   />
-                ) : it.otherRole ? (
-                  <div className="label" style={{ marginBottom: 6 }}>{it.otherRole}</div>
-                ) : null}
+                ) : it.otherRole ? <div className="label" style={{ marginBottom: 6 }}>{it.otherRole}</div> : null}
 
                 {mode === "trainer" ? (
-                  <DebouncedInput
-                    className="input field-full"
-                    placeholder="相手の英語セリフ"
-                    value={it.otherEn || ""}
-                    onChange={(v) =>
-                      setWs((cur) => ({
-                        ...cur,
-                        parts: {
-                          ...cur.parts,
-                          part3: {
-                            ...cur.parts.part3,
-                            items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, otherEn: v } : x)),
-                          },
-                        },
-                      }))
-                    }
+                  <DebouncedInput className="input field-full" placeholder="相手の英語セリフ" value={it.otherEn || ""}
+                    onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => x.id === it.id ? { ...x, otherEn: v } : x) } }}))}
                   />
                 ) : (
                   <p style={{ margin: 0, lineHeight: 1.6 }}>{it.otherEn}</p>
@@ -1184,10 +874,9 @@ const resetQuestions = useCallback(() => {
             </div>
 
             <div style={{ marginTop: 8 }}>
-              {/* ← 左端を1行目に揃える：paddingLeft削除 */}
               <div className="label">Masayuki</div>
-              <div className="row">{/* 横並びレイアウト */}
-                <div className="flex-1">{/* 入力はフル幅で確保 */}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
                   <DebouncedInput
                     multiline rows={2} autoGrow
                     className={`input field-full ${wrong3 ? "answer-wrong" : ""} ${ok3 ? "answer-correct" : ""}`}
@@ -1207,19 +896,8 @@ const resetQuestions = useCallback(() => {
 
               <div className="label" style={{ marginTop: 8 }}>日本語</div>
               {mode === "trainer" ? (
-                <DebouncedInput
-                  multiline rows={2} autoGrow
-                  className="input field-full"
-                  value={it.jp || ""}
-                  onChange={(v) =>
-                    setWs((cur) => ({
-                      ...cur,
-                      parts: {
-                        ...cur.parts,
-                        part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => (x.id === it.id ? { ...x, jp: v } : x)) },
-                      },
-                    }))
-                  }
+                <DebouncedInput multiline rows={2} autoGrow className="input field-full" value={it.jp || ""}
+                  onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: cur.parts.part3.items.map((x) => x.id === it.id ? { ...x, jp: v } : x) } }}))}
                 />
               ) : (
                 <p style={{ margin: 0, lineHeight: 1.6 }}>{it.jp}</p>
@@ -1230,164 +908,91 @@ const resetQuestions = useCallback(() => {
       })}
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button
-            className="btn btn-primary"
-            onClick={() =>
-              setWs((cur) => ({
-                ...cur,
-                parts: {
-                  ...cur.parts,
-                  part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] },
-                },
-              }))
-            }
-          >
-            セリフを追加
-          </button>
+          <button className="btn btn-primary" onClick={() =>
+            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } }}))
+          }>セリフを追加</button>
         </div>
       )}
-      {/* Trainer notes for Part3 */}
       {mode === "trainer" ? (
         <div style={{ marginTop: 12 }}>
           <div className="label">講師コメント</div>
-          <DebouncedInput
-            id="p3-notes" key="p3-notes" multiline rows={3} autoGrow
-            className="input field-full teacher-comment"
+          <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
             value={ws.parts.part3.trainerNotes || ""}
-            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, trainerNotes: v } } }))}
-          />
+            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, trainerNotes: v } } }))} />
         </div>
       ) : ws.parts.part3.trainerNotes ? (
-        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
+        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
           <strong>講師コメント：</strong><br />{ws.parts.part3.trainerNotes}
         </div>
       ) : null}
     </Card>
   ));
 
-  useEffect(() => {
-    const flushNow = () => {
-      try {
-        const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
-localStorage.setItem(`${LS_PREFIX}${userId}:${dateISO}`, JSON.stringify(normalized));
-snapshotLocal(userId, dateISO, normalized);
-      } catch {}
-    };
-    const onVis = () => { if (document.visibilityState === "hidden") flushNow(); };
-    window.addEventListener("beforeunload", flushNow);
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      window.removeEventListener("beforeunload", flushNow);
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [userId, ws]);
-
-  // Part4 (handwriting)
+  /* ===== Part 4 (handwriting) ===== */
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let drawing = false;
-    const pos = (e) => {
-      const r = canvas.getBoundingClientRect();
-      const t = e.touches && e.touches[0];
-      const x = (t ? t.clientX : e.clientX) - r.left;
-      const y = (t ? t.clientY : e.clientY) - r.top;
-      return { x, y };
-    };
+    const ctx = canvas.getContext("2d"); let drawing = false;
+    const pos = (e) => { const r = canvas.getBoundingClientRect(); const t = e.touches && e.touches[0]; const x = (t ? t.clientX : e.clientX) - r.left; const y = (t ? t.clientY : e.clientY) - r.top; return { x, y }; };
     const start = (e) => { drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
     const move = (e) => { if (!drawing) return; const { x, y } = pos(e); ctx.lineTo(x, y); ctx.stroke(); };
     const end = () => { drawing = false; };
-    canvas.addEventListener("mousedown", start);
-    canvas.addEventListener("mousemove", move);
-    canvas.addEventListener("mouseup", end);
-    canvas.addEventListener("mouseleave", end);
-    canvas.addEventListener("touchstart", start, { passive: true });
-    canvas.addEventListener("touchmove", move, { passive: true });
-    canvas.addEventListener("touchend", end);
+    canvas.addEventListener("mousedown", start); canvas.addEventListener("mousemove", move); canvas.addEventListener("mouseup", end); canvas.addEventListener("mouseleave", end);
+    canvas.addEventListener("touchstart", start, { passive: true }); canvas.addEventListener("touchmove", move, { passive: true }); canvas.addEventListener("touchend", end);
     return () => {
-      canvas.removeEventListener("mousedown", start);
-      canvas.removeEventListener("mousemove", move);
-      canvas.removeEventListener("mouseup", end);
-      canvas.removeEventListener("mouseleave", end);
-      canvas.removeEventListener("touchstart", start);
-      canvas.removeEventListener("touchmove", move);
-      canvas.removeEventListener("touchend", end);
+      canvas.removeEventListener("mousedown", start); canvas.removeEventListener("mousemove", move); canvas.removeEventListener("mouseup", end); canvas.removeEventListener("mouseleave", end);
+      canvas.removeEventListener("touchstart", start); canvas.removeEventListener("touchmove", move); canvas.removeEventListener("touchend", end);
     };
   }, []);
 
   const Part4 = React.memo(() => (
     <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-      <DebouncedInput
-        multiline rows={3} autoGrow
-        className="input field-full"
-        placeholder="ここに英作文を入力してください"
-        value={ws.parts.part4.answer || ""}
-        onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))}
-      />
+      <DebouncedInput multiline rows={3} autoGrow className="input field-full" placeholder="ここに英作文を入力してください"
+        value={ws.parts.part4.answer || ""} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
       <div style={{ marginTop: 12 }}>
         <div className="label">iPad手書き（PNG保存）</div>
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={240}
-          style={{ border: "1px solid #e5e7eb", borderRadius: 8, width: "100%", touchAction: "none" }}
-        />
+        <canvas ref={canvasRef} width={800} height={240} style={{ border: "1px solid #e5e7eb", borderRadius: 8, width: "100%", touchAction: "none" }} />
         <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-          <button
-            className="btn-solid-gray"
-            onClick={() => {
-              const c = canvasRef.current;
-              const dataUrl = c && c.toDataURL ? c.toDataURL("image/png") : null;
-              if (!dataUrl) return;
-              setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, handwriting: dataUrl } } }));
-            }}
-          >
-            手書きを保存
-          </button>
-          {ws.parts.part4.handwriting && (
-            <a className="btn" href={ws.parts.part4.handwriting} download="part4-writing.png">PNGをダウンロード</a>
-          )}
+          <button className="btn-solid-gray" onClick={() => {
+            const c = canvasRef.current; const dataUrl = c && c.toDataURL ? c.toDataURL("image/png") : null; if (!dataUrl) return;
+            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, handwriting: dataUrl } } }));
+          }}>手書きを保存</button>
+          {ws.parts.part4.handwriting && (<a className="btn" href={ws.parts.part4.handwriting} download="part4-writing.png">PNGをダウンロード</a>)}
         </div>
       </div>
-      {/* Trainer notes for Part4 */}
       {mode === "trainer" ? (
         <div style={{ marginTop: 12 }}>
           <div className="label">講師コメント</div>
-          <DebouncedInput
-            id="p4-notes" key="p4-notes" multiline rows={3} autoGrow
-            className="input field-full teacher-comment"
+          <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
             value={ws.parts.part4.trainerNotes || ""}
-            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))}
-          />
+            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))} />
         </div>
       ) : ws.parts.part4.trainerNotes ? (
-        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
+        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
           <strong>講師コメント：</strong><br />{ws.parts.part4.trainerNotes}
         </div>
       ) : null}
     </Card>
   ));
 
+  /* ===== Reset questions (trainer only) ===== */
+  const resetQuestions = useCallback(() => {
+    if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
+    setWs((cur) => { const next = defaultWorksheet(cur.meta.date); next.meta.theme = cur.meta.theme || ""; return next; });
+    setStatus("出題を初期化しました");
+    doSync("出題リセット");
+  }, [doSync]);
+
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(to bottom, #fff, #f9fafb)" }}>
       <Header
-        genre={genre}
-        dateISO={dateISO}
-        status={status}
-        mode={mode}
-        pinInput={pinInput}
-        onPinChange={setPinInput}
-        switchToTrainer={() => { if (pinInput === DEFAULT_PIN) { setMode("trainer"); } else { alert("PINが違います。"); } }}
+        genre={genre} dateISO={dateISO} status={status}
+        mode={mode} pinInput={pinInput} onPinChange={setPinInput}
+        switchToTrainer={() => { if (pinInput === DEFAULT_PIN) setMode("trainer"); else alert("PINが違います。"); }}
         switchToStudent={() => setMode("student")}
-        showCal={showCal}
-        setShowCal={setShowCal}
-        doSync={doSync}
-        submit={submit}
-        userId={userId}
-        markedDates={markedDates}
-        submittedDates={submittedDates}
-        trainerDates={trainerDates}
+        showCal={showCal} setShowCal={setShowCal}
+        doSync={doSync} submit={submit}
+        userId={userId} markedDates={markedDates} submittedDates={submittedDates} trainerDates={trainerDates}
         onPickDate={(iso) => { setDateISO(iso); setShowCal(false); }}
         resetQuestions={resetQuestions}
       />
@@ -1396,18 +1001,14 @@ snapshotLocal(userId, dateISO, normalized);
       <Part2 />
       <Part3 />
       <Part4 />
-      {/* Global Trainer Feedback */}
+
       {mode === "trainer" ? (
         <section className="container" style={{ padding: "12px 16px" }}>
           <div className="card" style={{ padding: "16px" }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 6px" }}>全体フィードバック</h2>
-            <DebouncedInput
-              id="global-notes" key="global-notes" multiline rows={4} autoGrow
-              className="input field-full teacher-comment"
-              placeholder="今日のまとめコメントを入力"
-              value={ws.trainerFeedback || ""}
-              onChange={(v) => setWs((cur) => ({ ...cur, trainerFeedback: v }))}
-            />
+            <DebouncedInput id="global-notes" key="global-notes" multiline rows={4} autoGrow className="input field-full teacher-comment"
+              placeholder="今日のまとめコメントを入力" value={ws.trainerFeedback || ""}
+              onChange={(v) => setWs((cur) => ({ ...cur, trainerFeedback: v }))} />
           </div>
         </section>
       ) : ws.trainerFeedback ? (
@@ -1418,9 +1019,7 @@ snapshotLocal(userId, dateISO, normalized);
           </div>
         </section>
       ) : null}
-      <footer className="container" style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: "#6b7280" }}>
-        ©︎annetmii - 学習を習慣に
-      </footer>
+      <footer className="container" style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: "#6b7280" }}>©︎annetmii - 学習を習慣に</footer>
     </div>
   );
 }
