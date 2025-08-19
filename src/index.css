@@ -255,3 +255,7 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   }
 }
 
+/* iOSの入力ズーム対策：モバイルでは入力フォントは16px以上に */
+@media (max-width: 480px) {
+  input, textarea, .input, .pin-4ch { font-size: 16px !important; }
+}
