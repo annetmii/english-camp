@@ -13,35 +13,35 @@
       "instructions": "英単語の日本語訳を入力してください。",
       "items": [
         {
-          "id": "2e7d1ea0-285e-4661-a192-eb0e24fb6e72",
+          "id": "d0baab0b-14ee-4f0e-a4b5-d18cf6b3b726",
           "en": "warning"
         },
         {
-          "id": "32960fe7-3f63-416c-ae0b-dd1c00b166eb",
+          "id": "a410bb38-2f90-4039-9c4c-13c6a50feb47",
           "en": "shelter"
         },
         {
-          "id": "5dffe134-a270-4260-ac38-07acb2de0835",
+          "id": "58e61965-5aff-4efb-a8a6-7321a21fb7b1",
           "en": "evacuate"
         },
         {
-          "id": "c00fe93c-f417-4220-a58d-6c15bbdc83f8",
+          "id": "9ca79a1c-1466-4024-a7d6-ffeb32b98cee",
           "en": "calm"
         },
         {
-          "id": "a45cacfa-85e8-4c2a-b81c-88a23951ee0f",
+          "id": "973ceaf0-84fd-4aff-946e-017f8c49fdfc",
           "en": "debris"
         },
         {
-          "id": "4a912b2a-a771-46e2-b0fa-da012735864b",
+          "id": "86760c2a-9a07-48aa-a9c0-d6dd17ce5197",
           "en": "inspect"
         },
         {
-          "id": "23bd7784-48fd-47f5-986e-c6097b292f83",
+          "id": "02a9af63-1fb2-4fcc-973a-b12be3f8bf36",
           "en": "help"
         },
         {
-          "id": "11f8be57-adcb-4663-bb5e-cd182bebdd82",
+          "id": "bb884e47-d231-4911-b221-01240fcb7a27",
           "en": "take cover"
         }
       ],
@@ -54,23 +54,23 @@
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
       "items": [
         {
-          "id": "56232c3e-ec4f-4658-94bc-7243018d806d",
+          "id": "96083821-0a31-459a-b05c-6df9490741e1",
           "prompt": "We need to follow the ______ from the radio."
         },
         {
-          "id": "05a6a421-feff-4ea3-a510-335151fffba5",
+          "id": "09667449-3749-4f36-baf3-108ea72e15f5",
           "prompt": "Please stay ______ until we know it’s safe."
         },
         {
-          "id": "72f38da9-ee8a-4fe6-98c5-5ac7a6a838b7",
+          "id": "09cccb3c-4b0e-46af-a083-17711084332e",
           "prompt": "Let’s ______ the area before it’s too dangerous."
         },
         {
-          "id": "e14655d3-d09f-47a7-8f9f-412945ff80c9",
+          "id": "cd4f0f4c-fecb-4c8f-8153-b15406590a40",
           "prompt": "The city sent volunteers to ______ the elderly."
         },
         {
-          "id": "ad124809-e1ab-40dc-9db0-bc372a5ba74f",
+          "id": "f4b1a11f-70d1-49e1-9055-7b4e1ed5776a",
           "prompt": "After the storm, we need to ______ the power lines."
         }
       ],
@@ -83,25 +83,25 @@
       "instructions": "英文を入力して会話を完成させてください。",
       "items": [
         {
-          "id": "ea28694d-514d-4437-b994-ab4e16b2e9ea",
+          "id": "2ce6e883-c008-4f64-aa46-bacd1b69028f",
           "otherRole": "Coworker",
           "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
           "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
         },
         {
-          "id": "10e62d80-f542-4b91-9b66-021ba8acce6a",
+          "id": "9be1e120-ce1e-486e-9005-14717e0fea23",
           "otherRole": "Coworker",
           "otherEn": "Please stay calm and follow the official instructions.",
           "jp": "まずは警告を確認して指示に従いましょう。"
         },
         {
-          "id": "43567336-beb6-4024-9ec1-b7e49873f6a5",
+          "id": "ac5da717-7c77-4d84-9c72-31567afb3b96",
           "otherRole": "Coworker",
           "otherEn": "Shall we evacuate to higher ground now?",
           "jp": "はい。急いで準備をして高台に行きましょう。"
         },
         {
-          "id": "56b1d8a7-3ca2-4750-9fbb-6d8d99836099",
+          "id": "00c722a6-8019-477a-9c67-6b35bb84bc19",
           "otherRole": "Coworker",
           "otherEn": "Do you need any help with your bag?",
           "jp": "いいえ。一緒に安全を確保しましょう。"
