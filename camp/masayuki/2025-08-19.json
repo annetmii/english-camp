@@ -80,11 +80,11 @@
         },
         {
           "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
-          "prompt": "The doctor asked me to fill out a ＿＿＿＿＿ before the examination."
+          "prompt": ""
         },
         {
           "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
-          "prompt": "The patient was nervous when the nurse picked up the ＿＿＿＿＿＿."
+          "prompt": ""
         }
       ],
       "answers": {
@@ -110,27 +110,27 @@
       "items": [
         {
           "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
-          "otherRole": "Nurse",
-          "otherEn": "Good morning, Masayuki. Do you have your health insurance card and health history form?",
-          "jp": "はい、こちらです。今日の予約に必要な資料全て持参しました。"
+          "otherRole": "Coworker",
+          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
+          "jp": ""
         },
         {
           "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
-          "otherRole": "Nurse",
-          "otherEn": "Great. First, I’ll check your blood pressure and then take your temperature.",
-          "jp": "わかりました。自宅で測った時は、熱はありませんでした。"
+          "otherRole": "Coworker",
+          "otherEn": "Please stay calm and follow the official instructions.",
+          "jp": "まずは警告を確認して指示に従いましょう。"
         },
         {
           "id": "30ab5fdb-9e4e-4c34-8551-0a382057e42e",
-          "otherRole": "Doctor",
-          "otherEn": "Hello, Masayuki. I’ll examine your throat.",
-          "jp": "特に喉の痛みや違和感はありません。"
+          "otherRole": "Coworker",
+          "otherEn": "Shall we evacuate to higher ground now?",
+          "jp": "はい。急いで準備をして高台に行きましょう。"
         },
         {
           "id": "ba514455-e224-4eb2-94b2-72dca770d876",
-          "otherRole": "Doctor",
-          "otherEn": "Great. Finally, we may need a blood test, so the nurse will draw your blood.",
-          "jp": "はい。注射は何度も経験していますが、苦手です。"
+          "otherRole": "Coworker",
+          "otherEn": "Do you need any help with your bag?",
+          "jp": "いいえ。一緒に安全を確保しましょう。"
         }
       ],
       "answers": {},
