@@ -231,10 +231,27 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
 
-/* モバイルでは縦並び＋入力は常に100%幅（Part2と同じ見た目） */
+/* === Part1：PCは横並びで英単語は折り返さない。入力は残り幅いっぱい === */
+.p1-row { display: flex; gap: 12px; align-items: center; }
+.p1-word {
+  font-weight: 600;
+  min-width: 120px;          /* 余裕を少し増やす（お好みで 88〜140px） */
+  white-space: nowrap;       /* ← 折り返し禁止（PC向け） */
+  flex: 0 0 auto;            /* つぶれ防止：固定幅として扱う */
+}
+.p1-answer { flex: 1; max-width: 100%; }   /* 入力は残り幅を占有 */
+
+/* === iPhoneなど狭幅：縦並び＆入力は100%幅。英単語は折り返し可に戻す === */
 @media (max-width: 480px) {
   .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word { min-width: 0; width: 100%; display: block; }
-  .p1-row .p1-answer { width: 100%; }        /* ← これでPart2と同じ幅に */
-  .p1-row .input.field-full { width: 100%; }  /* 念のための保険 */
+  .p1-word {
+    min-width: 0;
+    width: 100%;
+    white-space: normal;      /* ← モバイルでは折り返しOK */
+  }
+  .p1-row .p1-answer {
+    width: 100%;
+    flex: initial;
+  }
 }
+
