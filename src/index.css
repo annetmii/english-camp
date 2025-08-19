@@ -205,3 +205,13 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .hdr-btn.submit-btn:active {
   transform: scale(0.98);
 }
+
+/* 出題リセット（サイズは .hdr-btn と同一。色のみ変更） */
+.hdr-btn.danger-btn {
+  background: #fff;
+  color: #b91c1c;         /* 赤文字 */
+  border: 1px solid #ef4444;
+}
+.hdr-btn.danger-btn:active {
+  transform: scale(0.98);
+}
