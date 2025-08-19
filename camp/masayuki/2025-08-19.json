@@ -46,15 +46,21 @@
         }
       ],
       "answers": {
-        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "警告",
-        "c0e39871-6756-4da7-971a-e81effd5b929": "シェルター",
-        "9f8d4567-9930-4a05-ad55-1d4667065989": "避難",
-        "147423b0-529c-4479-b69e-eb6144b3fdb0": "落ち着き",
-        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "ヘルプ"
+        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "",
+        "c0e39871-6756-4da7-971a-e81effd5b929": "",
+        "9f8d4567-9930-4a05-ad55-1d4667065989": "",
+        "147423b0-529c-4479-b69e-eb6144b3fdb0": "",
+        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": ""
       },
-      "trainerNotes": "Perfect！その調子です",
+      "trainerNotes": "",
       "marks": {},
-      "answersUpdatedAt": {}
+      "answersUpdatedAt": {
+        "c7ba2088-8bc0-4440-98e2-46e78b88cae7": "2025-08-19T11:52:59.741Z",
+        "c0e39871-6756-4da7-971a-e81effd5b929": "2025-08-19T11:53:01.961Z",
+        "9f8d4567-9930-4a05-ad55-1d4667065989": "2025-08-19T11:53:04.131Z",
+        "147423b0-529c-4479-b69e-eb6144b3fdb0": "2025-08-19T11:53:06.284Z",
+        "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "2025-08-19T11:53:08.969Z"
+      }
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -83,16 +89,19 @@
       ],
       "answers": {
         "4f059020-5a55-426f-bf7a-b1c950762f21": {
-          "en": "instruction",
+          "en": "",
           "ja": ""
         }
       },
-      "trainerNotes": "惜しい！",
+      "trainerNotes": "",
       "marks": {
         "4f059020-5a55-426f-bf7a-b1c950762f21": {}
       },
       "answersUpdatedAt": {
-        "4f059020-5a55-426f-bf7a-b1c950762f21": {}
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {
+          "en": "2025-08-19T11:53:32.343Z",
+          "ja": "2025-08-19T11:53:32.343Z"
+        }
       }
     },
     "part3": {
@@ -103,7 +112,7 @@
           "id": "19118020-e575-4d0c-9fb4-9ea7f8c31797",
           "otherRole": "Coworker",
           "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
-          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
+          "jp": ""
         },
         {
           "id": "e2e71eb5-3a1b-47f2-b647-c4ab98b960c1",
@@ -125,7 +134,7 @@
         }
       ],
       "answers": {},
-      "trainerNotes": "惜しい！",
+      "trainerNotes": "",
       "marks": {},
       "answersUpdatedAt": {}
     },
@@ -134,9 +143,9 @@
       "instructions": "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。",
       "answer": "",
       "handwriting": null,
-      "trainerNotes": "いいね"
+      "trainerNotes": ""
     }
   },
-  "trainerFeedback": "いいね",
+  "trainerFeedback": "",
   "submittedAt": null
 }
