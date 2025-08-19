@@ -205,7 +205,7 @@ function listLocalSubmittedDatesForUser(userId) {
   return dates;
 }
 
-function MonthCalendar({ dateISO, onSelect, marked, submitted }) {
+function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
   const d = new Date(`${dateISO}T00:00:00`);
   const y = d.getFullYear();
   const m = d.getMonth();
@@ -269,6 +269,7 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted }) {
           const selected = iso === dateISO;
           const hasAny = marked.has(iso);
           const hasSubmit = submitted && submitted.has(iso);
+        const hasTrainer = trainer  && trainer.has(iso);
           return (
             <button
               key={iso}
@@ -285,9 +286,9 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted }) {
             >
               {String(dt.getDate())}
               {hasAny && (
-                <span
-                  className={`cal-dot ${hasSubmit ? "cal-submit" : "cal-any"}`}
-                />
+                <span className={`cal-dot ${
+                  hasTrainer ? 'cal-trainer' : (hasSubmit ? 'cal-submit' : 'cal-any')
+                }`} />
               )}
             </button>
           );
@@ -295,6 +296,35 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted }) {
       </div>
     </div>
   );
+}
+
+// ③ 講師が採点/コメントした日（marks or trainerNotes or trainerFeedback が存在）を集める
+function listLocalTrainerDatesForUser(userId) {
+  const prefix = `${LS_PREFIX}${userId}:`;
+  const dates = new Set();
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i) || "";
+    if (!k.startsWith(prefix)) continue;
+    try {
+      const raw = localStorage.getItem(k);
+      const obj = JSON.parse(raw || "{}");
+      const p = obj?.parts || {};
+      const hasMarks =
+        (p.part1 && p.part1.marks && Object.keys(p.part1.marks).length) ||
+        (p.part2 && p.part2.marks && Object.keys(p.part2.marks).length) ||
+        (p.part3 && p.part3.marks && Object.keys(p.part3.marks).length);
+      const hasNotes =
+        (p.part1 && p.part1.trainerNotes) ||
+        (p.part2 && p.part2.trainerNotes) ||
+        (p.part3 && p.part3.trainerNotes) ||
+        (obj && obj.trainerFeedback);
+      if (hasMarks || hasNotes) {
+        const d = k.substring(prefix.length, prefix.length + 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.add(d);
+      }
+    } catch {}
+  }
+  return dates;
 }
 
 // ===================== Data Model =====================
@@ -486,6 +516,7 @@ const Header = React.memo(function Header({
   userId,
   markedDates,
   submittedDates,
+  trainerDates,
   onPickDate,
 }) {
   return (
@@ -573,15 +604,7 @@ const Header = React.memo(function Header({
               >
                 同期
               </button>
-              <button
-                className="hdr-btn-primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  submit();
-                }}
-              >
-                提出
-              </button>
+              <button className="hdr-btn-submit" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>
               ステータス：{status}
@@ -612,7 +635,8 @@ const Header = React.memo(function Header({
               onPickDate(iso);
             }}
             marked={markedDates}
-            submitted={submittedDates}
+            submitted={submittedDates
+            trainer={trainerDates}
           />
         </div>
       )}
@@ -710,6 +734,10 @@ export default function App() {
   const submittedDates = useMemo(() => {
     return listLocalSubmittedDatesForUser(userId);
   }, [userId, ws]); // ws 更新でも再判定
+
+  const trainerDates = useMemo(() => {
+  return listLocalTrainerDatesForUser(userId);
+}, [userId, ws]); // ws 変化時に再判定
 
   // ============= Input batching for Parts answers =============
   const draftRef = useRef({ p1: {}, p2: {}, p3: {} });
@@ -1537,6 +1565,7 @@ export default function App() {
         userId={userId}
         markedDates={markedDates}
         submittedDates={submittedDates}
+        trainerDates={trainerDates}
         onPickDate={(iso) => {
           setDateISO(iso);
           setShowCal(false);
