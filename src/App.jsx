@@ -163,7 +163,7 @@ const defaultWorksheet = (dateISO) => ({
   parts: {
     part1: {
       label: "Part 1｜語彙チェック（英単語→日本語訳）",
-      instructions: "英単語の日本語訳を入力してください。（8問）",
+      instructions: "英単語の日本語訳を入力してください。",
       items: [
         { id: crypto.randomUUID(), en: "warning" },
         { id: crypto.randomUUID(), en: "shelter" },
@@ -179,7 +179,7 @@ const defaultWorksheet = (dateISO) => ({
     },
     part2: {
       label: "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
-      instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。（5問）",
+      instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
       items: [
         { id: crypto.randomUUID(), prompt: "We need to follow the ______ from the radio." },
         { id: crypto.randomUUID(), prompt: "Please stay ______ until we know it’s safe." },
@@ -191,8 +191,8 @@ const defaultWorksheet = (dateISO) => ({
       trainerNotes: "",
     },
     part3: {
-      label: "Part 3｜会話ロールプレイ（Masayukiの英語セリフを記入）",
-      instructions: "相手役の英語セリフ（講師編集）＋Masayukiの日本語→学習者が英訳を入力（4問）",
+      label: "Part 3｜会話ロールプレイ",
+      instructions: "英文を入力して会話を完成させてください。",
       items: [
         { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Hey Masayuki, did you hear they issued a tsunami warning?", jp: "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。" },
         { id: crypto.randomUUID(), otherRole: "Coworker", otherEn: "Please stay calm and follow the official instructions.", jp: "まずは警告を確認して指示に従いましょう。" },
@@ -202,7 +202,7 @@ const defaultWorksheet = (dateISO) => ({
       answers: {},
       trainerNotes: "",
     },
-    part4: { label: "Part 4｜英作文 + 手書きパッド", instructions: "本日のテーマに沿って80–120語で英作文。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
+    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
   },
   trainerFeedback: "",
   submittedAt: null,
@@ -221,7 +221,7 @@ const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInp
           <button className="btn" onClick={(ev)=>{ev.stopPropagation(); setShowCal(v=>!v);}}>カレンダー</button>
           {mode === "student" ? (
             <div style={{display:'flex', alignItems:'center', gap:6}}>
-              <input type="password" className="input" style={{width:96}} placeholder="講師PIN" value={pinInput} onChange={(e)=>onPinChange(e.target.value)} />
+              <input type="password" className="input" style={{width:96}} placeholder="PIN" value={pinInput} onChange={(e)=>onPinChange(e.target.value)} />
               <button className="btn btn-primary" onClick={(ev)=>{ev.stopPropagation(); switchToTrainer();}}>講師モード</button>
             </div>
           ) : (
@@ -230,9 +230,9 @@ const Header = React.memo(function Header({ genre, dateISO, status, mode, pinInp
         </div>
       </div>
       <div className="container" style={{padding:'0 16px 8px', display:'flex', justifyContent:'space-between', color:'#6b7280', fontSize:11}}>
-        <span>{genre}｜{dateISO}｜学習者：Masayuki</span>
+        <span>{genre}｜{dateISO}</span>
         <div style={{display:'flex', gap:12, alignItems:'center'}}>
-          <button className="btn" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>手動同期</button>
+          <button className="btn" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
           <button className="btn" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
           <span>状態：{status}</span>
         </div>
@@ -374,7 +374,7 @@ export default function App() {
 
   const ThemeBar = React.memo(() => (
     <Card title="本日のテーマ">
-      <DebouncedInput multiline rows={2} autoGrow className="input" placeholder="例：災害時の安全アナウンス / HQレポートの書き方 など" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
+      <DebouncedInput multiline rows={2} autoGrow className="input" placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう" value={ws.meta.theme} onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))} />
     </Card>
   ));
 
