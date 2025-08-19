@@ -1,0 +1,121 @@
+{
+  "meta": {
+    "app": "annetmii-english-camp",
+    "version": 43,
+    "date": "2025-08-18",
+    "genre": "HR（採用・育成）",
+    "trainee": "Masayuki",
+    "theme": ""
+  },
+  "parts": {
+    "part1": {
+      "label": "Part 1｜語彙チェック（英単語→日本語訳）",
+      "instructions": "英単語の日本語訳を入力してください。",
+      "items": [
+        {
+          "id": "4a76c88a-acbd-4e65-af35-1b21ab827966",
+          "en": "warning"
+        },
+        {
+          "id": "212ab4b3-408d-436b-a5a9-0215c5038def",
+          "en": "shelter"
+        },
+        {
+          "id": "c2f94744-1145-48dd-9ecb-6578164d0b85",
+          "en": "evacuate"
+        },
+        {
+          "id": "1383eb95-d0b2-4206-afb0-bf028b99152d",
+          "en": "calm"
+        },
+        {
+          "id": "0a210ad7-3523-41df-9941-9cf9a5a397dc",
+          "en": "debris"
+        },
+        {
+          "id": "4184b96d-d197-4e60-a352-d14c4cbad95a",
+          "en": "inspect"
+        },
+        {
+          "id": "fd565b39-e748-4829-995f-54c4689cf2a4",
+          "en": "help"
+        },
+        {
+          "id": "5c314506-3c7c-44a4-8453-2bb56936d43d",
+          "en": "take cover"
+        }
+      ],
+      "answers": {},
+      "trainerNotes": ""
+    },
+    "part2": {
+      "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
+      "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
+      "items": [
+        {
+          "id": "bb28b219-63b1-49bf-a061-3cc5ffb3e39a",
+          "prompt": "We need to follow the ______ from the radio."
+        },
+        {
+          "id": "04d41d1f-1c7e-4945-ae37-ef3c5cd3e400",
+          "prompt": "Please stay ______ until we know it’s safe."
+        },
+        {
+          "id": "eb468e11-3d73-4084-86df-96247d8aff30",
+          "prompt": "Let’s ______ the area before it’s too dangerous."
+        },
+        {
+          "id": "b80e901c-d2c4-42ac-90bf-f11928099ea0",
+          "prompt": "The city sent volunteers to ______ the elderly."
+        },
+        {
+          "id": "2c4badc7-b02b-4c0b-bfe1-6184ac527bd6",
+          "prompt": "After the storm, we need to ______ the power lines."
+        }
+      ],
+      "answers": {},
+      "trainerNotes": ""
+    },
+    "part3": {
+      "label": "Part 3｜会話ロールプレイ",
+      "instructions": "英文を入力して会話を完成させてください。",
+      "items": [
+        {
+          "id": "9f5d140e-5843-4f8a-af7d-d9c57383727c",
+          "otherRole": "Coworker",
+          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
+          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
+        },
+        {
+          "id": "8d405c9a-17a6-47c3-9334-fe9041f741c1",
+          "otherRole": "Coworker",
+          "otherEn": "Please stay calm and follow the official instructions.",
+          "jp": "まずは警告を確認して指示に従いましょう。"
+        },
+        {
+          "id": "b51a95dc-2ecf-4580-b263-59e7e9b92576",
+          "otherRole": "Coworker",
+          "otherEn": "Shall we evacuate to higher ground now?",
+          "jp": "はい。急いで準備をして高台に行きましょう。"
+        },
+        {
+          "id": "f05451b3-72d0-45d3-9ca0-c3e9b46e12c5",
+          "otherRole": "Coworker",
+          "otherEn": "Do you need any help with your bag?",
+          "jp": "いいえ。一緒に安全を確保しましょう。"
+        }
+      ],
+      "answers": {},
+      "trainerNotes": ""
+    },
+    "part4": {
+      "label": "Part 4｜英作文",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "answer": "",
+      "handwriting": null,
+      "trainerNotes": ""
+    }
+  },
+  "trainerFeedback": "",
+  "submittedAt": null
+}
