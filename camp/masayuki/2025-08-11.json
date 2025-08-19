@@ -11,15 +11,11 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "ee8b252a-1fbd-40e8-8d5a-252e0d73da7a",
-          "en": ""
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -27,7 +23,8 @@
       "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
@@ -35,7 +32,8 @@
       "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": ""
+      "trainerNotes": "",
+      "answersUpdatedAt": {}
     },
     "part4": {
       "label": "Part 4｜英作文",
