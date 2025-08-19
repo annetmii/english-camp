@@ -11,56 +11,26 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "580f8e8c-fffd-4ba7-81c1-809d5e73ddf6",
-          "en": "t"
-        },
-        {
-          "id": "12c21875-c1e2-4a66-b131-889753b07d14",
-          "en": "new word"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
-      "items": [
-        {
-          "id": "038b0683-474b-4d3a-9d88-1335b209561c",
-          "prompt": "wf"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
-      "items": [
-        {
-          "id": "a1284f99-12b2-4e1e-a4e8-d5f8b219ca8e",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        },
-        {
-          "id": "0e55d689-fbec-4426-99a0-b03e3d7af26b",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part4": {
       "label": "Part 4｜英作文",
