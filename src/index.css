@@ -215,3 +215,15 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .hdr-btn.danger-btn:active {
   transform: scale(0.98);
 }
+
+/* === Part1（iPhoneで上下にしてフル幅） === */
+.p1-row { display:flex; gap:12px; align-items:center; }
+.p1-word { font-weight:600; min-width:88px; }
+
+/* 画面が狭い端末では縦積み＆入力を100%に */
+@media (max-width: 480px) {
+  .p1-row { flex-direction: column; align-items: stretch; }
+  .p1-word { min-width: 0; }
+  .p1-row .input { width: 100%; }
+}
+
