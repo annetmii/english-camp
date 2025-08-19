@@ -125,3 +125,29 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .input::placeholder, textarea.input::placeholder {
   color: #9ca3af;  /* gray-400 */
 }
+
+/* --- 講師コメント（入力・記入済みは赤） --- */
+.teacher-comment {
+  color: #6b7280;                 /* 未入力はグレー */
+}
+.teacher-comment:focus,
+.teacher-comment:not(:placeholder-shown) {
+  color: #b91c1c;                 /* 入力中/記入済みは赤 */
+}
+
+/* --- 正誤強調（× は薄赤、○ は薄緑） --- */
+.answer-wrong {
+  background-color: #fee2e2;      /* red-100 */
+  border-color: #fecaca;          /* red-200 */
+}
+.answer-correct {
+  background-color: #ecfdf5;      /* emerald-50 */
+  border-color: #a7f3d0;          /* emerald-200 */
+}
+
+/* --- カレンダーの “提出済み” マーカー（●） --- */
+.cal-dot {
+  position:absolute; bottom:6px; width:6px; height:6px; border-radius:9999px;
+}
+.cal-any   { background:#111827; } /* 何か保存あり：黒点 */
+.cal-submit{ background:#16a34a; } /* 提出済み：緑点（優先表示） */
