@@ -403,6 +403,71 @@ function ensureMaps(ws) {
   }
   return ws;
 }
+// === 時刻ユーティリティ ===
+const nowISO = () => new Date().toISOString();
+
+// === ローカルにスナップショット（最新5個） ===
+function snapshotLocal(userId, ws) {
+  try {
+    const keyPrefix = `${LS_PREFIX}${userId}:${ws.meta.date}:bak:`;
+    const snapKey = keyPrefix + nowISO();
+    localStorage.setItem(snapKey, JSON.stringify({ at: nowISO(), ws }));
+    // 掃除（最大5）
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(keyPrefix)) keys.push(k);
+    }
+    keys.sort();
+    while (keys.length > 5) localStorage.removeItem(keys.shift());
+  } catch {}
+}
+
+// === クラウドとローカルを“マージ”（LWW：項目ごと） ===
+function newer(a, b) { return a && b ? (a > b ? a : b) : (a || b || null); }
+
+function mergeWs(local, remote) {
+  const out = JSON.parse(JSON.stringify(remote || local));
+
+  // Part1
+  const l1a = local.parts.part1.answers || {}, r1a = remote.parts.part1.answers || {};
+  const l1t = local.parts.part1.answersUpdatedAt || {}, r1t = remote.parts.part1.answersUpdatedAt || {};
+  const m1a = { ...r1a }, m1t = { ...r1t };
+  for (const id of new Set([...Object.keys(l1a), ...Object.keys(r1a)])) {
+    const lt = l1t[id] || null, rt = r1t[id] || null;
+    if ((lt && !rt) || (lt && rt && lt > rt)) { m1a[id] = l1a[id]; m1t[id] = lt; }
+  }
+  out.parts.part1.answers = m1a; out.parts.part1.answersUpdatedAt = m1t;
+
+  // Part2
+  const l2a = local.parts.part2.answers || {}, r2a = remote.parts.part2.answers || {};
+  const l2t = local.parts.part2.answersUpdatedAt || {}, r2t = remote.parts.part2.answersUpdatedAt || {};
+  const m2a = JSON.parse(JSON.stringify(r2a)), m2t = JSON.parse(JSON.stringify(r2t));
+  for (const id of new Set([...Object.keys(l2a), ...Object.keys(r2a)])) {
+    const lrec = l2a[id] || {}, rrec = r2a[id] || {};
+    const lt = l2t[id] || {}, rt = r2t[id] || {};
+    const enT = newer(lt.en, rt.en), jaT = newer(lt.ja, rt.ja);
+    m2a[id] = { ...(m2a[id] || rrec) };
+    m2t[id] = { ...(m2t[id] || rt) };
+    if (enT === lt.en && lt.en) { m2a[id].en = lrec.en; m2t[id].en = lt.en; }
+    if (jaT === lt.ja && lt.ja) { m2a[id].ja = lrec.ja; m2t[id].ja = lt.ja; }
+  }
+  out.parts.part2.answers = m2a; out.parts.part2.answersUpdatedAt = m2t;
+
+  // Part3
+  const l3a = local.parts.part3.answers || {}, r3a = remote.parts.part3.answers || {};
+  const l3t = local.parts.part3.answersUpdatedAt || {}, r3t = remote.parts.part3.answersUpdatedAt || {};
+  const m3a = { ...r3a }, m3t = { ...r3t };
+  for (const id of new Set([...Object.keys(l3a), ...Object.keys(r3a)])) {
+    const lt = l3t[id] || null, rt = r3t[id] || null;
+    if ((lt && !rt) || (lt && rt && lt > rt)) { m3a[id] = l3a[id]; m3t[id] = lt; }
+  }
+  out.parts.part3.answers = m3a; out.parts.part3.answersUpdatedAt = m3t;
+
+  // 提出は既提出を優先
+  out.submittedAt = remote.submittedAt || local.submittedAt || null;
+  return out;
+}
 
 // ===================== Header (4-lines compact layout) =====================
 const Header = React.memo(function Header({
@@ -597,6 +662,7 @@ export default function App() {
               `${LS_PREFIX}${userId}:${ws.meta.date}`,
               JSON.stringify(ws)
             );
+            snapshotLocal(userId, ws);
           } catch {}
         }),
       500
@@ -606,22 +672,23 @@ export default function App() {
 
   // load cloud on start/date change
   useEffect(() => {
-    (async () => {
-      try {
-        setStatus("クラウド読込中…");
-        const remote = await cloudLoad({ userId, dateISO });
-        if (remote && remote.data) {
-  setWs(ensureMaps(remote.data));
-  setStatus("クラウドから読み込みました");
-} else {
-  setWs((cur) => (cur?.meta?.date === dateISO ? ensureMaps(cur) : ensureMaps(defaultWorksheet(dateISO))));
-  setStatus("本日のワークシートを作成しました");
-}
-      } catch {
-        setStatus("オフライン：ローカル保存のみ");
+  (async () => {
+    try {
+      setStatus("クラウド読込中…");
+      const remote = await cloudLoad({ userId, dateISO });
+      if (remote && remote.data) {
+        setWs(prev => mergeWs(
+          ensureMaps(prev && prev.meta?.date === dateISO ? prev : defaultWorksheet(dateISO)),
+          ensureMaps(remote.data)
+        ));
+        setStatus("クラウドから読み込みました");
+      } else {
+        setWs((cur) => (cur?.meta?.date === dateISO ? ensureMaps(cur) : ensureMaps(defaultWorksheet(dateISO))));
+        setStatus("本日のワークシートを作成しました");
       }
-    })();
-  }, [userId, dateISO]);
+    } catch { setStatus("オフライン：ローカル保存のみ"); }
+  })();
+}, [userId, dateISO]);
 
   // fetch cloud dates (for ◎ marking)
   const refreshCloudDates = useCallback(async () => {
@@ -648,39 +715,58 @@ export default function App() {
   const draftRef = useRef({ p1: {}, p2: {}, p3: {} });
   const flushTimerRef = useRef(null);
   const scheduleFlush = useCallback(() => {
-    if (flushTimerRef.current) return;
-    flushTimerRef.current = setTimeout(() => {
-      const d = draftRef.current;
-      draftRef.current = { p1: {}, p2: {}, p3: {} };
-      if (
-        Object.keys(d.p1).length ||
-        Object.keys(d.p2).length ||
-        Object.keys(d.p3).length
-      ) {
-        setWs((cur) => {
-          const next = { ...cur, parts: { ...cur.parts } };
-          if (Object.keys(d.p1).length)
-            next.parts.part1 = {
-              ...cur.parts.part1,
-              answers: { ...(cur.parts.part1.answers || {}), ...d.p1 },
-            };
-          if (Object.keys(d.p2).length)
-            next.parts.part2 = {
-              ...cur.parts.part2,
-              answers: { ...(cur.parts.part2.answers || {}), ...d.p2 },
-            };
-          if (Object.keys(d.p3).length)
-            next.parts.part3 = {
-              ...cur.parts.part3,
-              answers: { ...(cur.parts.part3.answers || {}), ...d.p3 },
-            };
-          return next;
-        });
-      }
-      clearTimeout(flushTimerRef.current);
-      flushTimerRef.current = null;
-    }, 300);
-  }, []);
+  if (flushTimerRef.current) return;
+  flushTimerRef.current = setTimeout(() => {
+    const d = draftRef.current; 
+    draftRef.current = { p1: {}, p2: {}, p3: {} };
+
+    if (Object.keys(d.p1).length || Object.keys(d.p2).length || Object.keys(d.p3).length) {
+      setWs((cur) => {
+        const ts = nowISO();
+        const next = { ...cur, parts: { ...cur.parts } };
+
+        // Part1
+        if (Object.keys(d.p1).length) {
+          const prevAns = cur.parts.part1.answers || {};
+          const prevTs  = cur.parts.part1.answersUpdatedAt || {};
+          const newAns = { ...prevAns };
+          const newTs  = { ...prevTs };
+          for (const id in d.p1) { newAns[id] = d.p1[id]; newTs[id] = ts; }
+          next.parts.part1 = { ...cur.parts.part1, answers: newAns, answersUpdatedAt: newTs };
+        }
+
+        // Part2
+        if (Object.keys(d.p2).length) {
+          const prevAns = cur.parts.part2.answers || {};
+          const prevTs  = cur.parts.part2.answersUpdatedAt || {};
+          const newAns = { ...prevAns };
+          const newTs  = { ...prevTs };
+          for (const id in d.p2) {
+            const prev = newAns[id] || { en:"", ja:"" };
+            const patch = d.p2[id];
+            newAns[id] = { ...prev, ...patch };
+            newTs[id]  = { ...(prevTs[id] || {}), ...(Object.fromEntries(Object.keys(patch).map(k => [k, ts]))) };
+          }
+          next.parts.part2 = { ...cur.parts.part2, answers: newAns, answersUpdatedAt: newTs };
+        }
+
+        // Part3
+        if (Object.keys(d.p3).length) {
+          const prevAns = cur.parts.part3.answers || {};
+          const prevTs  = cur.parts.part3.answersUpdatedAt || {};
+          const newAns = { ...prevAns };
+          const newTs  = { ...prevTs };
+          for (const id in d.p3) { newAns[id] = d.p3[id]; newTs[id] = ts; }
+          next.parts.part3 = { ...cur.parts.part3, answers: newAns, answersUpdatedAt: newTs };
+        }
+
+        return next;
+      });
+    }
+    clearTimeout(flushTimerRef.current); 
+    flushTimerRef.current = null;
+  }, 300);
+}, []);
 
   // ============= Cloud auto-sync =============
   const lastChangeRef = useRef(Date.now());
@@ -1276,6 +1362,22 @@ export default function App() {
       ) : null}
     </Card>
   ));
+
+  useEffect(() => {
+  const flushNow = () => {
+    try {
+      localStorage.setItem(`${LS_PREFIX}${userId}:${ws.meta.date}`, JSON.stringify(ws));
+      snapshotLocal(userId, ws);
+    } catch {}
+  };
+  const onVis = () => { if (document.visibilityState === 'hidden') flushNow(); };
+  window.addEventListener('beforeunload', flushNow);
+  document.addEventListener('visibilitychange', onVis);
+  return () => {
+    window.removeEventListener('beforeunload', flushNow);
+    document.removeEventListener('visibilitychange', onVis);
+  };
+}, [userId, ws]);
 
   // Part4 (handwriting)
   const canvasRef = useRef(null);
