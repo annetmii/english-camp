@@ -479,7 +479,7 @@ export default function App() {
             <div style={{display:'flex', gap:8, alignItems:'flex-start'}}>
               <span className="label" style={{width:24}}>{idx + 1}.</span>
               {mode === "trainer" ? (
-                <<DebouncedInput id={`p2-q-${it.id}`} key={`p2-q-${it.id}`} className="input field-full" value={it.prompt} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => (x.id === it.id ? { ...x, prompt: v } : x)) } } }))} />
+                <DebouncedInput id={`p2-q-${it.id}`} key={`p2-q-${it.id}`} className="input field-full" value={it.prompt} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: cur.parts.part2.items.map((x) => (x.id === it.id ? { ...x, prompt: v } : x)) } } }))} />
               ) : (
                 <p style={{margin:0, lineHeight:1.6, flex:1}}>{it.prompt}</p>
               )}
