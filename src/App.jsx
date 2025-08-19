@@ -255,7 +255,7 @@ const Header = React.memo(function Header({
         </div>
       </div>
 
-      {/* 3行目：同期／提出／状態 */}
+      {/* 3行目：同期／提出／ステータス */}
       <div className="header-row">
         <div className="container">
           <div className="hstack" style={{justifyContent:'space-between'}}>
@@ -263,7 +263,7 @@ const Header = React.memo(function Header({
               <button className="hdr-btn-primary" onClick={(e)=>{e.stopPropagation(); doSync("手動同期");}}>同期</button>
               <button className="hdr-btn-primary" onClick={(e)=>{e.stopPropagation(); submit();}}>提出</button>
             </div>
-            <span style={{color:'#6b7280', fontSize:13}}>状態：{status}</span>
+            <span style={{color:'#6b7280', fontSize:13}}>ステータス：{status}</span>
           </div>
         </div>
       </div>
