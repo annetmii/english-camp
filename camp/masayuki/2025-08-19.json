@@ -53,7 +53,8 @@
         "7a6cfc1a-69a1-49ca-b244-bf5a5809e345": "ヘルプ"
       },
       "trainerNotes": "Perfect！その調子です",
-      "marks": {}
+      "marks": {},
+      "answersUpdatedAt": {}
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -89,6 +90,9 @@
       "trainerNotes": "惜しい！",
       "marks": {
         "4f059020-5a55-426f-bf7a-b1c950762f21": {}
+      },
+      "answersUpdatedAt": {
+        "4f059020-5a55-426f-bf7a-b1c950762f21": {}
       }
     },
     "part3": {
@@ -122,7 +126,8 @@
       ],
       "answers": {},
       "trainerNotes": "惜しい！",
-      "marks": {}
+      "marks": {},
+      "answersUpdatedAt": {}
     },
     "part4": {
       "label": "Part 4｜英作文 + 手書きパッド",
