@@ -2,10 +2,10 @@
   "meta": {
     "app": "annetmii-english-camp",
     "version": 43,
-    "date": "2025-08-18",
-    "genre": "HR（採用・育成）",
+    "date": "2025-08-19",
+    "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
-    "theme": ""
+    "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう"
   },
   "parts": {
     "part1": {
@@ -13,39 +13,40 @@
       "instructions": "英単語の日本語訳を入力してください。",
       "items": [
         {
-          "id": "4a76c88a-acbd-4e65-af35-1b21ab827966",
-          "en": "warning"
+          "id": "db259d53-39f2-4094-b03b-7aaf6de12e4d",
+          "en": "Internet listing"
         },
         {
-          "id": "212ab4b3-408d-436b-a5a9-0215c5038def",
-          "en": "shelter"
+          "id": "56aea00c-ed29-4da9-ac2e-9a86198c948b",
+          "en": "classified ad"
         },
         {
-          "id": "c2f94744-1145-48dd-9ecb-6578164d0b85",
-          "en": "evacuate"
+          "id": "6723e4db-14d7-439e-85f3-974d0cecf672",
+          "en": "furnished apartment"
         },
         {
-          "id": "1383eb95-d0b2-4206-afb0-bf028b99152d",
-          "en": "calm"
+          "id": "139d9018-6137-49a5-98ce-d8a825927b07",
+          "en": "unfurnished apartment"
         },
         {
-          "id": "0a210ad7-3523-41df-9941-9cf9a5a397dc",
-          "en": "debris"
+          "id": "75921428-8b66-4894-9201-93aa7ec6caea",
+          "en": "utilities"
         },
         {
-          "id": "4184b96d-d197-4e60-a352-d14c4cbad95a",
-          "en": "inspect"
+          "id": "5991d395-7ba4-4f98-a798-c3f7083495f4",
+          "en": "call the manager"
         },
         {
-          "id": "fd565b39-e748-4829-995f-54c4689cf2a4",
-          "en": "help"
+          "id": "ac9557ac-2466-47b5-805a-8f5028d1b468",
+          "en": "submit an application"
         },
         {
-          "id": "5c314506-3c7c-44a4-8453-2bb56936d43d",
-          "en": "take cover"
+          "id": "dbfcfac3-50ca-4734-a98c-be68c6a89461",
+          "en": "sign the rental agreement"
         }
       ],
       "answers": {},
+      "marks": {},
       "trainerNotes": ""
     },
     "part2": {
@@ -53,27 +54,28 @@
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
       "items": [
         {
-          "id": "bb28b219-63b1-49bf-a061-3cc5ffb3e39a",
-          "prompt": "We need to follow the ______ from the radio."
+          "id": "5c55dfd7-c952-43e1-a4d9-bd1c84e5c8e2",
+          "prompt": "I found a nice apartment on the ＿＿＿＿＿."
         },
         {
-          "id": "04d41d1f-1c7e-4945-ae37-ef3c5cd3e400",
-          "prompt": "Please stay ______ until we know it’s safe."
+          "id": "166cc319-7354-4cb9-9103-0f9e34c6b652",
+          "prompt": ""
         },
         {
-          "id": "eb468e11-3d73-4084-86df-96247d8aff30",
-          "prompt": "Let’s ______ the area before it’s too dangerous."
+          "id": "0d45afb9-02bf-4eea-a641-7ca424efc1d0",
+          "prompt": ""
         },
         {
-          "id": "b80e901c-d2c4-42ac-90bf-f11928099ea0",
-          "prompt": "The city sent volunteers to ______ the elderly."
+          "id": "0f956843-dbd4-4fc2-9a1d-f5252cb93a38",
+          "prompt": ""
         },
         {
-          "id": "2c4badc7-b02b-4c0b-bfe1-6184ac527bd6",
-          "prompt": "After the storm, we need to ______ the power lines."
+          "id": "9f0fcb60-0498-4af2-af9d-a3b2a3c3b0a4",
+          "prompt": ""
         }
       ],
       "answers": {},
+      "marks": {},
       "trainerNotes": ""
     },
     "part3": {
@@ -81,31 +83,32 @@
       "instructions": "英文を入力して会話を完成させてください。",
       "items": [
         {
-          "id": "9f5d140e-5843-4f8a-af7d-d9c57383727c",
-          "otherRole": "Coworker",
-          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
-          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
+          "id": "ac6ec5f6-40df-4d5c-808b-317a46a66da6",
+          "otherRole": "",
+          "otherEn": "",
+          "jp": ""
         },
         {
-          "id": "8d405c9a-17a6-47c3-9334-fe9041f741c1",
-          "otherRole": "Coworker",
-          "otherEn": "Please stay calm and follow the official instructions.",
-          "jp": "まずは警告を確認して指示に従いましょう。"
+          "id": "91fb9574-bada-436c-b661-fa71df61f8ca",
+          "otherRole": "",
+          "otherEn": "",
+          "jp": ""
         },
         {
-          "id": "b51a95dc-2ecf-4580-b263-59e7e9b92576",
-          "otherRole": "Coworker",
-          "otherEn": "Shall we evacuate to higher ground now?",
-          "jp": "はい。急いで準備をして高台に行きましょう。"
+          "id": "0daeda1b-8bdc-48ef-a660-b27694c68af6",
+          "otherRole": "",
+          "otherEn": "",
+          "jp": ""
         },
         {
-          "id": "f05451b3-72d0-45d3-9ca0-c3e9b46e12c5",
-          "otherRole": "Coworker",
-          "otherEn": "Do you need any help with your bag?",
-          "jp": "いいえ。一緒に安全を確保しましょう。"
+          "id": "55675cd4-683a-4982-8493-0597a4de9576",
+          "otherRole": "",
+          "otherEn": "",
+          "jp": ""
         }
       ],
       "answers": {},
+      "marks": {},
       "trainerNotes": ""
     },
     "part4": {
