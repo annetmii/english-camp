@@ -54,23 +54,23 @@
       "items": [
         {
           "id": "d01a7eb9-783a-4b52-9311-3f10a937e0c2",
-          "prompt": "I found a nice apartment on the  ______ ."
+          "prompt": "We need to follow the ______ from the radio."
         },
         {
           "id": "f52ebcd1-8189-412e-8a70-a17bc8afd446",
-          "prompt": "They posted a ______ in the local newspaper."
+          "prompt": "Please stay ______ until we know it’s safe."
         },
         {
           "id": "ea96bc86-f0eb-4054-b4ac-a218e9e1a7eb",
-          "prompt": "We decided to rent a ______ for our new staff member."
+          "prompt": "Let’s ______ the area before it’s too dangerous."
         },
         {
           "id": "290257e8-531f-43dc-a576-4b8c3aa18da4",
-          "prompt": "Please ______ to confirm the rent and move-in date."
+          "prompt": "The city sent volunteers to ______ the elderly."
         },
         {
           "id": "3fab6e9e-d704-438a-9d63-237903c10421",
-          "prompt": "Before moving in, you need to ______."
+          "prompt": "After the storm, we need to ______ the power lines."
         }
       ],
       "answers": {},
