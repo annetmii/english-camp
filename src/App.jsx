@@ -459,6 +459,7 @@ const Header = React.memo(function Header({
   submittedDates,
   trainerDates,
   onPickDate,
+  resetQuestions,
 }) {
   return (
     <header className="sticky-header">
@@ -545,6 +546,16 @@ const Header = React.memo(function Header({
               >
                 同期
               </button>
+              {/* ← ここに講師専用リセット */}
+          {mode === "trainer" && (
+            <button
+              className="hdr-btn danger-btn"
+              onClick={(e)=>{ e.stopPropagation(); resetQuestions(); }}
+              title="この日の出題を初期化"
+            >
+              出題リセット
+            </button>
+          )}
               <button className="hdr-btn submit-btn" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
@@ -753,6 +764,21 @@ export default function App() {
   }, [pinInput]);
   const switchToStudent = useCallback(() => setMode("student"), []);
 
+  // === 出題を初期状態へリセット（講師モード専用） ===
+const resetQuestions = useCallback(() => {
+  if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
+
+  setWs((cur) => {
+    const next = defaultWorksheet(cur.meta.date); // 同じ日付のデフォルトに戻す
+    // テーマは維持（Aki要望）
+    next.meta.theme = cur.meta.theme || "";
+    return next;
+  });
+
+  setStatus("出題を初期化しました");
+  doSync("出題リセット"); // 即座に同期
+}, [doSync]);
+
   // ===================== UI Shell =====================
   const Card = ({ title, children, instructions }) => (
     <section className="container" style={{ padding: "12px 16px" }}>
@@ -767,16 +793,29 @@ export default function App() {
   );
 
   const ThemeBar = React.memo(() => (
-    <Card title="本日のテーマ">
+  <Card title="本日のテーマ">
+    {mode === "trainer" ? (
       <DebouncedInput
-        id="theme" key="theme" multiline rows={2} autoGrow
+        id="theme"
+        key="theme"
+        multiline
+        rows={2}
+        autoGrow
         className="input field-full"
-        placeholder="Week 4｜Tuesday（Emergency）- 緊急事態に備えよう　Picture Dictionaryの「Emergency Procedures」（p.147）から学びましょう"
+        placeholder="Week 4｜Tuesday（Emergency）- ..."
         value={ws.meta.theme}
-        onChange={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))}
+        onChange={(v) =>
+          setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))
+        }
       />
-    </Card>
-  ));
+    ) : (
+      // 学習者：プレーンテキスト表示のみ（編集不可）
+      <p style={{ margin: 0, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+        {ws.meta.theme || "（未設定）"}
+      </p>
+    )}
+  </Card>
+));
 
   // Part1 Row
   const Part1Row = React.memo(function Part1Row({ it }) {
@@ -1294,6 +1333,7 @@ export default function App() {
         submittedDates={submittedDates}
         trainerDates={trainerDates}
         onPickDate={(iso) => { setDateISO(iso); setShowCal(false); }}
+        resetQuestions={resetQuestions}
       />
       <ThemeBar />
       <Part1 />
