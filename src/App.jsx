@@ -58,22 +58,32 @@ async function cloudListDates({ userId }) {
   return res.json();
 }
 
-/* ===================== Input (IME-safe, autosize) ===================== */
+// ===================== Input (IME-safe, iOS-stable, autosize) =====================
 const DebouncedInput = React.memo(function DebouncedInput({
-  value, onChange, className = "", placeholder = "",
-  multiline = false, rows = 1, debounceMs = 220, autoGrow = true, ...rest
+  id,
+  value,
+  onChange,
+  className = "",
+  placeholder = "",
+  multiline = false,
+  rows = 1,
+  debounceMs = 220,
+  autoGrow = true,
+  ...rest
 }) {
   const [inner, setInner] = useState(value ?? "");
-  const compRef = useRef(false);
+  const composingRef = useRef(false);         // IME合成中フラグ
   const tRef = useRef(null);
-  const inputRef = useRef(null);
+  const elRef = useRef(null);
 
+  // 親→子 同期（合成中＆フォーカス中は上書きしない）
   useEffect(() => {
-    if (compRef.current) return;
-    if (typeof document !== "undefined" && document.activeElement === inputRef.current) return;
+    if (composingRef.current) return;
+    if (typeof document !== "undefined" && document.activeElement === elRef.current) return;
     setInner(value ?? "");
   }, [value]);
 
+  // flush: 親へ反映（デバウンス）
   const flush = useCallback((next) => {
     if (typeof onChange !== "function") return;
     if (next === value) return;
@@ -81,38 +91,75 @@ const DebouncedInput = React.memo(function DebouncedInput({
   }, [onChange, value]);
 
   const schedule = useCallback((next) => {
-    if (compRef.current) return;
+    if (composingRef.current) return;        // 変換確定まで送らない
     if (tRef.current) clearTimeout(tRef.current);
     tRef.current = setTimeout(() => flush(next), debounceMs);
   }, [flush, debounceMs]);
 
+  // オートリサイズ（textarea）
   const resize = useCallback(() => {
-    if (!autoGrow || !multiline || !inputRef.current) return;
-    const el = inputRef.current;
+    if (!autoGrow || !multiline || !elRef.current) return;
+    const el = elRef.current;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   }, [autoGrow, multiline]);
+
   useEffect(() => { resize(); }, [inner, resize]);
 
-  const common = {
-    ref: inputRef, className, placeholder, value: inner,
-    // 入力の見た目更新は onInput（毎キーで内側だけ更新：軽い）
-onInput: (e) => {
-  const v = e.currentTarget.value;
-  setInner(v);
-},
-// 親への反映は onChange（デバウンスでまとめて送る：安定）
-onChange: (e) => {
-  const v = e.target.value;
-  schedule(v);
-},
-    onBlur: () => flush(inner),
-    onCompositionStart: () => { compRef.current = true; },
-    onCompositionEnd: (e) => { compRef.current = false; const v = e.currentTarget.value; setInner(v); flush(v); },
-    autoComplete: "off", autoCorrect: "off", spellCheck: false, inputMode: "text", ...rest,
+  // 重要：入力の見た目更新は onInput のみ（毎キーで内側だけ更新）
+  const handleInput = (e) => {
+    const v = e.currentTarget.value;
+    setInner(v);
+    schedule(v);                // 親への通知はデバウンス
   };
-  if (!multiline) return <input {...common} />;
-  return <textarea {...common} rows={rows} style={{ resize: "none", overflow: "hidden", ...(rest.style || {}) }} />;
+
+  const handleBlur = () => {
+    if (tRef.current) { clearTimeout(tRef.current); tRef.current = null; }
+    flush(inner);               // フォーカス外れたら即反映
+  };
+
+  const handleCompStart = () => { composingRef.current = true; };
+  const handleCompEnd = (e) => {
+    composingRef.current = false;
+    const v = e.currentTarget.value;
+    setInner(v);
+    flush(v);                   // 変換確定時に即反映
+  };
+
+  // 一部ブラウザは onInput 後に onChange も飛ぶので onChange は NO-OP にする
+  const noopChange = () => {};
+
+  const commonProps = {
+    ref: elRef,
+    className,
+    placeholder,
+    value: inner,
+    onInput: handleInput,
+    onChange: noopChange,
+    onBlur: handleBlur,
+    onCompositionStart: handleCompStart,
+    onCompositionEnd: handleCompEnd,
+    autoComplete: "off",
+    autoCorrect: "off",
+    spellCheck: false,
+    autoCapitalize: "none",
+    inputMode: "text",
+    ...rest,
+  };
+
+  if (!multiline) return <input {...commonProps} />;
+
+  return (
+    <textarea
+      {...commonProps}
+      rows={rows}
+      style={{
+        resize: "none",
+        overflow: "hidden",
+        ...(rest && rest.style ? rest.style : {}),
+      }}
+    />
+  );
 });
 
 /* ===================== Calendar helpers ===================== */
