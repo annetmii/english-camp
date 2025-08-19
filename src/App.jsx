@@ -96,7 +96,16 @@ const DebouncedInput = React.memo(function DebouncedInput({
 
   const common = {
     ref: inputRef, className, placeholder, value: inner,
-    onChange: (e) => { const v = e.target.value; setInner(v); schedule(v); },
+    // 入力の見た目更新は onInput（毎キーで内側だけ更新：軽い）
+onInput: (e) => {
+  const v = e.currentTarget.value;
+  setInner(v);
+},
+// 親への反映は onChange（デバウンスでまとめて送る：安定）
+onChange: (e) => {
+  const v = e.target.value;
+  schedule(v);
+},
     onBlur: () => flush(inner),
     onCompositionStart: () => { compRef.current = true; },
     onCompositionEnd: (e) => { compRef.current = false; const v = e.currentTarget.value; setInner(v); flush(v); },
