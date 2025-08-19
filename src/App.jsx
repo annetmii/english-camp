@@ -58,7 +58,7 @@ const DebouncedInput = React.memo(function DebouncedInput({
   rows = 1,
   debounceMs = 220,
   autoGrow = true,
-  ...rest,               // ★ 追加：余剰propsを受け取る
+  ...rest               // ★ 追加：余剰propsを受け取る
 }) {
   // ...
   const common = {
