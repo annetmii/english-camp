@@ -5,7 +5,7 @@
     "date": "2025-08-19",
     "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
-    "theme": ""
+    "theme": "Week 5｜Tue（Compliance）- 健康診断\nPicture Dictionaryの「Medical Care」（p.118）から学びましょう"
   },
   "parts": {
     "part1": {
@@ -14,35 +14,35 @@
       "items": [
         {
           "id": "c7ba2088-8bc0-4440-98e2-46e78b88cae7",
-          "en": "warning"
+          "en": "appointment"
         },
         {
           "id": "c0e39871-6756-4da7-971a-e81effd5b929",
-          "en": "shelter"
+          "en": "health insurance card"
         },
         {
           "id": "9f8d4567-9930-4a05-ad55-1d4667065989",
-          "en": "evacuate"
+          "en": "health history form"
         },
         {
           "id": "147423b0-529c-4479-b69e-eb6144b3fdb0",
-          "en": "calm"
+          "en": "doctor"
         },
         {
           "id": "acab10f9-e939-4670-b3be-72ea53dcb2f2",
-          "en": "debris"
+          "en": "nurse"
         },
         {
           "id": "ce179415-72c1-4072-9054-1a2ead64d4e3",
-          "en": "inspect"
+          "en": "blood pressure gauge"
         },
         {
           "id": "7a6cfc1a-69a1-49ca-b244-bf5a5809e345",
-          "en": "help"
+          "en": "thermometer"
         },
         {
           "id": "65792442-8190-49ae-94ed-47c663ed56a0",
-          "en": "take cover"
+          "en": "syringe"
         }
       ],
       "answers": {
@@ -68,23 +68,23 @@
       "items": [
         {
           "id": "4f059020-5a55-426f-bf7a-b1c950762f21",
-          "prompt": "We need to follow the ______ from the radio."
+          "prompt": "I made an ＿＿＿＿＿＿ for my annual health check."
         },
         {
           "id": "05d5e2ef-15e0-4987-9ae3-a8b616489874",
-          "prompt": "Please stay ______ until we know it’s safe."
+          "prompt": "Please bring your ＿＿＿＿＿＿ when you see the doctor."
         },
         {
           "id": "de60e8d9-af4e-4dc7-a832-b9da6473e67e",
-          "prompt": "Let’s ______ the area before it’s too dangerous."
+          "prompt": "The nurse used a ＿＿＿＿＿＿ to check my blood pressure."
         },
         {
           "id": "b9febbd3-91b6-4fa0-a828-5efb339d2bd3",
-          "prompt": "The city sent volunteers to ______ the elderly."
+          "prompt": ""
         },
         {
           "id": "2083e58c-991e-4d3a-91e2-5dd2a744bf1a",
-          "prompt": "After the storm, we need to ______ the power lines."
+          "prompt": ""
         }
       ],
       "answers": {
