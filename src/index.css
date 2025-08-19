@@ -313,3 +313,16 @@ html, body { overflow-x: hidden; }
   .brand-title{ font-size:22px; }
   .hdr-meta{ font-size:12px; }
 }
+
+/* 全ボタン共通のスタイル */
+.header-button {
+  min-width: 90px;   /* 横幅を固定（少し小さめ） */
+  height: 40px;      /* 高さも揃える */
+  font-size: 14px;   /* 文字サイズ調整 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 8px;    /* 横の余白を少し減らす */
+  margin: 4px;
+}
