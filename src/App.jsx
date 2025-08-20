@@ -1,3 +1,4 @@
+// /src/App.jsx ーー 完全版
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 /* ===================== Utils ===================== */
@@ -82,7 +83,7 @@ const DebouncedInput = React.memo(function DebouncedInput({
   // 親→子 同期：フォーカス中は**絶対に上書きしない**
   useEffect(() => {
     if (compRef.current) return;
-    if (focusedRef.current) return;            // ← ここが効きます
+    if (focusedRef.current) return;
     if (!lockRef.current) setInner(value ?? "");
   }, [value]);
 
@@ -161,7 +162,8 @@ const DebouncedInput = React.memo(function DebouncedInput({
 });
 
 // ====== Part1Row（トップレベル版）======
-const Part1Row = React.memo(function Part1Row({ it }) {
+// ▼FIX: 受け取るpropsを正しく受理
+const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef, scheduleFlush }) {
   const answerMap = ws.parts.part1.answers || {};
   const answer = answerMap[it.id] !== undefined ? answerMap[it.id] : "";
   const mark = (ws.parts.part1.marks || {})[it.id];   // 'ok' | 'wrong' | undefined
@@ -311,41 +313,42 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
               </div>
               {mode === "trainer" && (
                 <div className="mark-wrap">
+                  {/* ▼FIX: JSXを正しい開閉に、ハンドラも正しい形に */}
                   <button
-  className="mark-btn ok"
-  onMouseDown={(e)=>e.preventDefault()}
-  onClick={() => setWs((c) => ({
-    ...c,
-    parts: { ...c.parts, part2: { ...c.parts.part2,
-      marks: { ...(c.parts.part2.marks || {}), [it.id]:
-        { ...((c.parts.part2.marks || {})[it.id]), en: "ok" } } } }
-  ))}
-/>○</button>
+                    className="mark-btn ok"
+                    onMouseDown={(e)=>e.preventDefault()}
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: { ...c.parts, part2: { ...c.parts.part2,
+                        marks: { ...(c.parts.part2.marks || {}), [it.id]:
+                          { ...((c.parts.part2.marks || {})[it.id]), en: "ok" } } } }
+                    }))}
+                  >○</button>
 
-<button
-  className="mark-btn wrong"
-  onMouseDown={(e)=>e.preventDefault()}
-  onClick={() => setWs((c) => ({
-    ...c,
-    parts: { ...c.parts, part2: { ...c.parts.part2,
-      marks: { ...(c.parts.part2.marks || {}), [it.id]:
-        { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" } } } }
-  ))}
-/>×</button>
+                  <button
+                    className="mark-btn wrong"
+                    onMouseDown={(e)=>e.preventDefault()}
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: { ...c.parts, part2: { ...c.parts.part2,
+                        marks: { ...(c.parts.part2.marks || {}), [it.id]:
+                          { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" } } } }
+                    }))}
+                  >×</button>
 
-<button
-  className="mark-btn clear"
-  onMouseDown={(e)=>e.preventDefault()}
-  onClick={() => {
-    const base = { ...(c.parts.part2.marks || {}) };
-    const rec = { ...(base[it.id] || {}) };
-    delete rec.en; base[it.id] = rec;
-    return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
-  }}
->消</button>
+                  <button
+                    className="mark-btn clear"
+                    onMouseDown={(e)=>e.preventDefault()}
+                    onClick={() => setWs((c) => {
+                      const base = { ...(c.parts.part2.marks || {}) };
+                      const rec = { ...(base[it.id] || {}) };
+                      delete rec.en; base[it.id] = rec;
+                      return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
+                    })}
+                  >消</button>
                 </div>
               )}
-            </div> {/* ← この閉じタグが抜けていた */}
+            </div> {/* ← ここは閉じタグあり */}
 
             {/* 3行目：日本語訳＋採点 */}
             <div className="row" style={{ marginTop: 8 }}>
@@ -515,9 +518,10 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>○</button>
-<button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>×</button>
-<button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>消</button>
+                    {/* ▼FIX: 有効なハンドラに置換 */}
+                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark3("ok")}>○</button>
+                    <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark3("wrong")}>×</button>
+                    <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={clearMark3}>消</button>
                   </div>
                 )}
               </div>
