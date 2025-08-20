@@ -1,33 +1,49 @@
-/* =================== グローバル：横揺れ防止・基本 =================== */
+/* =================== ベース：横揺れ防止・基本 =================== */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;        /* 横スクロール禁止 */
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
-html, body, #root {          /* iPhoneで縦スクロールのみ */
+html, body, #root {
   touch-action: pan-y;
   overscroll-behavior-x: none;
 }
-* { min-width: 0; }          /* flex子のはみ出し防止 */
-textarea { resize: none; }   /* オートリサイズで横ズレしない */
+* { box-sizing: border-box; min-width: 0; }   /* flex子のはみ出し防止 */
+textarea { resize: none; }
 
-/* =================== 中央カラム幅（各Partと統一） =================== */
+/* =================== 中央カラム =================== */
 .container {
-  max-width: 960px;          /* 必要なら 880〜1040pxで微調整可 */
+  max-width: 960px;
   margin: 0 auto;
 }
-
-/* =================== カード内側の共通余白/幅 =================== */
 .content-pad { padding: 16px; }
-.field-full {
+
+/* =================== 入力の共通スタイル =================== */
+.input,
+.input[type="text"],
+.input[type="password"],
+textarea.input {
   width: 100%;
   max-width: 100%;
   display: block;
-  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;           /* iOSズーム防止 */
+  line-height: 1.4;
+  color: #111827;
+  background: #fff;
 }
+.input::placeholder,
+textarea.input::placeholder { color: #9ca3af; }
 
-/* =================== 固定ヘッダー（背景ぼかし＋境界線） =================== */
+/* 正誤強調 */
+.answer-wrong   { background-color: #fee2e2; border-color: #fecaca; }
+.answer-correct { background-color: #ecfdf5; border-color: #a7f3d0; }
+
+/* =================== ヘッダーまわり =================== */
 .sticky-header {
   position: sticky;
   top: 0;
@@ -36,8 +52,6 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   background: rgba(255,255,255,0.85);
   border-bottom: 1px solid #e5e7eb;
 }
-
-/* =================== ヘッダー：行とブランド =================== */
 .header-bar { padding: 12px 16px 8px; }
 .header-row { padding: 0 16px 8px; }
 .hstack { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -46,7 +60,6 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
 .header-logo { height: 34px; }
 .brand-title { font-size: 24px; font-weight: 800; margin: 0; line-height: 1.1; }
 
-/* 4行目：ジャンル｜日付（iPhoneでも改行させない） */
 .hdr-meta {
   white-space: nowrap;
   overflow: hidden;
@@ -55,16 +68,13 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   font-size: 13px;
 }
 
-/* =================== ヘッダー：ボタンとPINを“少し小さめ”に完全統一 =================== */
 :root {
-  --hdr-btn-h: 36px;   /* 高さ（少し小さめ／押しやすさ維持） */
-  --hdr-btn-w: 88px;   /* 横幅固定で統一 */
-  --hdr-font: 14px;    /* フォントサイズ */
-  --hdr-gap: 8px;      /* ボタン間隔 */
+  --hdr-btn-h: 36px;
+  --hdr-btn-w: 88px;
+  --hdr-font: 14px;
+  --hdr-gap: 8px;
 }
-
-/* 共通ボタン（塗りなし/あり） */
-.hdr-btn, .hdr-btn-primary {
+.hdr-btn, .hdr-btn-primary, .hdr-btn.submit-btn, .hdr-btn.danger-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -75,23 +85,19 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   border-radius: 10px;
   padding: 0 12px;
   -webkit-tap-highlight-color: transparent;
-}
-.hdr-btn {
-  background: #fff;
   border: 1px solid #d1d5db;
+  background: #fff;
   color: #111827;
 }
-.hdr-btn-primary {
-  background: #6b7280;      /* gray-600 */
-  border: 1px solid #6b7280;
-  color: #fff;
-}
-.hdr-btn:active, .hdr-btn-primary:active { transform: scale(0.98); }
+.hdr-btn-primary { background: #6b7280; border-color: #6b7280; color: #fff; }
+.hdr-btn.submit-btn { background: #000; color: #ef4444; border-color: #000; }
+.hdr-btn.danger-btn { background: #fff; color: #b91c1c; border-color: #ef4444; }
+.hdr-btn:active, .hdr-btn-primary:active, .hdr-btn.submit-btn:active, .hdr-btn.danger-btn:active { transform: scale(0.98); }
 
-/* PINも同じ箱サイズに合わせて完全一致 */
 .pin-4ch {
   height: var(--hdr-btn-h);
-  min-width: var(--hdr-btn-w);
+  width: var(--hdr-btn-w) !important;
+  min-width: var(--hdr-btn-w) !important;
   border-radius: 10px;
   border: 1px solid #d1d5db;
   background: #fff;
@@ -99,163 +105,74 @@ textarea { resize: none; }   /* オートリサイズで横ズレしない */
   text-align: center;
   letter-spacing: .06em;
   padding: 0 10px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-/* =================== 端末幅が狭いときの微調整（iPhone SE等） =================== */
+/* 狭幅端末微調整 */
 @media (max-width: 380px) {
   :root { --hdr-btn-h: 34px; --hdr-btn-w: 84px; --hdr-font: 13px; --hdr-gap: 6px; }
   .header-logo { height: 32px; }
   .brand-title { font-size: 22px; }
   .hdr-meta { font-size: 12px; }
 }
-/* === PINボックス：幅が長くならないよう厳密固定（iOS対策） === */
-.pin-4ch{
-  width: var(--hdr-btn-w) !important;     /* ← min-width ではなく width で厳密固定 */
-  min-width: var(--hdr-btn-w) !important;
-  box-sizing: border-box;                 /* パディング込みで幅計算 */
-  -webkit-appearance: none;               /* iOSの標準見た目を無効化 */
-  appearance: none;
-  padding-right: 10px;                    /* 右端のアイコン余白で押し出されないように */
-}
 
-/* 入力文字は常に黒、placeholder は薄グレー */
-.input, .input[type="text"], .input[type="password"], .input textarea, textarea.input {
-  color: #111827;  /* black */
-}
-.input::placeholder, textarea.input::placeholder {
-  color: #9ca3af;  /* gray-400 */
-}
+/* =================== カレンダードット =================== */
+.cal-dot { position:absolute; bottom:6px; width:6px; height:6px; border-radius:9999px; }
+.cal-any{ background:#111827; }
+.cal-submit{ background:#16a34a; }
+.cal-trainer{ background:#ef4444; }
 
-/* --- 講師コメント（入力・記入済みは赤） --- */
-.teacher-comment {
-  color: #6b7280;                 /* 未入力はグレー */
+/* =================== 採点マーク =================== */
+.mark-wrap {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+  flex: 0 0 auto;      /* 入力側が優先的に広がる */
 }
-.teacher-comment:focus,
-.teacher-comment:not(:placeholder-shown) {
-  color: #b91c1c;                 /* 入力中/記入済みは赤 */
-}
-
-/* --- 正誤強調（× は薄赤、○ は薄緑） --- */
-.answer-wrong {
-  background-color: #fee2e2;      /* red-100 */
-  border-color: #fecaca;          /* red-200 */
-}
-.answer-correct {
-  background-color: #ecfdf5;      /* emerald-50 */
-  border-color: #a7f3d0;          /* emerald-200 */
-}
-
-/* --- カレンダーの “提出済み” マーカー（●） --- */
-.cal-dot {
-  position:absolute; bottom:6px; width:6px; height:6px; border-radius:9999px;
-}
-.cal-any   { background:#111827; } /* 何か保存あり：黒点 */
-.cal-submit{ background:#16a34a; } /* 提出済み：緑点（優先表示） */
-.cal-trainer{ background:#ef4444; } /* 講師応答：赤点（最優先表示） */
-
-/* === 採点マーク（○/×/消）UI === */
-.mark-wrap { display:inline-flex; gap:6px; margin-left:8px; vertical-align:middle; }
 .mark-btn {
   display:inline-flex; align-items:center; justify-content:center;
   width:28px; height:28px; border-radius:8px; font-size:14px; line-height:1;
   border:1px solid #d1d5db; background:#fff; color:#111827; cursor:pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.mark-btn.ok     { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; } /* 薄緑 */
-.mark-btn.wrong  { background:#fee2e2; border-color:#fecaca; color:#991b1b; } /* 薄赤 */
-.mark-btn.clear  { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
+.mark-btn.ok    { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+.mark-btn.wrong { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+.mark-btn.clear { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
 
-.answer-wrong  { background:#fee2e2; border-color:#fecaca; }
-.answer-correct{ background:#ecfdf5; border-color:#a7f3d0; }
-
-/* === Part1：iPhoneで語彙と日本語訳を上下配置 === */
-.p1-row { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
-.p1-word { min-width:88px; font-weight:600; }
-@media (max-width: 480px) {
-  .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word { width:100%; }
-}
-
-/* === 入力の横幅を優先（横にボタンがあっても縮み過ぎない） === */
-.flex-1 { flex:1; min-width:0; }     /* 入力側 */
-.mark-wrap { flex:0 0 auto; }        /* ボタン側は縮ませない */
-
-/* === Part3：Masayuki 入力の横幅を確保 === */
-.p3-answer-row { display:flex; gap:8px; align-items:center; }
-.p3-answer { flex: 1 1 auto; min-width: 0; }  /* 入力側を広げる */
-.mark-wrap { flex: 0 0 auto; }                 /* ボタン側は縮ませない */
-
-/* === 講師コメントを赤で表示（入力中も） === */
-.teacher-comment {
-  color: #b91c1c;               /* 赤 */
-}
-.teacher-comment::placeholder { color: #ef9a9a; } /* 薄い赤 */
-
-/* === 横幅＆左端そろえ用ユーティリティ === */
-.row      { display:flex; gap:8px; align-items:center; }
-.col-grow { flex:1 1 0; min-width:0; }   /* 入力側: 伸縮OK/折り返しOK */
-.mark-wrap{ flex:0 0 auto; }             /* ○×ボタン側: 幅固定で縮ませない */
-
-/* 提出ボタン：他と同じサイズを維持して色だけ変更 */
-.hdr-btn.submit-btn {
-  background: #000;   /* 黒背景 */
-  color: #ef4444;     /* 赤文字 */
-  border: 1px solid #000;
-}
-.hdr-btn.submit-btn:active {
-  transform: scale(0.98);
-}
-
-/* 出題リセット（サイズは .hdr-btn と同一。色のみ変更） */
-.hdr-btn.danger-btn {
-  background: #fff;
-  color: #b91c1c;         /* 赤文字 */
-  border: 1px solid #ef4444;
-}
-.hdr-btn.danger-btn:active {
-  transform: scale(0.98);
-}
-
-/* === Part1（iPhoneで上下にしてフル幅） === */
-.p1-row { display:flex; gap:12px; align-items:center; }
-.p1-word { font-weight:600; min-width:88px; }
-
-/* 画面が狭い端末では縦積み＆入力を100%に */
-@media (max-width: 480px) {
-  .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word { min-width: 0; }
-  .p1-row .input { width: 100%; }
-}
-
-/* 本日のテーマ（入力/表示どちらも少し小さめ） */
-.theme-input { font-size: 14px; }
-.theme-text  { font-size: 14px; line-height: 1.6; }
-
-/* === Part1：PCは横並びで英単語は折り返さない。入力は残り幅いっぱい === */
-.p1-row { display: flex; gap: 12px; align-items: center; }
+/* =================== Part1 レイアウト（統一） =================== */
+/* PC：横並び（英単語:固定幅 / 日本語欄:可変） */
+.p1-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
 .p1-word {
   font-weight: 600;
-  min-width: 120px;          /* 余裕を少し増やす（お好みで 88〜140px） */
-  white-space: nowrap;       /* ← 折り返し禁止（PC向け） */
-  flex: 0 0 auto;            /* つぶれ防止：固定幅として扱う */
+  min-width: 120px;      /* 88〜140で微調整可 */
+  white-space: nowrap;   /* PCは折り返さない */
+  flex: 0 0 auto;
 }
-.p1-answer { flex: 1; max-width: 100%; }   /* 入力は残り幅を占有 */
+.p1-answer {            /* ← Part1の日本語入力。学習者入力欄と同じ設定 */
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
 
-/* === iPhoneなど狭幅：縦並び＆入力は100%幅。英単語は折り返し可に戻す === */
+/* モバイル：縦積みでフル幅、マーク群は折り返し下へ */
 @media (max-width: 480px) {
   .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word {
-    min-width: 0;
-    width: 100%;
-    white-space: normal;      /* ← モバイルでは折り返しOK */
-  }
-  .p1-row .p1-answer {
-    width: 100%;
-    flex: initial;
-  }
+  .p1-word { min-width: 0; width: 100%; white-space: normal; }
+  .p1-row .p1-answer { width: 100%; flex: initial; }
+  .p1-row .mark-wrap { margin-left: 0; }
 }
 
-/* iOSの入力ズーム対策：モバイルでは入力フォントは16px以上に */
-@media (max-width: 480px) {
-  input, textarea, .input, .pin-4ch { font-size: 16px !important; }
-}
+/* =================== 共通行ユーティリティ（Part2/Part3等） =================== */
+.row { display: flex; gap: 8px; align-items: center; }
+.flex-1 { flex: 1 1 auto; min-width: 0; }
+.col-grow { flex: 1 1 0; min-width: 0; }   /* 旧クラス互換 */
+
+/* =================== メモ（講師コメントの見た目） =================== */
+.teacher-comment { color: #b91c1c; }
+.teacher-comment::placeholder { color: #ef9a9a; }
+
+/* 本日のテーマ（少し小さめ） */
+.theme-input { font-size: 14px; }
+.theme-text  { font-size: 14px; line-height: 1.6; }
