@@ -312,50 +312,37 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
               {mode === "trainer" && (
                 <div className="mark-wrap">
                   <button
-                    className="mark-btn ok"
-                    onMouseDown={(e)=>e.preventDefault()}
-                    onClick={() => setWs((c) => ({
-                      ...c,
-                      parts: {
-                        ...c.parts,
-                        part2: {
-                          ...c.parts.part2,
-                          marks: {
-                            ...(c.parts.part2.marks || {}),
-                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "ok" }
-                          }
-                        }
-                      }
-                    }))}
-                  >○</button>
-                  <button
-                    className="mark-btn wrong"
-                    onMouseDown={(e)=>e.preventDefault()}
-                    onClick={() => setWs((c) => ({
-                      ...c,
-                      parts: {
-                        ...c.parts,
-                        part2: {
-                          ...c.parts.part2,
-                          marks: {
-                            ...(c.parts.part2.marks || {}),
-                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" }
-                          }
-                        }
-                      }
-                    }))}
-                  >×</button>
-                  <button
-                    className="mark-btn clear"
-                    onMouseDown={(e)=>e.preventDefault()}
-                    onClick={() => setWs((c) => {
-                      const base = { ...(c.parts.part2.marks || {}) };
-                      const rec = { ...(base[it.id] || {}) };
-                      delete rec.en;
-                      base[it.id] = rec;
-                      return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
-                    })}
-                  >消</button>
+  className="mark-btn ok"
+  onMouseDown={(e)=>e.preventDefault()}
+  onClick={() => setWs((c) => ({
+    ...c,
+    parts: { ...c.parts, part2: { ...c.parts.part2,
+      marks: { ...(c.parts.part2.marks || {}), [it.id]:
+        { ...((c.parts.part2.marks || {})[it.id]), en: "ok" } } } }
+  ))}
+/>○</button>
+
+<button
+  className="mark-btn wrong"
+  onMouseDown={(e)=>e.preventDefault()}
+  onClick={() => setWs((c) => ({
+    ...c,
+    parts: { ...c.parts, part2: { ...c.parts.part2,
+      marks: { ...(c.parts.part2.marks || {}), [it.id]:
+        { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" } } } }
+  ))}
+/>×</button>
+
+<button
+  className="mark-btn clear"
+  onMouseDown={(e)=>e.preventDefault()}
+  onClick={() => {
+    const base = { ...(c.parts.part2.marks || {}) };
+    const rec = { ...(base[it.id] || {}) };
+    delete rec.en; base[it.id] = rec;
+    return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
+  }}
+>消</button>
                 </div>
               )}
             </div> {/* ← この閉じタグが抜けていた */}
@@ -528,9 +515,9 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} …>○</button>
-                    <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} …>×</button>
-                    <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} …>消</button>
+                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>○</button>
+<button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>×</button>
+<button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={/* 省略 */}>消</button>
                   </div>
                 )}
               </div>
