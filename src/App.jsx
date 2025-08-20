@@ -453,7 +453,6 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
   </div>
 )}
 
-        {/* 講師コメント（講師は編集、学習者は表示のみ） */}
         {mode === "trainer" ? (
           <div style={{ marginTop: 12 }}>
             <div className="label">講師コメント</div>
