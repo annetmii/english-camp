@@ -229,7 +229,7 @@ const Part1Row = React.memo(function Part1Row({ it, mode, ws, setWs, draftRef, s
 });
 
 // ====== Part1（トップレベル版）======
-const Part1 = React.memo(function Part1({ ws, setWs, mode, draftRef, scheduleFlush }) {
+const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part1.label} instructions={ws.parts.part1.instructions}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
@@ -261,7 +261,7 @@ const Part1 = React.memo(function Part1({ ws, setWs, mode, draftRef, scheduleFlu
 });
 
 // ====== Part2（トップレベル版）======
-const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlush }) {
+const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
       {ws.parts.part2.items.map((it) => {
@@ -445,7 +445,7 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
 });
 
 // ====== Part3（トップレベル版）======
-const Part3 = React.memo(function Part3({ ws, setWs, mode, draftRef, scheduleFlush }) {
+const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
       {ws.parts.part3.items.map((it) => {
@@ -1178,9 +1178,9 @@ export default function App() {
         resetQuestions={resetQuestions}
       />
       <ThemeBar />
-      <Part1 ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
-      <Part2 ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
-      <Part3 ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
+      <Part1  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
+      <Part2  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
+      <Part3  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={draftRef} scheduleFlush={scheduleFlush} />
       <Part4 />
 
       {mode === "trainer" ? (
