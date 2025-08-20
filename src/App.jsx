@@ -266,12 +266,13 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
     <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
       {ws.parts.part2.items.map((it) => {
         const ans = (ws.parts.part2.answers || {})[it.id] || { en: "", ja: "" };
-        const m = ((ws.parts.part2.marks || {})[it.id]) || {};
+        const m = (ws.parts.part2.marks || {})[it.id] || {};
         const enWrong = m.en === "wrong", enOk = m.en === "ok";
         const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
 
         return (
           <div key={it.id} style={{ marginBottom: 12 }}>
+            {/* 1行目：出題 */}
             <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
               {mode === "trainer" ? (
                 <DebouncedInput
@@ -293,205 +294,155 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
               )}
             </div>
 
+            {/* 2行目：英語の答え＋採点 */}
             <div className="row" style={{ marginTop: 8 }}>
               <div className="flex-1">
                 <DebouncedInput
                   className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
                   placeholder="英語の答え（穴埋め）"
                   value={ans.en ?? ""}
-                  onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v }; scheduleFlush(); }}
+                  onChange={(v) => {
+                    draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v };
+                    scheduleFlush();
+                  }}
                 />
+              </div>
               {mode === "trainer" && (
-  <div className="mark-wrap">
-    <button
-      className="mark-btn ok"
-      onClick={() => {
-        setWs((c) => ({
-          ...c,
-          parts: {
-            ...c.parts,
-            part2: {
-              ...c.parts.part2,
-              marks: {
-                ...(c.parts.part2.marks || {}),
-                [it.id]: {
-                  ...((c.parts.part2.marks || {})[it.id]),
-                  en: "ok",
-                },
-              },
-            },
-          },
-        }));
-      }}
-    >
-      ○
-    </button>
+                <div className="mark-wrap">
+                  <button
+                    className="mark-btn ok"
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: {
+                        ...c.parts,
+                        part2: {
+                          ...c.parts.part2,
+                          marks: {
+                            ...(c.parts.part2.marks || {}),
+                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "ok" }
+                          }
+                        }
+                      }
+                    }))}
+                  >○</button>
+                  <button
+                    className="mark-btn wrong"
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: {
+                        ...c.parts,
+                        part2: {
+                          ...c.parts.part2,
+                          marks: {
+                            ...(c.parts.part2.marks || {}),
+                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" }
+                          }
+                        }
+                      }
+                    }))}
+                  >×</button>
+                  <button
+                    className="mark-btn clear"
+                    onClick={() => setWs((c) => {
+                      const base = { ...(c.parts.part2.marks || {}) };
+                      const rec = { ...(base[it.id] || {}) };
+                      delete rec.en;
+                      base[it.id] = rec;
+                      return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
+                    })}
+                  >消</button>
+                </div>
+              )}
+            </div> {/* ← この閉じタグが抜けていた */}
 
-    <button
-      className="mark-btn wrong"
-      onClick={() => {
-        setWs((c) => ({
-          ...c,
-          parts: {
-            ...c.parts,
-            part2: {
-              ...c.parts.part2,
-              marks: {
-                ...(c.parts.part2.marks || {}),
-                [it.id]: {
-                  ...((c.parts.part2.marks || {})[it.id]),
-                  en: "wrong",
-                },
-              },
-            },
-          },
-        }));
-      }}
-    >
-      ×
-    </button>
-
-    <button
-      className="mark-btn clear"
-      onClick={() => {
-        setWs((c) => {
-          const base = { ...(c.parts.part2.marks || {}) };
-          const rec = { ...(base[it.id] || {}) };
-          delete rec.en;
-          base[it.id] = rec;
-          return {
-            ...c,
-            parts: {
-              ...c.parts,
-              part2: { ...c.parts.part2, marks: base },
-            },
-          };
-        });
-      }}
-    >
-      消
-    </button>
-  </div>
-)}
-
+            {/* 3行目：日本語訳＋採点 */}
             <div className="row" style={{ marginTop: 8 }}>
               <div className="flex-1">
                 <DebouncedInput
                   className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
                   placeholder="日本語訳"
                   value={ans.ja ?? ""}
-                  onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v }; scheduleFlush(); }}
+                  onChange={(v) => {
+                    draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v };
+                    scheduleFlush();
+                  }}
                 />
               </div>
               {mode === "trainer" && (
-  <div className="mark-wrap">
-    <button
-      className="mark-btn ok"
-      onClick={() =>
-        setWs((c) => ({
-          ...c,
-          parts: {
-            ...c.parts,
-            part2: {
-              ...c.parts.part2,
-              marks: {
-                ...(c.parts.part2.marks || {}),
-                [it.id]: {
-                  ...((c.parts.part2.marks || {})[it.id]),
-                  ja: "ok",
-                },
-              },
-            },
-          },
-        }))
-      }
-    >
-      ○
-    </button>
-
-    <button
-      className="mark-btn wrong"
-      onClick={() =>
-        setWs((c) => ({
-          ...c,
-          parts: {
-            ...c.parts,
-            part2: {
-              ...c.parts.part2,
-              marks: {
-                ...(c.parts.part2.marks || {}),
-                [it.id]: {
-                  ...((c.parts.part2.marks || {})[it.id]),
-                  ja: "wrong",
-                },
-              },
-            },
-          },
-        }))
-      }
-    >
-      ×
-    </button>
-
-    <button
-      className="mark-btn clear"
-      onClick={() =>
-        setWs((c) => {
-          const base = { ...(c.parts.part2.marks || {}) };
-          const rec = { ...(base[it.id] || {}) };
-          delete rec.ja;
-          base[it.id] = rec;
-          return {
-            ...c,
-            parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } },
-          };
-        })
-      }
-    >
-      消
-    </button>
-  </div>
-)}
-
-        {mode === "trainer" ? (
-          <div style={{ marginTop: 12 }}>
-            <div className="label">講師コメント</div>
-            <DebouncedInput
-              multiline
-              rows={3}
-              autoGrow
-              className="input field-full teacher-comment"
-              value={ws.parts.part2.trainerNotes || ""}
-              onChange={(v) =>
-                setWs((cur) => ({
-                  ...cur,
-                  parts: {
-                    ...cur.parts,
-                    part2: { ...cur.parts.part2, trainerNotes: v },
-                  },
-                }))
-              }
-            />
+                <div className="mark-wrap">
+                  <button
+                    className="mark-btn ok"
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: {
+                        ...c.parts,
+                        part2: {
+                          ...c.parts.part2,
+                          marks: {
+                            ...(c.parts.part2.marks || {}),
+                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "ok" }
+                          }
+                        }
+                      }
+                    }))}
+                  >○</button>
+                  <button
+                    className="mark-btn wrong"
+                    onClick={() => setWs((c) => ({
+                      ...c,
+                      parts: {
+                        ...c.parts,
+                        part2: {
+                          ...c.parts.part2,
+                          marks: {
+                            ...(c.parts.part2.marks || {}),
+                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "wrong" }
+                          }
+                        }
+                      }
+                    }))}
+                  >×</button>
+                  <button
+                    className="mark-btn clear"
+                    onClick={() => setWs((c) => {
+                      const base = { ...(c.parts.part2.marks || {}) };
+                      const rec = { ...(base[it.id] || {}) };
+                      delete rec.ja;
+                      base[it.id] = rec;
+                      return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
+                    })}
+                  >消</button>
+                </div>
+              )}
+            </div>
           </div>
-        ) : ws.parts.part2.trainerNotes ? (
-          <div
-            style={{
-              marginTop: 12,
-              background: "#f9fafb",
-              borderLeft: "4px solid #e5e7eb",
-              padding: "8px 12px",
-              borderRadius: 8,
-              color: "#b91c1c",
-            }}
-          >
-            <strong>講師コメント：</strong>
-            <br />
-            {ws.parts.part2.trainerNotes}
-          </div>
-        ) : null}
-      </Card>
-    );
-  });
+        );
+      })}
+
+      {/* 講師コメント */}
+      {mode === "trainer" ? (
+        <div style={{ marginTop: 12 }}>
+          <div className="label">講師コメント</div>
+          <DebouncedInput
+            multiline rows={3} autoGrow
+            className="input field-full teacher-comment"
+            value={ws.parts.part2.trainerNotes || ""}
+            onChange={(v) =>
+              setWs((cur) => ({
+                ...cur,
+                parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } }
+              }))
+            }
+          />
+        </div>
+      ) : ws.parts.part2.trainerNotes ? (
+        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
+          <strong>講師コメント：</strong><br />{ws.parts.part2.trainerNotes}
+        </div>
+      ) : null}
+    </Card>
+  );
+});
 
 // ====== Part3（トップレベル版）======
 const Part3 = React.memo(function Part3({ ws, setWs, mode, draftRef, scheduleFlush }) {
