@@ -384,23 +384,74 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
                 />
               </div>
               {mode === "trainer" && (
-                <div className="mark-wrap">
-                  <button className="mark-btn ok" onClick={() => setWs((c) => ({
-                    ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "ok" } } }
-                  }))}>○</button>
-                  <button className="mark-btn wrong" onClick={() => setWs((c) => ({
-                    ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "wrong" } } }
-                  }))}>×</button>
-                  <button className="mark-btn clear" onClick={() => setWs((c) => {
-                    const base = { ...(c.parts.part2.marks || {}) }; const rec = { ...(base[it.id] || {}) }; delete rec.ja; base[it.id] = rec;
-                    return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
-                  })}>消</button>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
+  <div className="mark-wrap">
+    <button
+      className="mark-btn ok"
+      onClick={() =>
+        setWs((c) => ({
+          ...c,
+          parts: {
+            ...c.parts,
+            part2: {
+              ...c.parts.part2,
+              marks: {
+                ...(c.parts.part2.marks || {}),
+                [it.id]: {
+                  ...((c.parts.part2.marks || {})[it.id]),
+                  ja: "ok",
+                },
+              },
+            },
+          },
+        }))
+      }
+    >
+      ○
+    </button>
+
+    <button
+      className="mark-btn wrong"
+      onClick={() =>
+        setWs((c) => ({
+          ...c,
+          parts: {
+            ...c.parts,
+            part2: {
+              ...c.parts.part2,
+              marks: {
+                ...(c.parts.part2.marks || {}),
+                [it.id]: {
+                  ...((c.parts.part2.marks || {})[it.id]),
+                  ja: "wrong",
+                },
+              },
+            },
+          },
+        }))
+      }
+    >
+      ×
+    </button>
+
+    <button
+      className="mark-btn clear"
+      onClick={() =>
+        setWs((c) => {
+          const base = { ...(c.parts.part2.marks || {}) };
+          const rec = { ...(base[it.id] || {}) };
+          delete rec.ja;
+          base[it.id] = rec;
+          return {
+            ...c,
+            parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } },
+          };
+        })
+      }
+    >
+      消
+    </button>
+  </div>
+)}
 
       {mode === "trainer" ? (
         <div style={{ marginTop: 12 }}>
