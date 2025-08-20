@@ -301,22 +301,78 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
                   value={ans.en ?? ""}
                   onChange={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v }; scheduleFlush(); }}
                 />
-              </div>
               {mode === "trainer" && (
-                <div className="mark-wrap">
-                  <button className="mark-btn ok" onClick={() => setWs((c) => ({
-                    ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "ok" } } }
-                  }))}>○</button>
-                  <button className="mark-btn wrong" onClick={() => setWs((c) => ({
-                    ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: { ...(c.parts.part2.marks || {}), [it.id]: { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" } } }
-                  }))}>×</button>
-                  <button className="mark-btn clear" onClick={() => setWs((c) => {
-                    const base = { ...(c.parts.part2.marks || {}) }; const rec = { ...(base[it.id] || {}) }; delete rec.en; base[it.id] = rec;
-                    return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
-                  })}>消</button>
-                </div>
-              )}
-            </div>
+  <div className="mark-wrap">
+    <button
+      className="mark-btn ok"
+      onClick={() => {
+        setWs((c) => ({
+          ...c,
+          parts: {
+            ...c.parts,
+            part2: {
+              ...c.parts.part2,
+              marks: {
+                ...(c.parts.part2.marks || {}),
+                [it.id]: {
+                  ...((c.parts.part2.marks || {})[it.id]),
+                  en: "ok",
+                },
+              },
+            },
+          },
+        }));
+      }}
+    >
+      ○
+    </button>
+
+    <button
+      className="mark-btn wrong"
+      onClick={() => {
+        setWs((c) => ({
+          ...c,
+          parts: {
+            ...c.parts,
+            part2: {
+              ...c.parts.part2,
+              marks: {
+                ...(c.parts.part2.marks || {}),
+                [it.id]: {
+                  ...((c.parts.part2.marks || {})[it.id]),
+                  en: "wrong",
+                },
+              },
+            },
+          },
+        }));
+      }}
+    >
+      ×
+    </button>
+
+    <button
+      className="mark-btn clear"
+      onClick={() => {
+        setWs((c) => {
+          const base = { ...(c.parts.part2.marks || {}) };
+          const rec = { ...(base[it.id] || {}) };
+          delete rec.en;
+          base[it.id] = rec;
+          return {
+            ...c,
+            parts: {
+              ...c.parts,
+              part2: { ...c.parts.part2, marks: base },
+            },
+          };
+        });
+      }}
+    >
+      消
+    </button>
+  </div>
+)}
 
             <div className="row" style={{ marginTop: 8 }}>
               <div className="flex-1">
