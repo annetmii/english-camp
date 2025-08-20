@@ -1,4 +1,4 @@
-// /src/App.jsx ーー 完全版
+// /src/App.jsx
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 /* ===================== Utils ===================== */
@@ -59,7 +59,13 @@ async function cloudListDates({ userId }) {
   return res.json();
 }
 
-// ===================== Input (IME-safe, iOS-stable, autosize) =====================
+/* ===================== DebouncedInput (安定版) ===================== */
+/**
+ * iOS/PCともにフォーカスを強固に維持する入力。
+ * - 内部stateで完全制御し、親値では上書きしない（フォーカス中/IME中/ロック中）
+ * - すべてのpointer系イベントをキャプチャで止め、外部クリックでのblurを極力抑止
+ * - キャレット位置を保存・復元
+ */
 const DebouncedInput = React.memo(function DebouncedInput({
   id,
   value,
@@ -74,18 +80,41 @@ const DebouncedInput = React.memo(function DebouncedInput({
   ...rest
 }) {
   const [inner, setInner] = useState(value ?? "");
-  const compRef = useRef(false);       // IME中フラグ
-  const tRef = useRef(null);           // debounce タイマ
-  const inputRef = useRef(null);       // 実DOM
-  const focusedRef = useRef(false);    // 直近でフォーカスを持っていたか
-  const lockRef = useRef(false);       // 一時的に親からの value 反映をブロック
+  const compRef = useRef(false);        // IME中
+  const tRef = useRef(null);            // debounceタイマ
+  const inputRef = useRef(null);        // DOM
+  const focusedRef = useRef(false);     // フォーカスフラグ
+  const lockRef = useRef(false);        // 親値上書きロック
+  const caretRef = useRef({ s: null, e: null });
 
-  // 親→子 同期：フォーカス中は**絶対に上書きしない**
+  // 親→子 同期：安全な時だけ反映
   useEffect(() => {
-    if (compRef.current) return;
-    if (focusedRef.current) return;
-    if (!lockRef.current) setInner(value ?? "");
+    if (compRef.current || focusedRef.current || lockRef.current) return;
+    setInner(value ?? "");
   }, [value]);
+
+  // オートリサイズ（textareaのみ）
+  const resize = useCallback(() => {
+    if (!autoGrow || !multiline || !inputRef.current) return;
+    const el = inputRef.current;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 320) + "px";
+  }, [autoGrow, multiline]);
+  useEffect(() => { resize(); }, [inner, resize]);
+
+  // 直近のキャレットを保存
+  const saveCaret = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    try { caretRef.current = { s: el.selectionStart, e: el.selectionEnd }; } catch {}
+  };
+  const restoreCaret = () => {
+    const el = inputRef.current;
+    const { s, e } = caretRef.current || {};
+    if (el && s != null && e != null) {
+      try { el.setSelectionRange(s, e); } catch {}
+    }
+  };
 
   const flush = useCallback((next) => {
     if (typeof onChange !== "function") return;
@@ -97,42 +126,40 @@ const DebouncedInput = React.memo(function DebouncedInput({
     if (compRef.current) return;
     if (tRef.current) clearTimeout(tRef.current);
     tRef.current = setTimeout(() => {
-      lockRef.current = false;                 // 送信後ロック解除
+      lockRef.current = false; // 送信後ロック解除
       flush(next);
     }, debounceMs);
   }, [flush, debounceMs]);
-
-  // iOSでのフォーカス復帰（再レンダー後でも保持）
-  useEffect(() => {
-    if (focusedRef.current && inputRef.current) {
-      try { inputRef.current.focus({ preventScroll: true }); } catch {}
-    }
-  });
-
-  const resize = useCallback(() => {
-    if (!autoGrow || !multiline || !inputRef.current) return;
-    const el = inputRef.current;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 320) + "px";
-  }, [autoGrow, multiline]);
-  useEffect(() => { resize(); }, [inner, resize]);
 
   const common = {
     ref: inputRef,
     className,
     placeholder,
-    value: inner,                         // 完全に内部状態で制御
+    value: inner,
     onChange: (e) => {
       const v = e.target.value;
+      saveCaret();
       setInner(v);
-      lockRef.current = true;            // 親からの value 反映を一時ロック
+      lockRef.current = true;
       schedule(v);
+      // 入力直後の再描画でキャレットが飛ぶ対策
+      requestAnimationFrame(restoreCaret);
     },
     onFocus: () => { focusedRef.current = true; },
-    onBlur: () => {
+    onBlur: (e) => {
+      // iOSで意図せずblurした場合に即復帰する
+      const related = e.relatedTarget;
+      const shouldRefocus =
+        flushOnBlur && focusedRef.current && (!related || !(related instanceof HTMLElement));
       focusedRef.current = false;
       lockRef.current = false;
       if (flushOnBlur) flush(inner);
+      if (shouldRefocus && inputRef.current) {
+        // ほんの少し遅らせて再フォーカス（iOSでキーボードが閉じない）
+        setTimeout(() => {
+          try { inputRef.current.focus({ preventScroll: true }); restoreCaret(); } catch {}
+        }, 0);
+      }
     },
     onCompositionStart: () => { compRef.current = true; },
     onCompositionEnd: (e) => {
@@ -140,14 +167,20 @@ const DebouncedInput = React.memo(function DebouncedInput({
       const v = e.currentTarget.value;
       setInner(v);
       flush(v);
+      requestAnimationFrame(restoreCaret);
     },
-    // 近くのボタンや親のクリックがフォーカスを奪わないように
-    onMouseDownCapture: (e) => { e.stopPropagation(); },
-    onTouchStartCapture: (e) => { e.stopPropagation(); },
+    // 近接UIによるフォーカス奪取防止（マウス/タッチ/ペン共通）
+    onPointerDownCapture: (e) => { e.stopPropagation(); },
+    onPointerUpCapture:   (e) => { e.stopPropagation(); },
+    // レガシーSafari対策としてmouse/touchも残す
+    onMouseDownCapture:   (e) => { e.stopPropagation(); },
+    onTouchStartCapture:  (e) => { e.stopPropagation(); },
     autoComplete: "off",
     autoCorrect: "off",
     spellCheck: false,
     inputMode: "text",
+    enterKeyHint: "done",
+    autoCapitalize: "none",
     ...rest,
   };
 
@@ -161,12 +194,11 @@ const DebouncedInput = React.memo(function DebouncedInput({
   );
 });
 
-// ====== Part1Row（トップレベル版）======
-// ▼FIX: 受け取るpropsを正しく受理
+/* ====== Part1Row ====== */
 const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef, scheduleFlush }) {
   const answerMap = ws.parts.part1.answers || {};
   const answer = answerMap[it.id] !== undefined ? answerMap[it.id] : "";
-  const mark = (ws.parts.part1.marks || {})[it.id];   // 'ok' | 'wrong' | undefined
+  const mark = (ws.parts.part1.marks || {})[it.id];
   const isWrong = mark === "wrong";
   const isOk = mark === "ok";
 
@@ -176,7 +208,7 @@ const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef, s
       const idx = items.findIndex((x) => x.id === it.id);
       if (idx < 0) return cur;
       const curVal = items[idx].en || "";
-      if (curVal === (v ?? "")) return cur; // 変更なしなら何もしない
+      if (curVal === (v ?? "")) return cur;
       const next = [...items]; next[idx] = { ...next[idx], en: v };
       return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: next } } };
     });
@@ -221,16 +253,22 @@ const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef, s
 
       {mode === "trainer" && (
         <div className="mark-wrap">
-          <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark("ok")}>○</button>
-          <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark("wrong")}>×</button>
-          <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={clearMark}>消</button>
+          <button type="button" className="mark-btn ok"
+            onPointerDown={(e)=>e.preventDefault()}
+            onClick={() => setMark("ok")}>○</button>
+          <button type="button" className="mark-btn wrong"
+            onPointerDown={(e)=>e.preventDefault()}
+            onClick={() => setMark("wrong")}>×</button>
+          <button type="button" className="mark-btn clear"
+            onPointerDown={(e)=>e.preventDefault()}
+            onClick={clearMark}>消</button>
         </div>
       )}
     </div>
   );
 });
 
-// ====== Part1（トップレベル版）======
+/* ====== Part1 ====== */
 const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part1.label} instructions={ws.parts.part1.instructions}>
@@ -241,11 +279,13 @@ const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef, sched
       </div>
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button className="btn btn-primary" 
-            onMouseDown={(e)=>e.preventDefault()}
+          <button type="button" className="btn btn-primary"
+            onPointerDown={(e)=>e.preventDefault()}
             onClick={() => setWs((cur) => ({
-            ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }
-          }))}>語彙を追加</button>
+              ...cur,
+              parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }
+            }))}
+          >語彙を追加</button>
         </div>
       )}
       {mode === "trainer" ? (
@@ -264,7 +304,7 @@ const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef, sched
   );
 });
 
-// ====== Part2（トップレベル版）======
+/* ====== Part2 ====== */
 const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
@@ -313,10 +353,8 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
               </div>
               {mode === "trainer" && (
                 <div className="mark-wrap">
-                  {/* ▼FIX: JSXを正しい開閉に、ハンドラも正しい形に */}
-                  <button
-                    className="mark-btn ok"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn ok"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: { ...c.parts, part2: { ...c.parts.part2,
@@ -324,10 +362,8 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                           { ...((c.parts.part2.marks || {})[it.id]), en: "ok" } } } }
                     }))}
                   >○</button>
-
-                  <button
-                    className="mark-btn wrong"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn wrong"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: { ...c.parts, part2: { ...c.parts.part2,
@@ -335,10 +371,8 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                           { ...((c.parts.part2.marks || {})[it.id]), en: "wrong" } } } }
                     }))}
                   >×</button>
-
-                  <button
-                    className="mark-btn clear"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn clear"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => {
                       const base = { ...(c.parts.part2.marks || {}) };
                       const rec = { ...(base[it.id] || {}) };
@@ -348,7 +382,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                   >消</button>
                 </div>
               )}
-            </div> {/* ← ここは閉じタグあり */}
+            </div>
 
             {/* 3行目：日本語訳＋採点 */}
             <div className="row" style={{ marginTop: 8 }}>
@@ -365,48 +399,30 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
               </div>
               {mode === "trainer" && (
                 <div className="mark-wrap">
-                  <button
-                    className="mark-btn ok"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn ok"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
-                      parts: {
-                        ...c.parts,
-                        part2: {
-                          ...c.parts.part2,
-                          marks: {
-                            ...(c.parts.part2.marks || {}),
-                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "ok" }
-                          }
-                        }
-                      }
+                      parts: { ...c.parts, part2: { ...c.parts.part2,
+                        marks: { ...(c.parts.part2.marks || {}), [it.id]:
+                          { ...((c.parts.part2.marks || {})[it.id]), ja: "ok" } } } }
                     }))}
                   >○</button>
-                  <button
-                    className="mark-btn wrong"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn wrong"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
-                      parts: {
-                        ...c.parts,
-                        part2: {
-                          ...c.parts.part2,
-                          marks: {
-                            ...(c.parts.part2.marks || {}),
-                            [it.id]: { ...((c.parts.part2.marks || {})[it.id]), ja: "wrong" }
-                          }
-                        }
-                      }
+                      parts: { ...c.parts, part2: { ...c.parts.part2,
+                        marks: { ...(c.parts.part2.marks || {}), [it.id]:
+                          { ...((c.parts.part2.marks || {})[it.id]), ja: "wrong" } } } }
                     }))}
                   >×</button>
-                  <button
-                    className="mark-btn clear"
-                    onMouseDown={(e)=>e.preventDefault()}
+                  <button type="button" className="mark-btn clear"
+                    onPointerDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => {
                       const base = { ...(c.parts.part2.marks || {}) };
                       const rec = { ...(base[it.id] || {}) };
-                      delete rec.ja;
-                      base[it.id] = rec;
+                      delete rec.ja; base[it.id] = rec;
                       return { ...c, parts: { ...c.parts, part2: { ...c.parts.part2, marks: base } } };
                     })}
                   >消</button>
@@ -442,7 +458,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
   );
 });
 
-// ====== Part3（トップレベル版）======
+/* ====== Part3 ====== */
 const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, scheduleFlush }) {
   return (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
@@ -518,10 +534,15 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    {/* ▼FIX: 有効なハンドラに置換 */}
-                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark3("ok")}>○</button>
-                    <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark3("wrong")}>×</button>
-                    <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={clearMark3}>消</button>
+                    <button type="button" className="mark-btn ok"
+                      onPointerDown={(e)=>e.preventDefault()}
+                      onClick={() => setMark3("ok")}>○</button>
+                    <button type="button" className="mark-btn wrong"
+                      onPointerDown={(e)=>e.preventDefault()}
+                      onClick={() => setMark3("wrong")}>×</button>
+                    <button type="button" className="mark-btn clear"
+                      onPointerDown={(e)=>e.preventDefault()}
+                      onClick={clearMark3}>消</button>
                   </div>
                 )}
               </div>
@@ -553,11 +574,12 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
 
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button className="btn btn-primary" 
-            onMouseDown={(e)=>e.preventDefault()}
+          <button type="button" className="btn btn-primary"
+            onPointerDown={(e)=>e.preventDefault()}
             onClick={() => setWs((cur) => ({
-            ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } }
-          }))}>セリフを追加</button>
+              ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } }
+            }))}
+          >セリフを追加</button>
         </div>
       )}
 
@@ -658,7 +680,7 @@ const defaultWorksheet = (dateISO) => ({
       label: "Part 3｜会話ロールプレイ",
       instructions: "英文を入力して会話を完成させてください。",
       items: [], answers: {}, marks: {}, trainerNotes: "" },
-    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。", answer: "", handwriting: null, trainerNotes: "" },
+    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。", answer: "", handwriting: null, trainerNotes: "" },
   },
   trainerFeedback: "",
   submittedAt: null,
@@ -700,7 +722,6 @@ function newer(a, b) { return a && b ? (a > b ? a : b) : (a || b || null); }
 function mergeWs(local, remote) {
   const out = JSON.parse(JSON.stringify(remote || local));
 
-  // Part1 answers
   const l1a = local.parts.part1.answers || {}, r1a = remote.parts.part1.answers || {};
   const l1t = local.parts.part1.answersUpdatedAt || {}, r1t = remote.parts.part1.answersUpdatedAt || {};
   const m1a = { ...r1a }, m1t = { ...r1t };
@@ -710,7 +731,6 @@ function mergeWs(local, remote) {
   }
   out.parts.part1.answers = m1a; out.parts.part1.answersUpdatedAt = m1t;
 
-  // Part2 answers (per-field)
   const l2a = local.parts.part2.answers || {}, r2a = remote.parts.part2.answers || {};
   const l2t = local.parts.part2.answersUpdatedAt || {}, r2t = remote.parts.part2.answersUpdatedAt || {};
   const m2a = JSON.parse(JSON.stringify(r2a)), m2t = JSON.parse(JSON.stringify(r2t));
@@ -725,7 +745,6 @@ function mergeWs(local, remote) {
   }
   out.parts.part2.answers = m2a; out.parts.part2.answersUpdatedAt = m2t;
 
-  // Part3 answers
   const l3a = local.parts.part3.answers || {}, r3a = remote.parts.part3.answers || {};
   const l3t = local.parts.part3.answersUpdatedAt || {}, r3t = remote.parts.part3.answersUpdatedAt || {};
   const m3a = { ...r3a }, m3t = { ...r3t };
@@ -735,7 +754,6 @@ function mergeWs(local, remote) {
   }
   out.parts.part3.answers = m3a; out.parts.part3.answersUpdatedAt = m3t;
 
-  // submitted: keep any submitted
   out.submittedAt = remote.submittedAt || local.submittedAt || null;
   return out;
 }
@@ -752,9 +770,9 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
   return (
     <div className="card" style={{ padding: "12px", background: "white" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m - 1, 1)))}>◀</button>
+        <button type="button" className="btn" onClick={() => onSelect(todayISO(new Date(y, m - 1, 1)))}>◀</button>
         <div className="text-sm font-medium">{y}年{String(m + 1).padStart(2, "0")}月</div>
-        <button className="btn" onClick={() => onSelect(todayISO(new Date(y, m + 1, 1)))}>▶</button>
+        <button type="button" className="btn" onClick={() => onSelect(todayISO(new Date(y, m + 1, 1)))}>▶</button>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, textAlign: "center", fontSize: 11, color: "#6b7280", marginBottom: 4 }}>
         {"月火水木金土日".split("").map((w) => <div key={w}>{w}</div>)}
@@ -769,6 +787,7 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
           const hasTrainer = trainer && trainer.has(iso);
           return (
             <button
+              type="button"
               key={iso}
               onClick={() => onSelect(iso)}
               className="btn"
@@ -815,20 +834,20 @@ const Header = React.memo(function Header({
       <div className="header-row">
         <div className="container">
           <div className="hstack">
-            <button className="hdr-btn" 
-              onMouseDown={(e)=>e.preventDefault()}
+            <button type="button" className="hdr-btn"
+              onPointerDown={(e)=>e.preventDefault()}
               onClick={(ev) => { ev.stopPropagation(); setShowCal((v) => !v); }}>カレンダー</button>
             {mode === "student" ? (
               <>
                 <input type="password" inputMode="numeric" maxLength={4} className="pin-4ch" placeholder="PIN"
                        value={pinInput} onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))} aria-label="講師PIN" />
-                <button className="hdr-btn-primary" 
-                  onMouseDown={(e)=>e.preventDefault()}
+                <button type="button" className="hdr-btn-primary"
+                  onPointerDown={(e)=>e.preventDefault()}
                   onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}>講師モード</button>
               </>
             ) : (
-              <button className="hdr-btn" 
-                onMouseDown={(e)=>e.preventDefault()}
+              <button type="button" className="hdr-btn"
+                onPointerDown={(e)=>e.preventDefault()}
                 onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}>学習者モードへ</button>
             )}
           </div>
@@ -839,11 +858,11 @@ const Header = React.memo(function Header({
         <div className="container">
           <div className="hstack" style={{ justifyContent: "space-between" }}>
             <div className="hstack">
-              <button className="hdr-btn-primary" onClick={(e) => { e.stopPropagation(); doSync("手動同期"); }}>同期</button>
+              <button type="button" className="hdr-btn-primary" onClick={(e) => { e.stopPropagation(); doSync("手動同期"); }}>同期</button>
               {mode === "trainer" && (
-                <button className="hdr-btn danger-btn" onClick={(e) => { e.stopPropagation(); resetQuestions(); }} title="この日の出題を初期化">出題リセット</button>
+                <button type="button" className="hdr-btn danger-btn" onClick={(e) => { e.stopPropagation(); resetQuestions(); }} title="この日の出題を初期化">出題リセット</button>
               )}
-              <button className="hdr-btn submit-btn" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
+              <button type="button" className="hdr-btn submit-btn" onClick={(e) => { e.stopPropagation(); submit(); }}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
           </div>
@@ -891,7 +910,7 @@ export default function App() {
 
   useEffect(() => { window.__aec_setDate = (iso) => setDateISO(iso); return () => { delete window.__aec_setDate; }; }, []);
 
-  /* ===== Local save (500ms + idle), always keyed by dateISO ===== */
+  /* ===== Local save (500ms + idle) ===== */
   const saveTimerRef = useRef(null);
   useEffect(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -941,7 +960,7 @@ export default function App() {
   const submittedDates = useMemo(() => listLocalSubmittedDatesForUser(userId), [userId, ws]);
   const trainerDates = useMemo(() => listLocalTrainerDatesForUser(userId), [userId, ws]);
 
-  /* ===== Batched input → ws (sets timestamps and status) ===== */
+  /* ===== Batched input → ws ===== */
   const draftRef = useRef({ p1: {}, p2: {}, p3: {} });
   const flushTimerRef = useRef(null);
   const scheduleFlush = useCallback(() => {
@@ -1056,7 +1075,7 @@ export default function App() {
   const switchToTrainer = useCallback(() => { if (pinInput === DEFAULT_PIN) setMode("trainer"); else alert("PINが違います。"); }, [pinInput]);
   const switchToStudent = useCallback(() => setMode("student"), []);
 
-  /* ===== Fetch & merge loop (for other devices) ===== */
+  /* ===== Fetch & merge loop ===== */
   const fetchAndMerge = useCallback(async () => {
     try {
       const remote = await cloudLoad({ userId, dateISO });
@@ -1118,64 +1137,62 @@ export default function App() {
 
   /* ===== Part 4 (writing) ===== */
   const Part4 = React.memo(() => (
-  <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-    {/* 英作文テキスト（残す） */}
-    <DebouncedInput
-      multiline
-      rows={3}
-      autoGrow
-      className="input field-full"
-      placeholder="ここに英作文を入力してください"
-      value={ws.parts.part4.answer || ""}
-      onChange={(v) =>
-        setWs((cur) => ({
-          ...cur,
-          parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } },
-        }))
-      }
-    />
+    <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
+      <DebouncedInput
+        multiline
+        rows={3}
+        autoGrow
+        className="input field-full"
+        placeholder="ここに英作文を入力してください"
+        value={ws.parts.part4.answer || ""}
+        onChange={(v) =>
+          setWs((cur) => ({
+            ...cur,
+            parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } },
+          }))
+        }
+      />
 
-    {/* 講師コメントはそのまま（閲覧/編集） */}
-    {mode === "trainer" ? (
-      <div style={{ marginTop: 12 }}>
-        <div className="label">講師コメント</div>
-        <DebouncedInput
-          id="p4-notes"
-          key="p4-notes"
-          multiline
-          rows={3}
-          autoGrow
-          className="input field-full teacher-comment"
-          value={ws.parts.part4.trainerNotes || ""}
-          onChange={(v) =>
-            setWs((cur) => ({
-              ...cur,
-              parts: {
-                ...cur.parts,
-                part4: { ...cur.parts.part4, trainerNotes: v },
-              },
-            }))
-          }
-        />
-      </div>
-    ) : ws.parts.part4.trainerNotes ? (
-      <div
-        style={{
-          marginTop: 12,
-          background: "#f9fafb",
-          borderLeft: "4px solid #e5e7eb",
-          padding: "8px 12px",
-          borderRadius: 8,
-          color: "#b91c1c",
-        }}
-      >
-        <strong>講師コメント：</strong>
-        <br />
-        {ws.parts.part4.trainerNotes}
-      </div>
-    ) : null}
-  </Card>
-));
+      {mode === "trainer" ? (
+        <div style={{ marginTop: 12 }}>
+          <div className="label">講師コメント</div>
+          <DebouncedInput
+            id="p4-notes"
+            key="p4-notes"
+            multiline
+            rows={3}
+            autoGrow
+            className="input field-full teacher-comment"
+            value={ws.parts.part4.trainerNotes || ""}
+            onChange={(v) =>
+              setWs((cur) => ({
+                ...cur,
+                parts: {
+                  ...cur.parts,
+                  part4: { ...cur.parts.part4, trainerNotes: v },
+                },
+              }))
+            }
+          />
+        </div>
+      ) : ws.parts.part4.trainerNotes ? (
+        <div
+          style={{
+            marginTop: 12,
+            background: "#f9fafb",
+            borderLeft: "4px solid #e5e7eb",
+            padding: "8px 12px",
+            borderRadius: 8,
+            color: "#b91c1c",
+          }}
+        >
+          <strong>講師コメント：</strong>
+          <br />
+          {ws.parts.part4.trainerNotes}
+        </div>
+      ) : null}
+    </Card>
+  ));
 
   /* ===== Reset questions (trainer only) ===== */
   const resetQuestions = useCallback(() => {
