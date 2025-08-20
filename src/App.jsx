@@ -69,34 +69,45 @@ const DebouncedInput = React.memo(function DebouncedInput({
   rows = 1,
   debounceMs = 220,
   autoGrow = true,
-  flushOnBlur = true,     // ← 追加：blur時にflushするか
+  flushOnBlur = true,
   ...rest
 }) {
   const [inner, setInner] = useState(value ?? "");
-  const compRef = useRef(false);   // IME合成中フラグ（日本語/英語どちらでも安全）
-  const tRef = useRef(null);
-  const inputRef = useRef(null);
+  const compRef = useRef(false);       // IME中フラグ
+  const tRef = useRef(null);           // debounce タイマ
+  const inputRef = useRef(null);       // 実DOM
+  const focusedRef = useRef(false);    // 直近でフォーカスを持っていたか
+  const lockRef = useRef(false);       // 一時的に親からの value 反映をブロック
 
-  // 親→子の値同期：フォーカス中/合成中は上書きしない
+  // 親→子 同期：フォーカス中は**絶対に上書きしない**
   useEffect(() => {
     if (compRef.current) return;
-    if (typeof document !== "undefined" && document.activeElement === inputRef.current) return;
-    setInner(value ?? "");
+    if (focusedRef.current) return;            // ← ここが効きます
+    if (!lockRef.current) setInner(value ?? "");
   }, [value]);
 
   const flush = useCallback((next) => {
     if (typeof onChange !== "function") return;
-    if (next === value) return; // 変化がないなら何もしない（無駄な再レンダー抑制）
+    if (next === value) return;
     onChange(next);
   }, [onChange, value]);
 
   const schedule = useCallback((next) => {
-    if (compRef.current) return;                // 合成中は送らない
+    if (compRef.current) return;
     if (tRef.current) clearTimeout(tRef.current);
-    tRef.current = setTimeout(() => flush(next), debounceMs);
+    tRef.current = setTimeout(() => {
+      lockRef.current = false;                 // 送信後ロック解除
+      flush(next);
+    }, debounceMs);
   }, [flush, debounceMs]);
 
-  // テキストエリアのオートリサイズ
+  // iOSでのフォーカス復帰（再レンダー後でも保持）
+  useEffect(() => {
+    if (focusedRef.current && inputRef.current) {
+      try { inputRef.current.focus({ preventScroll: true }); } catch {}
+    }
+  });
+
   const resize = useCallback(() => {
     if (!autoGrow || !multiline || !inputRef.current) return;
     const el = inputRef.current;
@@ -105,69 +116,55 @@ const DebouncedInput = React.memo(function DebouncedInput({
   }, [autoGrow, multiline]);
   useEffect(() => { resize(); }, [inner, resize]);
 
-  // 共通ハンドラ
-  const handleChange = (e) => {
-    const v = e.target.value;
-    setInner(v);
-    schedule(v);
-  };
-  const handleBlur = () => { if (flushOnBlur) flush(inner); };
-  const handleCompStart = () => { compRef.current = true; };
-  const handleCompEnd = (e) => {
-    compRef.current = false;
-    const v = e.currentTarget.value;
-    setInner(v);
-    flush(v);                                // 合成終了時は即flush（確定入力を反映）
+  const common = {
+    ref: inputRef,
+    className,
+    placeholder,
+    value: inner,                         // 完全に内部状態で制御
+    onChange: (e) => {
+      const v = e.target.value;
+      setInner(v);
+      lockRef.current = true;            // 親からの value 反映を一時ロック
+      schedule(v);
+    },
+    onFocus: () => { focusedRef.current = true; },
+    onBlur: () => {
+      focusedRef.current = false;
+      lockRef.current = false;
+      if (flushOnBlur) flush(inner);
+    },
+    onCompositionStart: () => { compRef.current = true; },
+    onCompositionEnd: (e) => {
+      compRef.current = false;
+      const v = e.currentTarget.value;
+      setInner(v);
+      flush(v);
+    },
+    // 近くのボタンや親のクリックがフォーカスを奪わないように
+    onMouseDownCapture: (e) => { e.stopPropagation(); },
+    onTouchStartCapture: (e) => { e.stopPropagation(); },
+    autoComplete: "off",
+    autoCorrect: "off",
+    spellCheck: false,
+    inputMode: "text",
+    ...rest,
   };
 
-  if (!multiline) {
-    return (
-      <input
-        ref={inputRef}
-        id={id}
-        className={className}
-        placeholder={placeholder}
-        value={inner}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onCompositionStart={handleCompStart}
-        onCompositionEnd={handleCompEnd}
-        autoComplete="off"
-        autoCorrect="off"
-        spellCheck={false}
-        inputMode="text"
-        {...rest}
-      />
-    );
-  }
-
+  if (!multiline) return <input {...common} />;
   return (
     <textarea
-      ref={inputRef}
-      id={id}
-      className={className}
-      placeholder={placeholder}
-      value={inner}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      onCompositionStart={handleCompStart}
-      onCompositionEnd={handleCompEnd}
+      {...common}
       rows={rows}
       style={{ resize: "none", overflow: "hidden", ...(rest && rest.style ? rest.style : {}) }}
-      autoComplete="off"
-      autoCorrect="off"
-      spellCheck={false}
-      inputMode="text"
-      {...rest}
     />
   );
 });
 
 // ====== Part1Row（トップレベル版）======
-const Part1Row = React.memo(function Part1Row({ it, mode, ws, setWs, draftRef, scheduleFlush }) {
+const Part1Row = React.memo(function Part1Row({ it }) {
   const answerMap = ws.parts.part1.answers || {};
-  const answer = answerMap[it.id] ?? "";
-  const mark = (ws.parts.part1.marks || {})[it.id];
+  const answer = answerMap[it.id] !== undefined ? answerMap[it.id] : "";
+  const mark = (ws.parts.part1.marks || {})[it.id];   // 'ok' | 'wrong' | undefined
   const isWrong = mark === "wrong";
   const isOk = mark === "ok";
 
@@ -177,10 +174,9 @@ const Part1Row = React.memo(function Part1Row({ it, mode, ws, setWs, draftRef, s
       const idx = items.findIndex((x) => x.id === it.id);
       if (idx < 0) return cur;
       const curVal = items[idx].en || "";
-      if (curVal === (v ?? "")) return cur;
-      const nextItems = [...items];
-      nextItems[idx] = { ...nextItems[idx], en: v };
-      return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: nextItems } } };
+      if (curVal === (v ?? "")) return cur; // 変更なしなら何もしない
+      const next = [...items]; next[idx] = { ...next[idx], en: v };
+      return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: next } } };
     });
 
   const onChangeAnswer = (v) => { draftRef.current.p1[it.id] = v; scheduleFlush(); };
@@ -188,41 +184,45 @@ const Part1Row = React.memo(function Part1Row({ it, mode, ws, setWs, draftRef, s
   const setMark = (val) =>
     setWs((cur) => ({
       ...cur,
-      parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } } },
+      parts: {
+        ...cur.parts,
+        part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } },
+      },
     }));
+
   const clearMark = () =>
     setWs((cur) => {
-      const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id];
+      const m = { ...(cur.parts.part1.marks || {}) };
+      delete m[it.id];
       return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } };
     });
 
   return (
     <div className="p1-row">
       {mode === "trainer" ? (
-        <DebouncedInput className="input p1-word" value={it.en} onChange={onChangeWord} flushOnBlur={false} />
+        <DebouncedInput
+          className="input p1-word"
+          value={it.en}
+          onChange={onChangeWord}
+          flushOnBlur={false}
+        />
       ) : (
         <span className="p1-word">{it.en}</span>
       )}
+
       <DebouncedInput
         className={`input p1-answer ${isWrong ? "answer-wrong" : ""} ${isOk ? "answer-correct" : ""}`}
         placeholder="日本語訳"
         value={answer}
         onChange={onChangeAnswer}
       />
+
       {mode === "trainer" && (
-        <>
-          <div className="mark-wrap">
-            <button type="button" className="mark-btn ok" onClick={() => setMark("ok")}>○</button>
-            <button type="button" className="mark-btn wrong" onClick={() => setMark("wrong")}>×</button>
-            <button type="button" className="mark-btn clear" onClick={clearMark}>消</button>
-          </div>
-          <button className="btn" onClick={() => setWs((cur) => {
-            const items = cur.parts.part1.items.filter((x) => x.id !== it.id);
-            const answers = { ...(cur.parts.part1.answers || {}) }; delete answers[it.id];
-            const marks = { ...(cur.parts.part1.marks || {}) }; delete marks[it.id];
-            return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items, answers, marks } } };
-          })} style={{ color: "#ef4444" }}>削除</button>
-        </>
+        <div className="mark-wrap">
+          <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark("ok")}>○</button>
+          <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} onClick={() => setMark("wrong")}>×</button>
+          <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} onClick={clearMark}>消</button>
+        </div>
       )}
     </div>
   );
@@ -239,7 +239,9 @@ const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef, sched
       </div>
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button className="btn btn-primary" onClick={() => setWs((cur) => ({
+          <button className="btn btn-primary" 
+            onMouseDown={(e)=>e.preventDefault()}
+            onClick={() => setWs((cur) => ({
             ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }
           }))}>語彙を追加</button>
         </div>
@@ -311,6 +313,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                 <div className="mark-wrap">
                   <button
                     className="mark-btn ok"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: {
@@ -327,6 +330,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                   >○</button>
                   <button
                     className="mark-btn wrong"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: {
@@ -343,6 +347,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                   >×</button>
                   <button
                     className="mark-btn clear"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => {
                       const base = { ...(c.parts.part2.marks || {}) };
                       const rec = { ...(base[it.id] || {}) };
@@ -372,6 +377,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                 <div className="mark-wrap">
                   <button
                     className="mark-btn ok"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: {
@@ -388,6 +394,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                   >○</button>
                   <button
                     className="mark-btn wrong"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => ({
                       ...c,
                       parts: {
@@ -404,6 +411,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef, sched
                   >×</button>
                   <button
                     className="mark-btn clear"
+                    onMouseDown={(e)=>e.preventDefault()}
                     onClick={() => setWs((c) => {
                       const base = { ...(c.parts.part2.marks || {}) };
                       const rec = { ...(base[it.id] || {}) };
@@ -520,9 +528,9 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
                 </div>
                 {mode === "trainer" && (
                   <div className="mark-wrap">
-                    <button type="button" className="mark-btn ok" onClick={() => setMark3("ok")}>○</button>
-                    <button type="button" className="mark-btn wrong" onClick={() => setMark3("wrong")}>×</button>
-                    <button type="button" className="mark-btn clear" onClick={clearMark3}>消</button>
+                    <button className="mark-btn ok"    onMouseDown={(e)=>e.preventDefault()} …>○</button>
+                    <button className="mark-btn wrong" onMouseDown={(e)=>e.preventDefault()} …>×</button>
+                    <button className="mark-btn clear" onMouseDown={(e)=>e.preventDefault()} …>消</button>
                   </div>
                 )}
               </div>
@@ -554,7 +562,9 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef, sched
 
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
-          <button className="btn btn-primary" onClick={() => setWs((cur) => ({
+          <button className="btn btn-primary" 
+            onMouseDown={(e)=>e.preventDefault()}
+            onClick={() => setWs((cur) => ({
             ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: [...cur.parts.part3.items, { id: genId(), otherRole: "", otherEn: "", jp: "" }] } }
           }))}>セリフを追加</button>
         </div>
@@ -814,15 +824,21 @@ const Header = React.memo(function Header({
       <div className="header-row">
         <div className="container">
           <div className="hstack">
-            <button className="hdr-btn" onClick={(ev) => { ev.stopPropagation(); setShowCal((v) => !v); }}>カレンダー</button>
+            <button className="hdr-btn" 
+              onMouseDown={(e)=>e.preventDefault()}
+              onClick={(ev) => { ev.stopPropagation(); setShowCal((v) => !v); }}>カレンダー</button>
             {mode === "student" ? (
               <>
                 <input type="password" inputMode="numeric" maxLength={4} className="pin-4ch" placeholder="PIN"
                        value={pinInput} onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))} aria-label="講師PIN" />
-                <button className="hdr-btn-primary" onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}>講師モード</button>
+                <button className="hdr-btn-primary" 
+                  onMouseDown={(e)=>e.preventDefault()}
+                  onClick={(ev) => { ev.stopPropagation(); switchToTrainer(); }}>講師モード</button>
               </>
             ) : (
-              <button className="hdr-btn" onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}>学習者モードへ</button>
+              <button className="hdr-btn" 
+                onMouseDown={(e)=>e.preventDefault()}
+                onClick={(ev) => { ev.stopPropagation(); switchToStudent(); }}>学習者モードへ</button>
             )}
           </div>
         </div>
@@ -1109,52 +1125,66 @@ export default function App() {
     </Card>
   ));
 
-  /* ===== Part 4 (handwriting) ===== */
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d"); let drawing = false;
-    const pos = (e) => { const r = canvas.getBoundingClientRect(); const t = e.touches && e.touches[0]; const x = (t ? t.clientX : e.clientX) - r.left; const y = (t ? t.clientY : e.clientY) - r.top; return { x, y }; };
-    const start = (e) => { drawing = true; const { x, y } = pos(e); ctx.beginPath(); ctx.moveTo(x, y); };
-    const move = (e) => { if (!drawing) return; const { x, y } = pos(e); ctx.lineTo(x, y); ctx.stroke(); };
-    const end = () => { drawing = false; };
-    canvas.addEventListener("mousedown", start); canvas.addEventListener("mousemove", move); canvas.addEventListener("mouseup", end); canvas.addEventListener("mouseleave", end);
-    canvas.addEventListener("touchstart", start, { passive: true }); canvas.addEventListener("touchmove", move, { passive: true }); canvas.addEventListener("touchend", end);
-    return () => {
-      canvas.removeEventListener("mousedown", start); canvas.removeEventListener("mousemove", move); canvas.removeEventListener("mouseup", end); canvas.removeEventListener("mouseleave", end);
-      canvas.removeEventListener("touchstart", start); canvas.removeEventListener("touchmove", move); canvas.removeEventListener("touchend", end);
-    };
-  }, []);
-
+  /* ===== Part 4 (writing) ===== */
   const Part4 = React.memo(() => (
-    <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-      <DebouncedInput multiline rows={3} autoGrow className="input field-full" placeholder="ここに英作文を入力してください"
-        value={ws.parts.part4.answer || ""} onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))} />
+  <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
+    {/* 英作文テキスト（残す） */}
+    <DebouncedInput
+      multiline
+      rows={3}
+      autoGrow
+      className="input field-full"
+      placeholder="ここに英作文を入力してください"
+      value={ws.parts.part4.answer || ""}
+      onChange={(v) =>
+        setWs((cur) => ({
+          ...cur,
+          parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } },
+        }))
+      }
+    />
+
+    {/* 講師コメントはそのまま（閲覧/編集） */}
+    {mode === "trainer" ? (
       <div style={{ marginTop: 12 }}>
-        <div className="label">iPad手書き（PNG保存）</div>
-        <canvas ref={canvasRef} width={800} height={240} style={{ border: "1px solid #e5e7eb", borderRadius: 8, width: "100%", touchAction: "none" }} />
-        <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-          <button className="btn-solid-gray" onClick={() => {
-            const c = canvasRef.current; const dataUrl = c && c.toDataURL ? c.toDataURL("image/png") : null; if (!dataUrl) return;
-            setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, handwriting: dataUrl } } }));
-          }}>手書きを保存</button>
-          {ws.parts.part4.handwriting && (<a className="btn" href={ws.parts.part4.handwriting} download="part4-writing.png">PNGをダウンロード</a>)}
-        </div>
+        <div className="label">講師コメント</div>
+        <DebouncedInput
+          id="p4-notes"
+          key="p4-notes"
+          multiline
+          rows={3}
+          autoGrow
+          className="input field-full teacher-comment"
+          value={ws.parts.part4.trainerNotes || ""}
+          onChange={(v) =>
+            setWs((cur) => ({
+              ...cur,
+              parts: {
+                ...cur.parts,
+                part4: { ...cur.parts.part4, trainerNotes: v },
+              },
+            }))
+          }
+        />
       </div>
-      {mode === "trainer" ? (
-        <div style={{ marginTop: 12 }}>
-          <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
-            value={ws.parts.part4.trainerNotes || ""}
-            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))} />
-        </div>
-      ) : ws.parts.part4.trainerNotes ? (
-        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
-          <strong>講師コメント：</strong><br />{ws.parts.part4.trainerNotes}
-        </div>
-      ) : null}
-    </Card>
-  ));
+    ) : ws.parts.part4.trainerNotes ? (
+      <div
+        style={{
+          marginTop: 12,
+          background: "#f9fafb",
+          borderLeft: "4px solid #e5e7eb",
+          padding: "8px 12px",
+          borderRadius: 8,
+          color: "#b91c1c",
+        }}
+      >
+        <strong>講師コメント：</strong>
+        <br />
+        {ws.parts.part4.trainerNotes}
+      </div>
+    ) : null}
+  </Card>
+));
 
   /* ===== Reset questions (trainer only) ===== */
   const resetQuestions = useCallback(() => {
