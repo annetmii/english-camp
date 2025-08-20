@@ -453,21 +453,46 @@ const Part2 = React.memo(function Part2({ ws, setWs, mode, draftRef, scheduleFlu
   </div>
 )}
 
-      {mode === "trainer" ? (
-        <div style={{ marginTop: 12 }}>
-          <div className="label">講師コメント</div>
-          <DebouncedInput multiline rows={3} autoGrow className="input field-full teacher-comment"
-            value={ws.parts.part2.trainerNotes || ""}
-            onChange={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, trainerNotes: v } } }))} />
-        </div>
-      ) : ws.parts.part2.trainerNotes ? (
-        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
-          <strong>講師コメント：</strong><br/>{ws.parts.part2.trainerNotes}
-        </div>
-      ) : null}
-    </Card>
-  );
-});
+        {/* 講師コメント（講師は編集、学習者は表示のみ） */}
+        {mode === "trainer" ? (
+          <div style={{ marginTop: 12 }}>
+            <div className="label">講師コメント</div>
+            <DebouncedInput
+              multiline
+              rows={3}
+              autoGrow
+              className="input field-full teacher-comment"
+              value={ws.parts.part2.trainerNotes || ""}
+              onChange={(v) =>
+                setWs((cur) => ({
+                  ...cur,
+                  parts: {
+                    ...cur.parts,
+                    part2: { ...cur.parts.part2, trainerNotes: v },
+                  },
+                }))
+              }
+            />
+          </div>
+        ) : ws.parts.part2.trainerNotes ? (
+          <div
+            style={{
+              marginTop: 12,
+              background: "#f9fafb",
+              borderLeft: "4px solid #e5e7eb",
+              padding: "8px 12px",
+              borderRadius: 8,
+              color: "#b91c1c",
+            }}
+          >
+            <strong>講師コメント：</strong>
+            <br />
+            {ws.parts.part2.trainerNotes}
+          </div>
+        ) : null}
+      </Card>
+    );
+  });
 
 // ====== Part3（トップレベル版）======
 const Part3 = React.memo(function Part3({ ws, setWs, mode, draftRef, scheduleFlush }) {
