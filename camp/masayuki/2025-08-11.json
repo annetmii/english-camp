@@ -11,7 +11,12 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [],
+      "items": [
+        {
+          "id": "f7b2be9a-0dad-4568-804d-2652019d8078",
+          "en": ""
+        }
+      ],
       "answers": {},
       "marks": {},
       "trainerNotes": ""
