@@ -14,7 +14,7 @@
       "items": [
         {
           "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
-          "en": "study"
+          "en": ""
         },
         {
           "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
@@ -45,10 +45,14 @@
           "en": "screening area"
         }
       ],
-      "answers": {},
+      "answers": {
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": ""
+      },
       "marks": {},
       "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "answersUpdatedAt": {
+        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-21T13:56:57.418Z"
+      }
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
