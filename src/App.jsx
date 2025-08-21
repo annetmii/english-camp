@@ -197,6 +197,56 @@ function ensureMaps(ws, curDate) {
   return ws;
 }
 
+/* ====== Merge (newer wins; Part2 per-field) ====== */
+function newer(a, b) { return a && b ? (a > b ? a : b) : (a || b || null); }
+
+function mergeWs(local, remote) {
+  // どちらかが欠けるなら、ある方を返す
+  if (!local) return remote;
+  if (!remote) return local;
+
+  const out = JSON.parse(JSON.stringify(remote));
+
+  // === Part1 answers ===
+  const l1a = local.parts.part1.answers || {}, r1a = remote.parts.part1.answers || {};
+  const l1t = local.parts.part1.answersUpdatedAt || {}, r1t = remote.parts.part1.answersUpdatedAt || {};
+  const m1a = { ...r1a }, m1t = { ...r1t };
+  for (const id of new Set([...Object.keys(l1a), ...Object.keys(r1a)])) {
+    const lt = l1t[id] || null, rt = r1t[id] || null;
+    if ((lt && !rt) || (lt && rt && lt > rt)) { m1a[id] = l1a[id]; m1t[id] = lt; }
+  }
+  out.parts.part1.answers = m1a; out.parts.part1.answersUpdatedAt = m1t;
+
+  // === Part2 answers（en/ja を個別比較） ===
+  const l2a = local.parts.part2.answers || {}, r2a = remote.parts.part2.answers || {};
+  const l2t = local.parts.part2.answersUpdatedAt || {}, r2t = remote.parts.part2.answersUpdatedAt || {};
+  const m2a = JSON.parse(JSON.stringify(r2a)), m2t = JSON.parse(JSON.stringify(r2t));
+  for (const id of new Set([...Object.keys(l2a), ...Object.keys(r2a)])) {
+    const lrec = l2a[id] || {}, rrec = r2a[id] || {};
+    const lt = l2t[id] || {}, rt = r2t[id] || {};
+    const enT = newer(lt.en, rt.en), jaT = newer(lt.ja, rt.ja);
+    m2a[id] = { ...(m2a[id] || rrec) };
+    m2t[id] = { ...(m2t[id] || rt) };
+    if (enT === lt.en && lt.en) { m2a[id].en = lrec.en; m2t[id].en = lt.en; }
+    if (jaT === lt.ja && lt.ja) { m2a[id].ja = lrec.ja; m2t[id].ja = lt.ja; }
+  }
+  out.parts.part2.answers = m2a; out.parts.part2.answersUpdatedAt = m2t;
+
+  // === Part3 answers ===
+  const l3a = local.parts.part3.answers || {}, r3a = remote.parts.part3.answers || {};
+  const l3t = local.parts.part3.answersUpdatedAt || {}, r3t = remote.parts.part3.answersUpdatedAt || {};
+  const m3a = { ...r3a }, m3t = { ...r3t };
+  for (const id of new Set([...Object.keys(l3a), ...Object.keys(r3a)])) {
+    const lt = l3t[id] || null, rt = r3t[id] || null;
+    if ((lt && !rt) || (lt && rt && lt > rt)) { m3a[id] = l3a[id]; m3t[id] = lt; }
+  }
+  out.parts.part3.answers = m3a; out.parts.part3.answersUpdatedAt = m3t;
+
+  // 提出はどちらかにあれば採用
+  out.submittedAt = remote.submittedAt || local.submittedAt || null;
+  return out;
+}
+
 /* ===================== Part1 ===================== */
 const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode }) {
   const answer = (ws.parts.part1.answers || {})[it.id] ?? "";
@@ -641,11 +691,11 @@ const Header = React.memo(function Header({
         <div className="container">
           <div className="hstack" style={{ justifyContent: "space-between" }}>
             <div className="hstack">
-              <button className="hdr-btn-primary" onMouseDown={(e)=>e.preventDefault()} onClick={() => doSync("手動同期")}>同期</button>
+              <button className="hdr-btn-primary" onMouseDown={(e)=>e.preventDefault()} onClick={() => doSync("手動同期", true)}>同期</button>
               {mode === "trainer" && (
                 <button className="hdr-btn danger-btn" onMouseDown={(e)=>e.preventDefault()} onClick={resetQuestions} title="この日の出題を初期化">出題リセット</button>
               )}
-              <button className="hdr-btn submit-btn" onMouseDown={(e)=>e.preventDefault()} onClick={submit}>提出</button>
+              <button className="hdr-btn submit-btn" onMouseDown={(e)=>e.preventDefault()} onClick={() => submit(true)}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
           </div>
@@ -716,30 +766,39 @@ export default function App() {
     return () => clearTimeout(saveTimerRef.current);
   }, [ws, userId, dateISO]);
 
-  /* --- 初回/日付変更：クラウド読み込み（編集中は遅延） --- */
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setStatus("クラウド読込中…");
-        // 編集中なら少し待ってから
-        if (guard.isEditing()) return setStatus("編集中のため読込待機");
-        const remote = await cloudLoad({ userId, dateISO });
-        if (!cancelled) {
-          if (remote && remote.data) {
-            setWs(ensureMaps(remote.data, dateISO));
-            setStatus("クラウドから読み込みました");
-          } else {
-            setWs(ensureMaps(defaultWorksheet(dateISO), dateISO));
-            setStatus("本日のワークシートを作成しました");
-          }
-        }
-      } catch {
-        setStatus("オフライン：ローカル保存のみ");
+  /* --- 初回/日付変更：クラウド読み込み（編集中なら待って必ず実行） --- */
+useEffect(() => {
+  let cancelled = false;
+  let retryTimer = null;
+
+  const load = async () => {
+    if (cancelled) return;
+    // 編集中なら “ガード猶予 + 300ms” 後に再試行
+    if (guard.isEditing()) {
+      setStatus("編集中のため読込待機");
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(load, 1 * 1000);   // ← 1秒ごとに様子見（軽い）
+      return;
+    }
+    try {
+      setStatus("クラウド読込中…");
+      const remote = await cloudLoad({ userId, dateISO });
+      if (cancelled) return;
+      if (remote && remote.data) {
+        setWs((prev) => ensureMaps(mergeWs(prev, ensureMaps(remote.data, dateISO)), dateISO));
+        setStatus("クラウドから読み込みました");
+      } else {
+        setWs(ensureMaps(defaultWorksheet(dateISO), dateISO));
+        setStatus("本日のワークシートを作成しました");
       }
-    })();
-    return () => { cancelled = true; };
-  }, [userId, dateISO, guard]);
+    } catch {
+      if (!cancelled) setStatus("オフライン：ローカル保存のみ");
+    }
+  };
+
+  load();
+  return () => { cancelled = true; clearTimeout(retryTimer); };
+}, [userId, dateISO, guard]);
 
   /* --- カレンダードット --- */
   const refreshCloudDates = useCallback(async () => {
@@ -798,46 +857,46 @@ export default function App() {
   }, [ws, mode, userId, dateISO, pinInput, refreshCloudDates, guard]);
 
   /* --- 手動同期 --- */
-  const doSync = useCallback(async (reason = "同期") => {
-    if (guard.isEditing()) { setStatus("編集中のため同期を保留"); return; }
-    try {
-      setStatus(`${reason}中…`);
-      await cloudSave({
-        userId, dateISO,
-        data: { ...ws, meta: { ...ws.meta, date: dateISO } },
-        asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
-      });
-      setStatus(`${reason}完了`);
-      refreshCloudDates();
-    } catch {
-      setStatus(`${reason}失敗：後で再試行`);
-    }
-  }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
+const doSync = useCallback(async (reason = "同期", force = false) => {
+  if (!force && guard.isEditing()) {
+    setStatus("編集中のため同期を保留");
+    return;
+  }
+  try {
+    setStatus(`${reason}中…`);
+    await cloudSave({
+      userId, dateISO,
+      data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+      asTrainer: mode === "trainer",
+      pin: mode === "trainer" ? pinInput : "",
+    });
+    setStatus(`${reason}完了`);
+    refreshCloudDates();
+  } catch (e) {
+    setStatus(`${reason}失敗：後で再試行`);
+  }
+}, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
 
   /* --- 提出 --- */
-  const submit = useCallback(() => {
-    setWs((c) => ({ ...c, submittedAt: nowISO() }));
-    doSync("提出");
-  }, [doSync]);
+const submit = useCallback((force = false) => {
+  setWs((c) => ({ ...c, submittedAt: nowISO() }));
+  doSync("提出", force);
+}, [doSync]);
 
   /* --- モード切替 --- */
   const switchToTrainer = useCallback(() => { if (pinInput === DEFAULT_PIN) setMode("trainer"); else alert("PINが違います。"); }, [pinInput]);
   const switchToStudent = useCallback(() => setMode("student"), []);
 
   /* --- 定期フェッチ＆マージ（20s・編集中は完全停止） --- */
-  const fetchAndMerge = useCallback(async () => {
-    if (guard.isEditing()) return;
-    try {
-      const remote = await cloudLoad({ userId, dateISO });
-      if (remote && remote.data) setWs(ensureMaps(remote.data, dateISO));
-    } catch {}
-  }, [userId, dateISO, guard]);
-  useEffect(() => {
-    const id = setInterval(fetchAndMerge, 20000);
-    const onVis = () => { if (document.visibilityState === "visible") fetchAndMerge(); };
-    document.addEventListener("visibilitychange", onVis);
-    return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
-  }, [fetchAndMerge]);
+const fetchAndMerge = useCallback(async () => {
+  if (guard.isEditing()) return;
+  try {
+    const remote = await cloudLoad({ userId, dateISO });
+    if (remote && remote.data) {
+      setWs((cur) => ensureMaps(mergeWs(cur, ensureMaps(remote.data, dateISO)), dateISO));
+    }
+  } catch {}
+}, [userId, dateISO, guard]);
 
   /* --- 離脱時のローカル保存 --- */
   useEffect(() => {
