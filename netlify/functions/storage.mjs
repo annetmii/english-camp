@@ -14,10 +14,12 @@ export async function handler(event) {
     PATH_PREFIX = "masayuki",
     TRAINER_PIN,
     PIN_CODE,
+    GITHUB_BRANCH,
   } = process.env;
 
   const REPO_NAME = REPO || GITHUB_REPO;
   const TRAINER = TRAINER_PIN || PIN_CODE;
+  const BRANCH = GITHUB_BRANCH || "main";
 
   if (!GITHUB_TOKEN || !REPO_NAME) {
     console.error("ENV MISSING", { hasToken: !!GITHUB_TOKEN, REPO_NAME });
@@ -47,7 +49,7 @@ export async function handler(event) {
     const path = `${PATH_PREFIX}/${user}/${date}.json`;
     console.info("GET storage", { owner, repo, path });
 
-    const r = await gh(path);
+    const r = await gh(`${path}?ref=${BRANCH}`);
     if (r.status === 200) {
       const j = await r.json();
       const data = JSON.parse(Buffer.from(j.content, j.encoding || "base64").toString());
@@ -77,7 +79,7 @@ export async function handler(event) {
 
     // 既存sha取得
     let sha = undefined;
-    const check = await gh(path);
+    const check = await gh(`${path}?ref=${BRANCH}`);
     if (check.status === 200) {
       const j = await check.json();
       sha = j.sha;
@@ -90,7 +92,13 @@ export async function handler(event) {
     const put = await gh(path, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: `update ${user}/${date}`, content, sha }),
+      // ★ Netlify ビルドを必ずスキップ
+     body: JSON.stringify({
+        message: `chore(data): save ${user}/${date}.json [skip netlify]`,
+        content,
+        sha,
+        branch: BRANCH,
+      }),
     });
 
     const bodyText = await put.text();
