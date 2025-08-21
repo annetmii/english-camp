@@ -1,7 +1,31 @@
-# netlify.toml（置き換え）
+# netlify.toml
+
 [build]
   command = "npm run build"
   publish = "dist"
+
+  # ▼「データだけの変更」はビルドをスキップする
+  #   - camp/ 以下（例: camp/masayuki/2025-08-18.json）と README しか変わっていない → skip
+  #   - それ以外（src/, public/, package.json など）が 1つでも変わった → build
+  ignore = """
+  # 初回や比較元がない場合はビルドする
+  if [ -z "$CACHED_COMMIT_REF" ]; then
+    echo 'No cached commit → build';
+    exit 1
+  fi
+  CHANGED=$(git diff --name-only "$CACHED_COMMIT_REF" "$COMMIT_REF" || true)
+
+  # camp/ と README.md 以外に変更があるか？
+  NONCAMP=$(echo "$CHANGED" | grep -vE '^(camp/|README.md$)' || true)
+
+  if [ -z "$NONCAMP" ]; then
+    echo 'Data-only change (camp/*) → skip build';
+    exit 0    # ← 0 で “ビルドをスキップ”
+  else
+    echo 'Code change detected → build';
+    exit 1    # ← 非 0 で “ビルド実行”
+  fi
+  """
 
 # Functions の配置（/.netlify/functions/* に対応）
 [functions]
@@ -14,6 +38,6 @@
   to = "/index.html"
   status = 200
 
-# ビルド環境を固定（Vite 5 は Node 18+ 必須）
+# ビルド環境（Vite 5 は Node 18+ 必須）
 [build.environment]
   NODE_VERSION = "20"
