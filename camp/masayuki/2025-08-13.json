@@ -1,7 +1,7 @@
 {
   "meta": {
     "app": "annetmii-english-camp",
-    "version": 43,
+    "version": 44,
     "date": "2025-08-13",
     "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
@@ -11,112 +11,30 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "db259d53-39f2-4094-b03b-7aaf6de12e4d",
-          "en": "Internet listing"
-        },
-        {
-          "id": "56aea00c-ed29-4da9-ac2e-9a86198c948b",
-          "en": "classified ad"
-        },
-        {
-          "id": "6723e4db-14d7-439e-85f3-974d0cecf672",
-          "en": "furnished apartment"
-        },
-        {
-          "id": "139d9018-6137-49a5-98ce-d8a825927b07",
-          "en": "unfurnished apartment"
-        },
-        {
-          "id": "75921428-8b66-4894-9201-93aa7ec6caea",
-          "en": "utilities"
-        },
-        {
-          "id": "5991d395-7ba4-4f98-a798-c3f7083495f4",
-          "en": "call the manager"
-        },
-        {
-          "id": "ac9557ac-2466-47b5-805a-8f5028d1b468",
-          "en": "submit an application"
-        },
-        {
-          "id": "dbfcfac3-50ca-4734-a98c-be68c6a89461",
-          "en": "sign the rental agreement"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
-      "items": [
-        {
-          "id": "5c55dfd7-c952-43e1-a4d9-bd1c84e5c8e2",
-          "prompt": "I found a nice apartment on the ＿＿＿＿＿."
-        },
-        {
-          "id": "166cc319-7354-4cb9-9103-0f9e34c6b652",
-          "prompt": ""
-        },
-        {
-          "id": "0d45afb9-02bf-4eea-a641-7ca424efc1d0",
-          "prompt": ""
-        },
-        {
-          "id": "0f956843-dbd4-4fc2-9a1d-f5252cb93a38",
-          "prompt": ""
-        },
-        {
-          "id": "9f0fcb60-0498-4af2-af9d-a3b2a3c3b0a4",
-          "prompt": ""
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
-      "items": [
-        {
-          "id": "ac6ec5f6-40df-4d5c-808b-317a46a66da6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        },
-        {
-          "id": "91fb9574-bada-436c-b661-fa71df61f8ca",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        },
-        {
-          "id": "0daeda1b-8bdc-48ef-a660-b27694c68af6",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        },
-        {
-          "id": "55675cd4-683a-4982-8493-0597a4de9576",
-          "otherRole": "",
-          "otherEn": "",
-          "jp": ""
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part4": {
       "label": "Part 4｜英作文",
-      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
