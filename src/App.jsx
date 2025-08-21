@@ -72,8 +72,8 @@ async function cloudListDates({ userId }) {
 /* ===================== DebouncedInput（アンコントロールド） ===================== */
 const DebouncedInput = React.memo(function DebouncedInput({
   value,
-  onCommit,              // 変更確定時だけ親に渡す
-  onDraft,               // 入力中通知（任意）
+  onCommit,
+  onDraft,
   className = "",
   placeholder = "",
   multiline = false,
@@ -83,9 +83,12 @@ const DebouncedInput = React.memo(function DebouncedInput({
   ...rest
 }) {
   const inputRef = useRef(null);
-  const compRef = useRef(false);
+  const compRef = useRef(false);      // 変換中フラグ
   const focusedRef = useRef(false);
   const defaultValueRef = useRef(value ?? "");
+  const idleTimerRef = useRef(null);  // フォーカス中アイドル確定用
+
+  const isIOS = typeof navigator !== "undefined" && /iP(hone|ad|od)/.test(navigator.userAgent);
 
   const resize = (el) => {
     if (!autoGrow || !multiline || !el) return;
@@ -105,6 +108,16 @@ const DebouncedInput = React.memo(function DebouncedInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  const scheduleIdleCommit = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    // 入力が止まって 1200ms 経ったら確定（iOSの予測確定でもキーボードを閉じない）
+    idleTimerRef.current = setTimeout(() => {
+      const el = inputRef.current;
+      if (!el || !focusedRef.current) return;
+      if (!compRef.current && typeof onCommit === "function") onCommit(el.value);
+    }, 1200);
+  };
+
   const commit = (v) => { if (typeof onCommit === "function") onCommit(v); };
 
   const cmn = {
@@ -114,15 +127,27 @@ const DebouncedInput = React.memo(function DebouncedInput({
     onChange: (e) => {
       if (multiline) resize(e.currentTarget);
       if (typeof onDraft === "function") onDraft(e.currentTarget.value);
+      // フォーカス中は “少し待って” 確定（iOSの予測候補対策）
+      scheduleIdleCommit();
     },
-    onFocus: () => { focusedRef.current = true; },
-    onBlur:  (e) => { focusedRef.current = false; commit(e.currentTarget.value); },
+    onFocus: () => { focusedRef.current = true; scheduleIdleCommit(); },
+    onBlur:  (e) => {
+      focusedRef.current = false;
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      commit(e.currentTarget.value);        // 最終値を確定
+    },
     onCompositionStart: () => { compRef.current = true; },
-    onCompositionEnd:   (e) => { compRef.current = false; commit(e.currentTarget.value); },
+    onCompositionEnd:   (e) => {
+      compRef.current = false;
+      // iOS は compositionend 直後に確定するとキーボードが閉じやすい
+      // → ここでは確定せず、少し待ってから（scheduleIdleCommit）に任せる
+      if (isIOS) scheduleIdleCommit();
+      else commit(e.currentTarget.value);
+    },
     onKeyDown: (e) => {
       if (!multiline && commitOnEnter && e.key === "Enter") {
         e.preventDefault();
-        commit(e.currentTarget.value);
+        commit(e.currentTarget.value);      // Enterで確定（iOSでもキーボードは閉じない）
       }
     },
     autoComplete: "off", autoCorrect: "off", spellCheck: false,
@@ -784,6 +809,27 @@ export default function App() {
     return () => clearInterval(id);
   }, [mode, userId, dateISO, ws, pinInput, setStatus]);
 
+// 学習者モードでも、入力停止20秒以上＋通信アイドル時にだけ1回保存
+useEffect(() => {
+  if (mode !== "student") return;
+  const timer = setInterval(async () => {
+    const idleMs = Date.now() - lastInputRef.current;
+    if (idleMs < 20000) return;           // 直近20秒以内に入力あり → スキップ
+    if (inflightRef.current) return;      // 他の通信中 → スキップ
+    inflightRef.current = true;
+    try {
+      await cloudSave({
+        userId, dateISO,
+        data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+      });
+      setStatus("自動保存済み");
+      lastInputRef.current = Date.now();  // 連打防止
+    } catch { /* オフライン時は黙って次回 */ }
+    finally { inflightRef.current = false; }
+  }, 5000); // 5秒ごとに条件チェック（保存は条件を満たす時だけ）
+  return () => clearInterval(timer);
+}, [mode, userId, dateISO, ws, setStatus]);
+  
   /* --- 離脱時のローカル保存 --- */
   useEffect(() => {
     const flushNow = () => {
