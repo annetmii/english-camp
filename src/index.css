@@ -198,3 +198,39 @@ textarea.input::placeholder { color: #9ca3af; }
   .p1-word { min-width: 0; width: 100%; white-space: normal; }
   .p1-answer { width: 100% !important; }
 }
+/* =================== Part1 を常に“縦並び”＆フル幅に（PC/iPhone共通） =================== */
+
+/* 1) 行を縦積みに固定（英単語の下に「入力＋採点」） */
+.p1-row {
+  display: flex;
+  flex-direction: column;     /* ← 常に縦積み */
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* 2) 英単語ラベルは1行扱いをやめ、幅100%（折返し可） */
+.p1-word {
+  min-width: 0;
+  width: 100%;
+  white-space: normal;        /* ← PCでも折り返しOKに */
+  font-weight: 600;
+}
+
+/* 3) 「入力＋採点」を1行（横）にしつつ、入力側が可変でボタンは固定 */
+.p1-row .row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 入力欄は残り幅をすべて占有（field-fullの100%を優先） */
+.p1-row .flex-1 { flex: 1 1 auto; min-width: 0; }
+
+/* 採点ボタンは幅固定で縮ませない。外枠の内側に収まる */
+.p1-row .mark-wrap { flex: 0 0 auto; }
+
+/* 4) 以前に入れた “width:auto !important;” を打ち消し、常にフル幅へ */
+.p1-answer {
+  width: 100% !important;     /* ← これが肝。PCでもiPhoneでもフル幅 */
+  max-width: 100%;
+}
