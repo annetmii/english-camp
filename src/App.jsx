@@ -7,6 +7,7 @@ const ENDPOINT_LIST = "/.netlify/functions/listDates";
 const LS_PREFIX = "aec:v4.3:";
 const DEFAULT_PIN = "1202";
 
+/* ---- ID/日付 ---- */
 const genId = () => {
   const g = typeof globalThis !== "undefined" ? globalThis : window;
   if (g && g.crypto && typeof g.crypto.randomUUID === "function") return g.crypto.randomUUID();
@@ -16,13 +17,13 @@ const idle = (fn) =>
   typeof window !== "undefined" && "requestIdleCallback" in window
     ? window.requestIdleCallback(fn)
     : setTimeout(fn, 0);
-
 function todayISO(d = new Date()) {
   const z = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit",
   }).format(d).replace(/\//g, "-");
   return z;
 }
+const nowISO = () => new Date().toISOString();
 
 const DAY_GENRE = {
   0: "Seasonal（季節・イベント・行事）",
@@ -34,21 +35,60 @@ const DAY_GENRE = {
   6: "Writing（書き言葉・メール・案内）",
 };
 
-/* ===================== Cloud I/O ===================== */
+/* ===================== 編集ガード =====================
+   - focusin で startEdit()、blur で endEdit()
+   - end してから N 秒は “編集中” と見なして通信・マージ停止
+====================================================== */
+function useEditingGuard(graceMs = 2500) {
+  const countRef = useRef(0);
+  const lastTouchedRef = useRef(0);
+
+  const isEditing = useCallback(() => {
+    const active = countRef.current > 0;
+    const withinGrace = Date.now() - lastTouchedRef.current < graceMs;
+    return active || withinGrace;
+  }, [graceMs]);
+
+  const startEdit = useCallback(() => {
+    countRef.current += 1;
+    lastTouchedRef.current = Date.now();
+  }, []);
+  const endEdit = useCallback(() => {
+    countRef.current = Math.max(0, countRef.current - 1);
+    lastTouchedRef.current = Date.now();
+  }, []);
+  const touch = useCallback(() => { lastTouchedRef.current = Date.now(); }, []);
+
+  return { isEditing, startEdit, endEdit, touch };
+}
+
+/* ===================== Cloud I/O（計測＋トークン） ===================== */
+let __saveToken = 0;  // 古いレスポンスの採用を防ぐ
+
 async function cloudLoad({ userId, dateISO }) {
   const url = `${ENDPOINT_STORAGE}?user=${encodeURIComponent(userId)}&date=${dateISO}`;
+  const t0 = performance.now();
   const res = await fetch(url);
+  const ms = Math.round(performance.now() - t0);
   if (!res.ok) throw new Error(`Load failed: ${res.status}`);
+  // console.debug("[AEC] load", ms, "ms");
   return res.json();
 }
 async function cloudSave({ userId, dateISO, data, asTrainer = false, pin = "" }) {
+  const t0 = performance.now();
+  const token = ++__saveToken;
   const res = await fetch(ENDPOINT_STORAGE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user: userId, date: dateISO, data, asTrainer, pin }),
   });
+  const ms = Math.round(performance.now() - t0);
+  // console.debug("[AEC] save", ms, "ms");
   if (!res.ok) throw new Error(`Save failed: ${res.status}`);
-  return res.json();
+  const json = await res.json();
+  // トークンが古い（保存が競合）なら破棄
+  if (token !== __saveToken) return null;
+  return json;
 }
 async function cloudListDates({ userId }) {
   const url = `${ENDPOINT_LIST}?user=${encodeURIComponent(userId)}`;
@@ -58,15 +98,16 @@ async function cloudListDates({ userId }) {
 }
 
 /* =====================================================================
-   DebouncedInput（Uncontrolled・確定コミット）
-   - defaultValueで描画し、DOM値が唯一のソース
-   - Blur / Enter / IME確定でだけ onCommit を呼ぶ（親state変更はこの時だけ）
-   - フォーカス中は外部valueで上書きしない
+   DebouncedInput（完全アンコントロールド）
+   - defaultValue で描画、DOMが真実
+   - onChange は “下書き通知” のみ（親は state を更新しない）
+   - blur / IME確定 / Enter でのみ onCommit（親 state 更新）
+   - フォーカス中は絶対に外部 value を流し込まない
 ===================================================================== */
 const DebouncedInput = React.memo(function DebouncedInput({
   value,
-  onDraft,
-  onCommit,
+  onDraft,     // 入力中通知（任意）
+  onCommit,    // 確定コミット（必須ではない）
   className = "",
   placeholder = "",
   multiline = false,
@@ -79,53 +120,27 @@ const DebouncedInput = React.memo(function DebouncedInput({
   const compRef = useRef(false);
   const focusedRef = useRef(false);
   const defaultValueRef = useRef(value ?? "");
-  const editCountRef = useRef(0);
 
-  useEffect(() => {
-    return () => {
-      if (editCountRef.current > 0) {
-        window.__aecEditingCount = Math.max(0, (window.__aecEditingCount || 0) - editCountRef.current);
-      }
-    };
-  }, []);
-
+  /* 高さの自動調整（テキストエリア） */
   const resize = (el) => {
     if (!autoGrow || !multiline || !el) return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   };
 
+  /* 外部値の同期：フォーカス外のみ */
   useEffect(() => {
     const el = inputRef.current;
-    if (!el) return;
-    if (multiline) resize(el);
-    // フォーカス外なら外部値をDOMへ反映
-    if (!focusedRef.current && !compRef.current) {
-      const next = value ?? "";
-      if (el.value !== next) {
-        el.value = next;
-        if (multiline) resize(el);
-      }
+    if (!el || focusedRef.current || compRef.current) return;
+    const next = value ?? "";
+    if (el.value !== next) {
+      el.value = next;
+      if (multiline) resize(el);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   const commit = (next) => { if (typeof onCommit === "function") onCommit(next); };
-
-  const onFocus = () => {
-    focusedRef.current = true;
-    window.__aecEditingCount = (window.__aecEditingCount || 0) + 1;
-    editCountRef.current += 1;
-  };
-  const onBlur = () => {
-    focusedRef.current = false;
-    const el = inputRef.current;
-    if (el) commit(el.value);
-    if (editCountRef.current > 0) {
-      window.__aecEditingCount = Math.max(0, (window.__aecEditingCount || 0) - 1);
-      editCountRef.current -= 1;
-    }
-  };
 
   const common = {
     ref: inputRef,
@@ -136,65 +151,85 @@ const DebouncedInput = React.memo(function DebouncedInput({
       if (multiline) resize(e.currentTarget);
       if (typeof onDraft === "function") onDraft(e.currentTarget.value);
     },
-    onFocus,
-    onBlur,
+    onFocus: () => { focusedRef.current = true; },
+    onBlur: (e) => { focusedRef.current = false; commit(e.currentTarget.value); },
     onCompositionStart: () => { compRef.current = true; },
-    onCompositionEnd: (e) => { compRef.current = false; if (!multiline) commit(e.currentTarget.value); },
+    onCompositionEnd: (e) => { compRef.current = false; commit(e.currentTarget.value); },
     onKeyDown: (e) => {
       if (!multiline && commitOnEnter && e.key === "Enter") {
         e.preventDefault(); commit(e.currentTarget.value);
-        try { e.currentTarget.blur(); } catch {}
+        // iOS で Enter でキーボードを閉じないよう blur() しない
       }
     },
-    autoComplete: "off", autoCorrect: "off", spellCheck: false, inputMode: "text",
-    enterKeyHint: "done", autoCapitalize: "none", ...rest,
+    autoComplete: "off", autoCorrect: "off", spellCheck: false,
+    inputMode: "text", enterKeyHint: "done", autoCapitalize: "none",
+    ...rest,
   };
 
   if (!multiline) return <input {...common} />;
   return <textarea {...common} rows={rows} style={{ resize: "none", overflow: "hidden", ...(rest.style || {}) }} />;
 });
 
+/* ===================== Data Model ===================== */
+const defaultWorksheet = (dateISO) => ({
+  meta: { app: "annetmii-english-camp", version: 43, date: dateISO,
+    genre: DAY_GENRE[new Date(dateISO + "T00:00:00").getDay()], trainee: "Masayuki", theme: "" },
+  parts: {
+    part1: { label: "Part 1｜語彙チェック（英単語→日本語訳）", instructions: "英単語の日本語訳を入力してください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
+    part2: { label: "Part 2｜構文トレーニング（穴埋め＋日本語訳）", instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
+    part3: { label: "Part 3｜会話ロールプレイ", instructions: "英文を入力して会話を完成させてください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
+    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。", answer: "", handwriting: null, trainerNotes: "" },
+  },
+  trainerFeedback: "", submittedAt: null,
+});
+function ensureMaps(ws, curDate) {
+  try {
+    ws.parts.part1.answers = ws.parts.part1.answers || {};
+    ws.parts.part1.marks   = ws.parts.part1.marks   || {};
+    ws.parts.part2.answers = ws.parts.part2.answers || {};
+    ws.parts.part2.marks   = ws.parts.part2.marks   || {};
+    ws.parts.part3.answers = ws.parts.part3.answers || {};
+    ws.parts.part3.marks   = ws.parts.part3.marks   || {};
+  } catch (_) {
+    ws = defaultWorksheet(curDate || todayISO());
+  }
+  if (ws?.meta) ws.meta.date = curDate || ws.meta.date || todayISO();
+  return ws;
+}
+
 /* ===================== Part1 ===================== */
-const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef }) {
-  const answerMap = ws.parts.part1.answers || {};
-  const answer = answerMap[it.id] ?? "";
+const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode }) {
+  const answer = (ws.parts.part1.answers || {})[it.id] ?? "";
   const mark = (ws.parts.part1.marks || {})[it.id];
   const isWrong = mark === "wrong";
   const isOk = mark === "ok";
 
-  const setWord = (v) =>
-    setWs((cur) => {
-      const items = cur.parts.part1.items;
-      const idx = items.findIndex((x) => x.id === it.id);
-      if (idx < 0) return cur;
-      const next = [...items]; next[idx] = { ...next[idx], en: v };
-      return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: next } } };
-    });
+  const setWord = (v) => setWs((cur) => {
+    const items = cur.parts.part1.items;
+    const idx = items.findIndex((x) => x.id === it.id);
+    if (idx < 0) return cur;
+    const next = [...items]; next[idx] = { ...next[idx], en: v };
+    return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: next } } };
+  });
+  const commitAnswer = (v) => setWs((cur) => {
+    const tsMap = cur.parts.part1.answersUpdatedAt || {};
+    return {
+      ...cur, parts: { ...cur.parts, part1: {
+        ...cur.parts.part1,
+        answers: { ...(cur.parts.part1.answers||{}), [it.id]: v },
+        answersUpdatedAt: { ...tsMap, [it.id]: nowISO() },
+      } }
+    };
+  });
 
-  const commitAnswer = (v) =>
-    setWs((cur) => {
-      const ts = new Date().toISOString();
-      const a = cur.parts.part1.answers || {};
-      const t = cur.parts.part1.answersUpdatedAt || {};
-      return {
-        ...cur, parts: { ...cur.parts, part1: {
-          ...cur.parts.part1,
-          answers: { ...a, [it.id]: v },
-          answersUpdatedAt: { ...t, [it.id]: ts },
-        } }
-      };
-    });
-
-  const setMark = (val) =>
-    setWs((cur) => ({
-      ...cur,
-      parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } } },
-    }));
-  const clearMark = () =>
-    setWs((cur) => {
-      const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id];
-      return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } };
-    });
+  const setMark = (val) => setWs((cur) => ({
+    ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1,
+      marks: { ...(cur.parts.part1.marks || {}), [it.id]: val } } }
+  }));
+  const clearMark = () => setWs((cur) => {
+    const m = { ...(cur.parts.part1.marks || {}) }; delete m[it.id];
+    return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, marks: m } } };
+  });
 
   return (
     <div className="p1-row">
@@ -203,8 +238,6 @@ const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef })
       ) : (
         <span className="p1-word">{it.en}</span>
       )}
-
-      {/* 日本語欄＋採点ボタンを1行に（PCで外枠内に収める） */}
       <div className="row" style={{ width: "100%" }}>
         <div className="flex-1">
           <DebouncedInput
@@ -226,19 +259,18 @@ const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode, draftRef })
   );
 });
 
-const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef }) {
+const Part1 = React.memo(function Part1({ Card, ws, setWs, mode }) {
   return (
     <Card title={ws.parts.part1.label} instructions={ws.parts.part1.instructions}>
-      <div className="grid1">
-        {ws.parts.part1.items.map((it) => (
-          <Part1Row key={it.id} it={it} mode={mode} ws={ws} setWs={setWs} draftRef={draftRef} />
-        ))}
-      </div>
+      {ws.parts.part1.items.map((it) => (
+        <Part1Row key={it.id} it={it} mode={mode} ws={ws} setWs={setWs} />
+      ))}
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
           <button type="button" className="btn btn-primary"
             onClick={() => setWs((cur) => ({
-              ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }
+              ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1,
+                items: [...cur.parts.part1.items, { id: genId(), en: "" }] } }
             }))}
           >語彙を追加</button>
         </div>
@@ -253,14 +285,16 @@ const Part1 = React.memo(function Part1({ Card, ws, setWs, mode, draftRef }) {
           />
         </div>
       ) : ws.parts.part1.trainerNotes ? (
-        <div className="teacher-note"><strong>講師コメント：</strong><br/>{ws.parts.part1.trainerNotes}</div>
+        <div style={{marginTop:12, background:'#f9fafb', borderLeft:'4px solid #e5e7eb', padding:'8px 12px', borderRadius:8, color:'#b91c1c'}}>
+          <strong>講師コメント：</strong><br/>{ws.parts.part1.trainerNotes}
+        </div>
       ) : null}
     </Card>
   );
 });
 
 /* ===================== Part2 ===================== */
-const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef }) {
+const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
   return (
     <Card title={ws.parts.part2.label} instructions={ws.parts.part2.instructions}>
       {ws.parts.part2.items.map((it) => {
@@ -270,17 +304,15 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef }) {
         const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
 
         const commitField = (patch) => setWs((cur) => {
-          const ts = new Date().toISOString();
           const prevAns = cur.parts.part2.answers || {};
           const prevTs  = cur.parts.part2.answersUpdatedAt || {};
           const prevRec = prevAns[it.id] || { en: "", ja: "" };
-          const newRec = { ...prevRec, ...patch };
-          const tsPatch = Object.fromEntries(Object.keys(patch).map(k => [k, ts]));
+          const ts = nowISO();
           return {
             ...cur, parts: { ...cur.parts, part2: {
               ...cur.parts.part2,
-              answers: { ...prevAns, [it.id]: newRec },
-              answersUpdatedAt: { ...prevTs, [it.id]: { ...(prevTs[it.id] || {}), ...tsPatch } }
+              answers: { ...prevAns, [it.id]: { ...prevRec, ...patch } },
+              answersUpdatedAt: { ...prevTs, [it.id]: { ...(prevTs[it.id] || {}), ...Object.fromEntries(Object.keys(patch).map(k => [k, ts])) } }
             } }
           };
         });
@@ -313,7 +345,6 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef }) {
                   className={`input field-full ${enWrong ? "answer-wrong" : ""} ${enOk ? "answer-correct" : ""}`}
                   placeholder="英語の答え（穴埋め）"
                   value={ans.en ?? ""}
-                  onDraft={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), en: v }; }}
                   onCommit={(v) => commitField({ en: v })}
                 />
               </div>
@@ -346,7 +377,6 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef }) {
                   className={`input field-full ${jaWrong ? "answer-wrong" : ""} ${jaOk ? "answer-correct" : ""}`}
                   placeholder="日本語訳"
                   value={ans.ja ?? ""}
-                  onDraft={(v) => { draftRef.current.p2[it.id] = { ...(draftRef.current.p2[it.id] || ans), ja: v }; }}
                   onCommit={(v) => commitField({ ja: v })}
                 />
               </div>
@@ -387,14 +417,16 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode, draftRef }) {
           />
         </div>
       ) : ws.parts.part2.trainerNotes ? (
-        <div className="teacher-note"><strong>講師コメント：</strong><br />{ws.parts.part2.trainerNotes}</div>
+        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
+          <strong>講師コメント：</strong><br />{ws.parts.part2.trainerNotes}
+        </div>
       ) : null}
     </Card>
   );
 });
 
 /* ===================== Part3 ===================== */
-const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef }) {
+const Part3 = React.memo(function Part3({ Card, ws, setWs, mode }) {
   return (
     <Card title={ws.parts.part3.label} instructions={ws.parts.part3.instructions}>
       {ws.parts.part3.items.map((it) => {
@@ -458,16 +490,14 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef }) {
                     className={`input field-full ${wrong3 ? "answer-wrong" : ""} ${ok3 ? "answer-correct" : ""}`}
                     placeholder="英語：ここに英訳を入力"
                     value={ans3Map[it.id] ?? ""}
-                    onDraft={(v) => { draftRef.current.p3[it.id] = v; }}
                     onCommit={(v) => setWs((cur) => {
-                      const ts = new Date().toISOString();
                       const prevAns = cur.parts.part3.answers || {};
                       const prevTs  = cur.parts.part3.answersUpdatedAt || {};
                       return {
                         ...cur, parts: { ...cur.parts, part3: {
                           ...cur.parts.part3,
                           answers: { ...prevAns, [it.id]: v },
-                          answersUpdatedAt: { ...prevTs, [it.id]: ts },
+                          answersUpdatedAt: { ...prevTs, [it.id]: nowISO() },
                         } }
                       };
                     })}
@@ -516,34 +546,6 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode, draftRef }) {
   );
 });
 
-/* ===================== Part4（Writing） ===================== */
-const Part4 = React.memo(function Part4({ Card, ws, setWs, mode }) {
-  return (
-    <Card title={ws.parts.part4.label} instructions={ws.parts.part4.instructions}>
-      <DebouncedInput
-        multiline rows={3} autoGrow className="input field-full"
-        placeholder="ここに英作文を入力してください"
-        value={ws.parts.part4.answer || ""}
-        onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))}
-      />
-      {mode === "trainer" ? (
-        <div style={{ marginTop: 12 }}>
-          <div className="label">講師コメント</div>
-          <DebouncedInput
-            multiline rows={3} autoGrow className="input field-full teacher-comment"
-            value={ws.parts.part4.trainerNotes || ""}
-            onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))}
-          />
-        </div>
-      ) : ws.parts.part4.trainerNotes ? (
-        <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
-          <strong>講師コメント：</strong><br />{ws.parts.part4.trainerNotes}
-        </div>
-      ) : null}
-    </Card>
-  );
-});
-
 /* ===================== Calendar ===================== */
 function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
   const d = new Date(`${dateISO}T00:00:00`);
@@ -584,7 +586,9 @@ function MonthCalendar({ dateISO, onSelect, marked, submitted, trainer }) {
               }}
             >
               {String(dt.getDate())}
-              {hasAny && <span className={`cal-dot ${hasTrainer ? "cal-trainer" : (hasSubmit ? "cal-submit" : "cal-any")}`} />}
+              {hasAny && (
+                <span className={`cal-dot ${hasTrainer ? "cal-trainer" : (hasSubmit ? "cal-submit" : "cal-any")}`} />
+              )}
             </button>
           );
         })}
@@ -615,15 +619,19 @@ const Header = React.memo(function Header({
       <div className="header-row">
         <div className="container">
           <div className="hstack">
-            <button className="hdr-btn" onClick={() => setShowCal((v) => !v)}>カレンダー</button>
+            <button className="hdr-btn" onMouseDown={(e)=>e.preventDefault()} onClick={() => setShowCal((v) => !v)}>カレンダー</button>
             {mode === "student" ? (
               <>
-                <input type="password" inputMode="numeric" maxLength={4} className="pin-4ch" placeholder="PIN"
-                       value={pinInput} onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))} aria-label="講師PIN" />
-                <button className="hdr-btn-primary" onClick={switchToTrainer}>講師モード</button>
+                <input
+                  type="password" inputMode="numeric" maxLength={4} className="pin-4ch" placeholder="PIN"
+                  value={pinInput}
+                  onChange={(e) => onPinChange(e.target.value.replace(/\D/g, ""))}
+                  aria-label="講師PIN"
+                />
+                <button className="hdr-btn-primary" onMouseDown={(e)=>e.preventDefault()} onClick={switchToTrainer}>講師モード</button>
               </>
             ) : (
-              <button className="hdr-btn" onClick={switchToStudent}>学習者モードへ</button>
+              <button className="hdr-btn" onMouseDown={(e)=>e.preventDefault()} onClick={switchToStudent}>学習者モードへ</button>
             )}
           </div>
         </div>
@@ -633,11 +641,11 @@ const Header = React.memo(function Header({
         <div className="container">
           <div className="hstack" style={{ justifyContent: "space-between" }}>
             <div className="hstack">
-              <button className="hdr-btn-primary" onClick={() => doSync("手動同期")}>同期</button>
+              <button className="hdr-btn-primary" onMouseDown={(e)=>e.preventDefault()} onClick={() => doSync("手動同期")}>同期</button>
               {mode === "trainer" && (
-                <button className="hdr-btn danger-btn" onClick={resetQuestions} title="この日の出題を初期化">出題リセット</button>
+                <button className="hdr-btn danger-btn" onMouseDown={(e)=>e.preventDefault()} onClick={resetQuestions} title="この日の出題を初期化">出題リセット</button>
               )}
-              <button className="hdr-btn submit-btn" onClick={submit}>提出</button>
+              <button className="hdr-btn submit-btn" onMouseDown={(e)=>e.preventDefault()} onClick={submit}>提出</button>
             </div>
             <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
           </div>
@@ -665,89 +673,6 @@ const Header = React.memo(function Header({
   );
 });
 
-/* ===================== Data Model ===================== */
-const defaultWorksheet = (dateISO) => ({
-  meta: { app: "annetmii-english-camp", version: 43, date: dateISO, genre: DAY_GENRE[new Date(dateISO + "T00:00:00").getDay()], trainee: "Masayuki", theme: "" },
-  parts: {
-    part1: { label: "Part 1｜語彙チェック（英単語→日本語訳）", instructions: "英単語の日本語訳を入力してください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
-    part2: { label: "Part 2｜構文トレーニング（穴埋め＋日本語訳）", instructions: "Part1の語彙を使って文を完成させ、日本語訳も入力してください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
-    part3: { label: "Part 3｜会話ロールプレイ", instructions: "英文を入力して会話を完成させてください。", items: [], answers: {}, marks: {}, trainerNotes: "" },
-    part4: { label: "Part 4｜英作文", instructions: "本日のテーマに沿って80–120語で英作文を作ろう。", answer: "", handwriting: null, trainerNotes: "" },
-  },
-  trainerFeedback: "", submittedAt: null,
-});
-
-function ensureMaps(ws, curDate) {
-  try {
-    ws.parts.part1.answers = ws.parts.part1.answers || {};
-    ws.parts.part1.marks   = ws.parts.part1.marks   || {};
-    ws.parts.part2.answers = ws.parts.part2.answers || {};
-    ws.parts.part2.marks   = ws.parts.part2.marks   || {};
-    ws.parts.part3.answers = ws.parts.part3.answers || {};
-    ws.parts.part3.marks   = ws.parts.part3.marks   || {};
-  } catch (_) {
-    ws = defaultWorksheet(curDate || todayISO());
-  }
-  if (ws?.meta) ws.meta.date = curDate || ws.meta.date || todayISO();
-  return ws;
-}
-const nowISO = () => new Date().toISOString();
-
-function listLocalDatesForUser(userId) {
-  const prefix = `${LS_PREFIX}${userId}:`;
-  const dates = new Set();
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i) || "";
-    if (k.startsWith(prefix)) {
-      const d = k.substring(prefix.length, prefix.length + 10);
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.add(d);
-    }
-  }
-  return dates;
-}
-function listLocalSubmittedDatesForUser(userId) {
-  const prefix = `${LS_PREFIX}${userId}:`;
-  const dates = new Set();
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i) || "";
-    if (!k.startsWith(prefix)) continue;
-    try {
-      const raw = localStorage.getItem(k);
-      const obj = JSON.parse(raw || "{}");
-      if (obj && obj.submittedAt) {
-        const d = k.substring(prefix.length, prefix.length + 10);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.add(d);
-      }
-    } catch {}
-  }
-  return dates;
-}
-function listLocalTrainerDatesForUser(userId) {
-  const prefix = `${LS_PREFIX}${userId}:`;
-  const dates = new Set();
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i) || "";
-    if (!k.startsWith(prefix)) continue;
-    try {
-      const raw = localStorage.getItem(k);
-      const obj = JSON.parse(raw || "{}");
-      const p = obj?.parts || {};
-      const hasMarks =
-        (p.part1 && p.part1.marks && Object.keys(p.part1.marks).length) ||
-        (p.part2 && p.part2.marks && Object.keys(p.part2.marks).length) ||
-        (p.part3 && p.part3.marks && Object.keys(p.part3.marks).length);
-      const hasNotes =
-        (p.part1 && p.part1.trainerNotes) || (p.part2 && p.part2.trainerNotes) ||
-        (p.part3 && p.part3.trainerNotes) || (obj && obj.trainerFeedback);
-      if (hasMarks || hasNotes) {
-        const d = k.substring(prefix.length, prefix.length + 10);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.add(d);
-      }
-    } catch {}
-  }
-  return dates;
-}
-
 /* ===================== App ===================== */
 export default function App() {
   const [userId] = useState("masayuki");
@@ -758,6 +683,9 @@ export default function App() {
   const [showCal, setShowCal] = useState(false);
   const [cloudDates, setCloudDates] = useState(new Set());
 
+  const guard = useEditingGuard(2500);  // ← blur後 2.5s も“編集中扱い”で通信停止
+
+  /* --- WS --- */
   const [ws, setWs] = useState(() => {
     const d = todayISO();
     const ls = localStorage.getItem(`${LS_PREFIX}${userId}:${d}`);
@@ -765,9 +693,17 @@ export default function App() {
   });
 
   const genre = useMemo(() => DAY_GENRE[new Date(`${dateISO}T00:00:00`).getDay()], [dateISO]);
-  useEffect(() => { window.__aec_setDate = (iso) => setDateISO(iso); return () => { delete window.__aec_setDate; }; }, []);
 
-  /* Local save */
+  /* --- 編集ガード：focusin/out 監視（全体に1度だけ） --- */
+  useEffect(() => {
+    const onIn  = () => guard.startEdit();
+    const onOut = () => guard.endEdit();
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
+    return () => { document.removeEventListener("focusin", onIn); document.removeEventListener("focusout", onOut); };
+  }, [guard]);
+
+  /* --- Local save（600ms + idle） --- */
   const saveTimerRef = useRef(null);
   useEffect(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -780,107 +716,130 @@ export default function App() {
     return () => clearTimeout(saveTimerRef.current);
   }, [ws, userId, dateISO]);
 
-  /* Load remote */
+  /* --- 初回/日付変更：クラウド読み込み（編集中は遅延） --- */
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         setStatus("クラウド読込中…");
+        // 編集中なら少し待ってから
+        if (guard.isEditing()) return setStatus("編集中のため読込待機");
         const remote = await cloudLoad({ userId, dateISO });
-        if (remote && remote.data) {
-          setWs(ensureMaps(remote.data, dateISO));
-          setStatus("クラウドから読み込みました");
-        } else {
-          setWs(ensureMaps(defaultWorksheet(dateISO), dateISO));
-          setStatus("本日のワークシートを作成しました");
+        if (!cancelled) {
+          if (remote && remote.data) {
+            setWs(ensureMaps(remote.data, dateISO));
+            setStatus("クラウドから読み込みました");
+          } else {
+            setWs(ensureMaps(defaultWorksheet(dateISO), dateISO));
+            setStatus("本日のワークシートを作成しました");
+          }
         }
       } catch {
         setStatus("オフライン：ローカル保存のみ");
       }
     })();
-  }, [userId, dateISO]);
+    return () => { cancelled = true; };
+  }, [userId, dateISO, guard]);
 
-  /* Calendar dots */
+  /* --- カレンダードット --- */
   const refreshCloudDates = useCallback(async () => {
     try { const res = await cloudListDates({ userId }); setCloudDates(new Set(res.dates || [])); } catch {}
   }, [userId]);
   useEffect(() => { refreshCloudDates(); }, [refreshCloudDates]);
 
-  const markedDates = useMemo(() => { const set = new Set(listLocalDatesForUser(userId)); cloudDates.forEach((d) => set.add(d)); return set; }, [userId, cloudDates]);
-  const submittedDates = useMemo(() => listLocalSubmittedDatesForUser(userId), [userId, ws]);
-  const trainerDates = useMemo(() => listLocalTrainerDatesForUser(userId), [userId, ws]);
+  const markedDates = useMemo(() => { const set = new Set(); try {
+    const prefix = `${LS_PREFIX}${userId}:`;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i) || "";
+      if (k.startsWith(prefix)) { const d = k.substring(prefix.length, prefix.length + 10); if (/^\d{4}-\d{2}-\d{2}$/.test(d)) set.add(d); }
+    }
+  } catch {} cloudDates.forEach((d)=>set.add(d)); return set; }, [userId, cloudDates]);
 
-  /* Idle autosave to cloud */
+  /* --- 自動保存：60s のみ（編集中は完全停止） --- */
   const lastChangeRef = useRef(Date.now());
   useEffect(() => { lastChangeRef.current = Date.now(); }, [ws]);
   useEffect(() => {
     const id = setInterval(async () => {
       const idleFor = Date.now() - lastChangeRef.current;
-      if (idleFor >= 60000 && (window.__aecEditingCount || 0) === 0) {
+      if (idleFor >= 60000 && !guard.isEditing()) {
         try {
           setStatus("自動同期中…");
           await cloudSave({
-            userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+            userId, dateISO,
+            data: { ...ws, meta: { ...ws.meta, date: dateISO } },
             asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
           });
           setStatus("自動同期完了");
           refreshCloudDates();
-        } catch { setStatus("自動同期失敗：後で再試行"); }
+        } catch {
+          setStatus("自動同期失敗：後で再試行");
+        }
         lastChangeRef.current = Date.now();
       }
     }, 5000);
     return () => clearInterval(id);
-  }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates]);
+  }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
 
-  /* Trainer fast autosave */
+  /* --- トレーナー自動保存（編集中は停止 / 1.5s→3s） --- */
   useEffect(() => {
     if (mode !== "trainer") return;
-    if ((window.__aecEditingCount || 0) > 0) return;
+    if (guard.isEditing()) return;             // ← フォーカス中/直後は保存しない
     const t = setTimeout(async () => {
       try {
-        await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } }, asTrainer: true, pin: pinInput });
+        await cloudSave({
+          userId, dateISO,
+          data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+          asTrainer: true, pin: pinInput,
+        });
         refreshCloudDates();
       } catch {}
-    }, 1500);
+    }, 3000);
     return () => clearTimeout(t);
-  }, [ws, mode, userId, dateISO, pinInput, refreshCloudDates]);
+  }, [ws, mode, userId, dateISO, pinInput, refreshCloudDates, guard]);
 
-  /* Manual sync */
+  /* --- 手動同期 --- */
   const doSync = useCallback(async (reason = "同期") => {
-    if ((window.__aecEditingCount || 0) > 0) { setStatus("編集中のため同期を保留"); return; }
+    if (guard.isEditing()) { setStatus("編集中のため同期を保留"); return; }
     try {
       setStatus(`${reason}中…`);
-      await cloudSave({ userId, dateISO, data: { ...ws, meta: { ...ws.meta, date: dateISO } }, asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "" });
+      await cloudSave({
+        userId, dateISO,
+        data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+        asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
+      });
       setStatus(`${reason}完了`);
       refreshCloudDates();
-    } catch { setStatus(`${reason}失敗：後で再試行`); }
-  }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates]);
+    } catch {
+      setStatus(`${reason}失敗：後で再試行`);
+    }
+  }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
 
-  /* Submit */
+  /* --- 提出 --- */
   const submit = useCallback(() => {
     setWs((c) => ({ ...c, submittedAt: nowISO() }));
     doSync("提出");
   }, [doSync]);
 
-  /* Mode switch */
+  /* --- モード切替 --- */
   const switchToTrainer = useCallback(() => { if (pinInput === DEFAULT_PIN) setMode("trainer"); else alert("PINが違います。"); }, [pinInput]);
   const switchToStudent = useCallback(() => setMode("student"), []);
 
-  /* Fetch & merge from remote (paused while editing) */
+  /* --- 定期フェッチ＆マージ（20s・編集中は完全停止） --- */
   const fetchAndMerge = useCallback(async () => {
+    if (guard.isEditing()) return;
     try {
-      if ((window.__aecEditingCount || 0) > 0) return;
       const remote = await cloudLoad({ userId, dateISO });
       if (remote && remote.data) setWs(ensureMaps(remote.data, dateISO));
     } catch {}
-  }, [userId, dateISO]);
+  }, [userId, dateISO, guard]);
   useEffect(() => {
-    const id = setInterval(fetchAndMerge, 10000);
+    const id = setInterval(fetchAndMerge, 20000);
     const onVis = () => { if (document.visibilityState === "visible") fetchAndMerge(); };
     document.addEventListener("visibilitychange", onVis);
     return () => { clearInterval(id); document.removeEventListener("visibilitychange", onVis); };
   }, [fetchAndMerge]);
 
-  /* Flush on unload/hidden */
+  /* --- 離脱時のローカル保存 --- */
   useEffect(() => {
     const flushNow = () => {
       try {
@@ -894,7 +853,7 @@ export default function App() {
     return () => { window.removeEventListener("beforeunload", flushNow); document.removeEventListener("visibilitychange", onVis); };
   }, [userId, dateISO, ws]);
 
-  /* UI Shell */
+  /* --- UI Shell --- */
   const Card = ({ title, children, instructions }) => (
     <section className="container" style={{ padding: "12px 16px" }}>
       <div className="card">
@@ -907,31 +866,14 @@ export default function App() {
     </section>
   );
 
-  const HeaderBar = React.memo(() => (
-    <Header
-      genre={genre} dateISO={dateISO} status={status}
-      mode={mode} pinInput={pinInput} onPinChange={setPinInput}
-      switchToTrainer={switchToTrainer} switchToStudent={switchToStudent}
-      showCal={showCal} setShowCal={setShowCal}
-      doSync={doSync} submit={submit}
-      userId={userId} markedDates={markedDates} submittedDates={submittedDates} trainerDates={trainerDates}
-      onPickDate={(iso) => { setDateISO(iso); setShowCal(false); }}
-      resetQuestions={() => {
-        if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
-        setWs((cur) => { const next = defaultWorksheet(cur.meta.date); next.meta.theme = cur.meta.theme || ""; return next; });
-        setStatus("出題を初期化しました");
-        doSync("出題リセット");
-      }}
-    />
-  ));
-
   const ThemeBar = React.memo(() => (
     <Card title="本日のテーマ">
       {mode === "trainer" ? (
         <DebouncedInput
           multiline rows={2} autoGrow className="input field-full theme-input"
           placeholder="Week 4｜Tuesday（Emergency）- ..."
-          value={ws.meta.theme} onCommit={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))}
+          value={ws.meta.theme}
+          onCommit={(v) => setWs((cur) => ({ ...cur, meta: { ...cur.meta, theme: v } }))}
         />
       ) : (
         <p className="theme-text" style={{ margin: 0, whiteSpace: "pre-line" }}>
@@ -943,18 +885,56 @@ export default function App() {
 
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(to bottom, #fff, #f9fafb)" }}>
-      <HeaderBar />
+      <Header
+        genre={genre} dateISO={dateISO} status={status}
+        mode={mode} pinInput={pinInput} onPinChange={setPinInput}
+        switchToTrainer={switchToTrainer} switchToStudent={switchToStudent}
+        showCal={showCal} setShowCal={setShowCal}
+        doSync={doSync} submit={submit}
+        userId={userId} markedDates={markedDates}
+        submittedDates={new Set()} trainerDates={new Set()}
+        onPickDate={(iso) => { setDateISO(iso); setShowCal(false); }}
+        resetQuestions={() => {
+          if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
+          setWs((cur) => { const next = defaultWorksheet(cur.meta.date); next.meta.theme = cur.meta.theme || ""; return next; });
+          setStatus("出題を初期化しました");
+          doSync("出題リセット");
+        }}
+      />
       <ThemeBar />
-      <Part1  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={{ current: { p1: {}, p2: {}, p3: {} } }} />
-      <Part2  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={{ current: { p1: {}, p2: {}, p3: {} } }} />
-      <Part3  Card={Card} ws={ws} setWs={setWs} mode={mode} draftRef={{ current: { p1: {}, p2: {}, p3: {} } }} />
-      <Part4  Card={Card} ws={ws} setWs={setWs} mode={mode} />
+      <Part1  Card={Card} ws={ws} setWs={setWs} mode={mode} />
+      <Part2  Card={Card} ws={ws} setWs={setWs} mode={mode} />
+      <Part3  Card={Card} ws={ws} setWs={setWs} mode={mode} />
+      <Card title="Part 4｜英作文" instructions={ws.parts.part4.instructions}>
+        <DebouncedInput
+          multiline rows={3} autoGrow className="input field-full"
+          placeholder="ここに英作文を入力してください"
+          value={ws.parts.part4.answer || ""}
+          onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))}
+        />
+        {mode === "trainer" ? (
+          <div style={{ marginTop: 12 }}>
+            <div className="label">講師コメント</div>
+            <DebouncedInput
+              multiline rows={3} autoGrow className="input field-full teacher-comment"
+              value={ws.parts.part4.trainerNotes || ""}
+              onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))}
+            />
+          </div>
+        ) : ws.parts.part4.trainerNotes ? (
+          <div style={{ marginTop: 12, background: "#f9fafb", borderLeft: "4px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, color: "#b91c1c" }}>
+            <strong>講師コメント：</strong><br />{ws.parts.part4.trainerNotes}
+          </div>
+        ) : null}
+      </Card>
+
       <section className="container" style={{ padding: "12px 16px" }}>
         {mode === "trainer" ? (
           <div className="card" style={{ padding: "16px" }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 6px" }}>全体フィードバック</h2>
-            <DebouncedInput id="global-notes" key="global-notes"
-              multiline rows={4} autoGrow className="input field-full teacher-comment"
+            <DebouncedInput
+              id="global-notes" key="global-notes" multiline rows={4} autoGrow
+              className="input field-full teacher-comment"
               placeholder="今日のまとめコメントを入力" value={ws.trainerFeedback || ""}
               onCommit={(v) => setWs((cur) => ({ ...cur, trainerFeedback: v }))}
             />
@@ -966,7 +946,10 @@ export default function App() {
           </div>
         ) : null}
       </section>
-      <footer className="container" style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: "#6b7280" }}>©︎annetmii - Make Every Day Yours</footer>
+
+      <footer className="container" style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: "#6b7280" }}>
+        ©︎annetmii - Make Every Day Yours
+      </footer>
     </div>
   );
 }
