@@ -1,7 +1,7 @@
 {
   "meta": {
     "app": "annetmii-english-camp",
-    "version": 43,
+    "version": 44,
     "date": "2025-08-11",
     "genre": "HR（採用・育成）",
     "trainee": "Masayuki",
@@ -11,16 +11,10 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "8fa1efa5-93cc-4ef7-bbb2-86bd7d3413ca",
-          "en": "wo"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
@@ -28,8 +22,7 @@
       "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
@@ -37,12 +30,11 @@
       "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part4": {
       "label": "Part 4｜英作文",
-      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
