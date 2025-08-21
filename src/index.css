@@ -177,27 +177,24 @@ textarea.input::placeholder { color: #9ca3af; }
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
 
-/* === Part1：日本語欄はPCで“横並び行”に最適化、モバイルは100% === */
-
-/* 行の中で入力を優先的に広げ、ボタンは固定 */
+/* Part1：PCは横並び、入力は残り幅いっぱい／ボタンは固定幅 */
 .p1-row { display: flex; gap: 12px; align-items: center; }
 .p1-word { font-weight: 600; min-width: 120px; white-space: nowrap; flex: 0 0 auto; }
 
-/* 入力ボックスは “row .flex-1” の中で伸縮、width:auto でボタンに押し出されない */
+/* 入力側を優先（field-fullの100%を打ち消す） */
 .p1-answer {
   flex: 1 1 auto;
   min-width: 0;
-  width: auto !important;      /* ← .field-full の width:100% を打ち消す */
+  width: auto !important;
   max-width: 100%;
 }
 
-/* ボタン側は縮ませない（既にあれば重複OK） */
+/* ボタン側は縮ませない */
 .mark-wrap { flex: 0 0 auto; }
 
-/* 狭い画面（iPhone）：縦積み＆入力は100%幅を維持（以前の見え方のまま） */
+/* モバイルは縦積み＋入力100%（従来どおり） */
 @media (max-width: 480px) {
   .p1-row { flex-direction: column; align-items: stretch; }
   .p1-word { min-width: 0; width: 100%; white-space: normal; }
-  .p1-answer { width: 100% !important; }  /* ← モバイルは100% */
+  .p1-answer { width: 100% !important; }
 }
-
