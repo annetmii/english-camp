@@ -144,11 +144,19 @@ const DebouncedInput = React.memo(function DebouncedInput({
   const focusedRef = useRef(false);
   const defaultValueRef = useRef(value ?? "");
 
-  const resize = (el) => {
+  const resize = (() => {
+  let raf = null;
+  return (el) => {
     if (!autoGrow || !multiline || !el) return;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 320) + "px";
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const prev = el.style.height;
+      el.style.height = "auto";
+      const next = Math.min(el.scrollHeight, 320) + "px";
+      if (prev !== next) el.style.height = next; // ★同値なら何もしない＝再レイアウトを減らす
+    });
   };
+})();
 
   useEffect(() => {
     const el = inputRef.current;
@@ -715,7 +723,9 @@ const Header = React.memo(function Header({
               )}
               <button className="hdr-btn submit-btn" onMouseDown={(e)=>e.preventDefault()} onClick={submit}>提出</button>
             </div>
-            <span style={{ color: "#6b7280", fontSize: 13 }}>ステータス：{status}</span>
+            <span className="status-slot" style={{ color: "#6b7280", fontSize: 13 }}>
+  ステータス：{status}
+</span>
           </div>
         </div>
       </div>
@@ -1011,7 +1021,7 @@ export default function App() {
   ));
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(to bottom, #fff, #f9fafb)" }}>
+    <div className="app-root" style={{ background: "linear-gradient(to bottom, #fff, #f9fafb)" }}>
       <Header
         genre={genre} dateISO={dateISO} status={status}
         mode={mode} pinInput={pinInput} onPinChange={setPinInput}
