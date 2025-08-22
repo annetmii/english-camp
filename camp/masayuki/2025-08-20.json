@@ -3,162 +3,38 @@
     "app": "annetmii-english-camp",
     "version": 43,
     "date": "2025-08-20",
-    "genre": "HQ（本国報告・ドキュメント作成）",
+    "genre": "Small Talk（雑談・会食）",
     "trainee": "Masayuki",
-    "theme": "Week 5｜Wed（Airport）- 海外出張に行く\nPicture Dictionaryの「An Airport」（p.160）から学びましょう"
+    "theme": ""
   },
   "parts": {
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "960e0882-90f2-40f0-bd6f-ecc220ea6ee6",
-          "en": "drink"
-        },
-        {
-          "id": "a2ebbf24-ae30-4ed8-b086-e477bf62dca5",
-          "en": "boarding pass"
-        },
-        {
-          "id": "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005",
-          "en": "security check"
-        },
-        {
-          "id": "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11",
-          "en": "carry-on bag"
-        },
-        {
-          "id": "7201e441-2b43-4eca-a11d-dd89150e818f",
-          "en": "claim baggage"
-        },
-        {
-          "id": "3889d80f-c382-440b-8985-b73033f85b26",
-          "en": "seat belt"
-        },
-        {
-          "id": "2413f719-dd0f-4c05-bfcc-c9d1114ae843",
-          "en": "boarding gate"
-        },
-        {
-          "id": "ea1d6e0f-d3bd-4489-b04b-e376d800638f",
-          "en": "screening area"
-        }
-      ],
-      "answers": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "ドリンク",
-        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "搭乗券",
-        "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005": "セキュリティcjxj",
-        "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11": "キャリーケース"
-      },
+      "items": [],
+      "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {
-        "960e0882-90f2-40f0-bd6f-ecc220ea6ee6": "2025-08-19T17:32:09.856Z",
-        "a2ebbf24-ae30-4ed8-b086-e477bf62dca5": "2025-08-20T16:35:17.896Z",
-        "0e6f6cb5-437b-43ba-aeec-1fc6ccb99005": "2025-08-20T16:34:10.024Z",
-        "31c67ffe-a1a5-4fa8-a54a-77e0b67cbc11": "2025-08-19T16:51:04.452Z"
-      }
+      "trainerNotes": ""
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
-      "items": [
-        {
-          "id": "554a0c3f-6d62-4a37-88f1-9fa53e5114d7",
-          "prompt": "I need to ＿＿＿＿＿ electronically before my flight."
-        },
-        {
-          "id": "a5cca132-f1ca-4d80-91e6-e679fe7f5a4c",
-          "prompt": "Please show your ＿＿＿＿＿ at the boarding gate."
-        },
-        {
-          "id": "d2acea31-ea3d-44e3-a283-224c17c381f9",
-          "prompt": "All passengers must go through the ＿＿＿＿＿ before boarding."
-        },
-        {
-          "id": "289fc96c-1b66-43a0-a87f-d70e08d677cc",
-          "prompt": "Don’t forget to fasten your ＿＿＿＿＿＿ before takeoff."
-        },
-        {
-          "id": "a2d7a6ae-f73a-4d19-8583-7f4ffaec2211",
-          "prompt": "After landing, I will ＿＿＿＿＿＿ at the baggage claim."
-        }
-      ],
-      "answers": {
-        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
-          "en": "",
-          "ja": ""
-        },
-        "554a0c3f-6d62-4a37-88f1-9fa53e5114d7": {
-          "en": "",
-          "ja": ""
-        },
-        "d2acea31-ea3d-44e3-a283-224c17c381f9": {
-          "en": "",
-          "ja": ""
-        }
-      },
+      "items": [],
+      "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {
-        "289fc96c-1b66-43a0-a87f-d70e08d677cc": {
-          "en": "2025-08-19T16:50:41.469Z",
-          "ja": "2025-08-19T16:50:41.469Z"
-        },
-        "554a0c3f-6d62-4a37-88f1-9fa53e5114d7": {
-          "en": "2025-08-20T02:19:14.678Z",
-          "ja": "2025-08-20T02:19:14.678Z"
-        },
-        "d2acea31-ea3d-44e3-a283-224c17c381f9": {
-          "en": "2025-08-20T02:18:00.060Z",
-          "ja": "2025-08-20T02:18:00.060Z"
-        }
-      }
+      "trainerNotes": ""
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
-      "items": [
-        {
-          "id": "d8eb0673-f295-4cc9-83f8-dc62183994d5",
-          "otherRole": "Colleague",
-          "otherEn": "Masayuki, are you ready for your business trip abroad?",
-          "jp": "オンラインでチェックインして搭乗券を印刷しておいたよ。"
-        },
-        {
-          "id": "4f6c289e-58e8-4665-87e5-6d9967de8584",
-          "otherRole": "Colleague",
-          "otherEn": "That’s good. Don’t forget you’ll have to go through the security check at the screening area.",
-          "jp": "もちろん。ノートパソコンを手荷物から出しておかないとね。"
-        },
-        {
-          "id": "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7",
-          "otherRole": "Colleague",
-          "otherEn": "Once you arrive, how will you manage your schedule?",
-          "jp": "到着したら、ホテルへ直行だね。最初の会議に遅れないようにスケジュールを整理しておいた。"
-        },
-        {
-          "id": "d46248be-1671-4bab-8b81-ba8a2b014854",
-          "otherRole": "Colleague",
-          "otherEn": "That sounds well planned. Have a safe flight!",
-          "jp": "ありがとう。機内では眠れないので、プレゼン準備などで時間を潰すよ。"
-        }
-      ],
-      "answers": {
-        "4f6c289e-58e8-4665-87e5-6d9967de8584": "",
-        "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7": ""
-      },
+      "items": [],
+      "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {
-        "4f6c289e-58e8-4665-87e5-6d9967de8584": "2025-08-19T13:19:10.563Z",
-        "fb78a5fe-a9fe-4f0d-bc8d-817e9fcd86b7": "2025-08-20T16:21:09.033Z"
-      }
+      "trainerNotes": ""
     },
     "part4": {
       "label": "Part 4｜英作文",
-      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
