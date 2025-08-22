@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 /* ===================== Utils ===================== */
@@ -25,6 +26,30 @@ function todayISO(d = new Date()) {
 }
 const nowISO = () => new Date().toISOString();
 
+/* ---- 変更点：安価なJSONハッシュ（sha代替にも使用） ---- */
+function djb2(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+  // 正の32bitに
+  return (h >>> 0).toString(16);
+}
+function stableStringify(obj) {
+  // キー順を安定化
+  return JSON.stringify(obj, Object.keys(obj).sort());
+}
+
+/* ---- 変更点：採用判定（savedAt/sha） ---- */
+function isRemoteNewer({ remote, localSha, localSavedAt }) {
+  // remote: { data, sha?, savedAt? }
+  if (!remote) return false;
+  const rSha = remote.sha || djb2(stableStringify(remote.data || {}));
+  const rAt = remote.savedAt ? Date.parse(remote.savedAt) : 0;
+  const lAt = localSavedAt ? Date.parse(localSavedAt) : 0;
+  if (rSha === localSha) return false;            // 同一内容は再適用しない
+  if (rAt && lAt && rAt <= lAt) return false;     // 古いタイムスタンプは却下
+  return true;                                     // どちらも分からない時は更新を許可（初回など）
+}
+
 const DAY_GENRE = {
   0: "Seasonal（季節・イベント・行事）",
   1: "HR（採用・育成）",
@@ -35,10 +60,7 @@ const DAY_GENRE = {
   6: "Writing（書き言葉・メール・案内）",
 };
 
-/* ===================== 編集ガード =====================
-   - focusin で startEdit()、blur で endEdit()
-   - end してから N 秒は “編集中” と見なして通信・マージ停止
-====================================================== */
+/* ===================== 編集ガード ===================== */
 function useEditingGuard(graceMs = 2500) {
   const countRef = useRef(0);
   const lastTouchedRef = useRef(0);
@@ -62,36 +84,37 @@ function useEditingGuard(graceMs = 2500) {
   return { isEditing, startEdit, endEdit, touch };
 }
 
-/* ===================== Cloud I/O（計測＋トークン） ===================== */
-let __saveToken = 0;  // 古いレスポンスの採用を防ぐ
+/* ===================== Cloud I/O（計測＋トークン＋Abort） ===================== */
+let __saveToken = 0;   // 既存：古い save レスポンス採用防止
+let __loadToken = 0;   // 追加：古い load レスポンス採用防止
 
-async function cloudLoad({ userId, dateISO }) {
+async function cloudLoad({ userId, dateISO, signal }) {
   const url = `${ENDPOINT_STORAGE}?user=${encodeURIComponent(userId)}&date=${dateISO}`;
   const t0 = performance.now();
-  const res = await fetch(url);
+  const res = await fetch(url, { signal });
   const ms = Math.round(performance.now() - t0);
   if (!res.ok) throw new Error(`Load failed: ${res.status}`);
-  const json = await res.json();
-  // sha を保持（必要に応じて使う）
+  const json = await res.json(); // { data?, sha?, savedAt? }
   return json;
 }
-async function cloudSave({ userId, dateISO, data, asTrainer = false, pin = "" }) {
+async function cloudSave({ userId, dateISO, data, asTrainer = false, pin = "", signal }) {
   const t0 = performance.now();
   const token = ++__saveToken;
   const res = await fetch(ENDPOINT_STORAGE, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user: userId, date: dateISO, data, asTrainer, pin }),
+    signal,
   });
   const ms = Math.round(performance.now() - t0);
   if (!res.ok) throw new Error(`Save failed: ${res.status}`);
-  const json = await res.json();
-  if (token !== __saveToken) return null;
+  const json = await res.json(); // { sha?, savedAt? }
+  if (token !== __saveToken) return null; // 古い応答は捨てる
   return json;
 }
-async function cloudListDates({ userId }) {
+async function cloudListDates({ userId, signal }) {
   const url = `${ENDPOINT_LIST}?user=${encodeURIComponent(userId)}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal });
   if (!res.ok) return { dates: [] };
   return res.json();
 }
@@ -102,11 +125,12 @@ async function cloudListDates({ userId }) {
    - onChange は “下書き通知” のみ（親は state を更新しない）
    - blur / IME確定 / Enter でのみ onCommit（親 state 更新）
    - フォーカス中は絶対に外部 value を流し込まない
+   - 変更点：同値は commit しない（無駄な再レンダーとガタつき抑止）
 ===================================================================== */
 const DebouncedInput = React.memo(function DebouncedInput({
   value,
-  onDraft,     // 入力中通知（任意）
-  onCommit,    // 確定コミット（必須ではない）
+  onDraft,
+  onCommit,
   className = "",
   placeholder = "",
   multiline = false,
@@ -120,14 +144,12 @@ const DebouncedInput = React.memo(function DebouncedInput({
   const focusedRef = useRef(false);
   const defaultValueRef = useRef(value ?? "");
 
-  /* 高さの自動調整（テキストエリア） */
   const resize = (el) => {
     if (!autoGrow || !multiline || !el) return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 320) + "px";
   };
 
-  /* 外部値の同期：フォーカス外のみ */
   useEffect(() => {
     const el = inputRef.current;
     if (!el || focusedRef.current || compRef.current) return;
@@ -139,7 +161,13 @@ const DebouncedInput = React.memo(function DebouncedInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  const commit = (next) => { if (typeof onCommit === "function") onCommit(next); };
+  const commit = (next) => {
+    if (typeof onCommit !== "function") return;
+    const cur = inputRef.current?.value ?? "";
+    // ★変更点：同値ならcommitしない（iOSの高さ再計測を減らす）
+    if (cur === next) return;
+    onCommit(next);
+  };
 
   const common = {
     ref: inputRef,
@@ -156,6 +184,7 @@ const DebouncedInput = React.memo(function DebouncedInput({
     onCompositionEnd: (e) => { compRef.current = false; commit(e.currentTarget.value); },
     onKeyDown: (e) => {
       if (!multiline && commitOnEnter && e.key === "Enter") {
+        if (compRef.current) { e.preventDefault(); return; } // 変換確定Enterは送信しない
         e.preventDefault(); commit(e.currentTarget.value);
       }
     },
@@ -210,6 +239,8 @@ const Part1Row = React.memo(function Part1Row({ it, ws, setWs, mode }) {
     return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, items: next } } };
   });
   const commitAnswer = (v) => setWs((cur) => {
+    const prev = (cur.parts.part1.answers || {})[it.id] ?? "";
+    if (prev === v) return cur; // ★同値セット抑止
     const tsMap = cur.parts.part1.answersUpdatedAt || {};
     return {
       ...cur, parts: { ...cur.parts, part1: {
@@ -279,7 +310,10 @@ const Part1 = React.memo(function Part1({ Card, ws, setWs, mode }) {
           <DebouncedInput
             multiline rows={3} autoGrow className="input field-full teacher-comment"
             value={ws.parts.part1.trainerNotes || ""}
-            onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } }))}
+            onCommit={(v) => setWs((cur) => {
+              if ((cur.parts.part1.trainerNotes || "") === v) return cur; // ★同値抑止
+              return { ...cur, parts: { ...cur.parts, part1: { ...cur.parts.part1, trainerNotes: v } } };
+            })}
           />
         </div>
       ) : ws.parts.part1.trainerNotes ? (
@@ -302,15 +336,19 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
         const jaWrong = m.ja === "wrong", jaOk = m.ja === "ok";
 
         const commitField = (patch) => setWs((cur) => {
+          const prevRec = (cur.parts.part2.answers || {})[it.id] || { en: "", ja: "" };
+          // ★同値抑止：フィールド単位で同じなら何もしない
+          const [k, v] = Object.entries(patch)[0] || [];
+          if (k && (prevRec[k] ?? "") === (v ?? "")) return cur;
+
           const prevAns = cur.parts.part2.answers || {};
           const prevTs  = cur.parts.part2.answersUpdatedAt || {};
-          const prevRec = prevAns[it.id] || { en: "", ja: "" };
           const ts = nowISO();
           return {
             ...cur, parts: { ...cur.parts, part2: {
               ...cur.parts.part2,
               answers: { ...prevAns, [it.id]: { ...prevRec, ...patch } },
-              answersUpdatedAt: { ...prevTs, [it.id]: { ...(prevTs[it.id] || {}), ...Object.fromEntries(Object.keys(patch).map(k => [k, ts])) } }
+              answersUpdatedAt: { ...prevTs, [it.id]: { ...(prevTs[it.id] || {}), ...Object.fromEntries(Object.keys(patch).map(key => [key, ts])) } }
             } }
           };
         });
@@ -327,6 +365,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
                     const items = cur.parts.part2.items;
                     const idx = items.findIndex((x) => x.id === it.id);
                     if (idx < 0) return cur;
+                    if ((items[idx].prompt || "") === v) return cur; // ★同値抑止
                     const next = [...items]; next[idx] = { ...next[idx], prompt: v };
                     return { ...cur, parts: { ...cur.parts, part2: { ...cur.parts.part2, items: next } } };
                   })}
@@ -403,7 +442,6 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
         );
       })}
 
-      {/* ✅ ここを追加：講師モードで「課題を追加」 */}
       {mode === "trainer" && (
         <div style={{ paddingTop: 8, display: "flex", gap: 8 }}>
           <button
@@ -418,7 +456,7 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
                     ...cur.parts.part2,
                     items: [
                       ...cur.parts.part2.items,
-                      { id: genId(), prompt: "" }, // 新規課題（出題文だけ持つ）
+                      { id: genId(), prompt: "" },
                     ],
                   },
                 },
@@ -430,7 +468,6 @@ const Part2 = React.memo(function Part2({ Card, ws, setWs, mode }) {
         </div>
       )}
 
-      {/* 講師コメント */}
       {mode === "trainer" ? (
         <div style={{ marginTop: 12 }}>
           <div className="label">講師コメント</div>
@@ -480,6 +517,7 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode }) {
                       const items = cur.parts.part3.items;
                       const idx = items.findIndex((x) => x.id === it.id);
                       if (idx < 0) return cur;
+                      if ((items[idx].otherRole || "") === v) return cur; // ★同値抑止
                       const next = [...items]; next[idx] = { ...next[idx], otherRole: v };
                       return { ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: next } } };
                     })}
@@ -497,6 +535,7 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode }) {
                       const items = cur.parts.part3.items;
                       const idx = items.findIndex((x) => x.id === it.id);
                       if (idx < 0) return cur;
+                      if ((items[idx].otherEn || "") === v) return cur; // ★同値抑止
                       const next = [...items]; next[idx] = { ...next[idx], otherEn: v };
                       return { ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: next } } };
                     })}
@@ -517,6 +556,8 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode }) {
                     placeholder="英語：ここに英訳を入力"
                     value={ans3Map[it.id] ?? ""}
                     onCommit={(v) => setWs((cur) => {
+                      const prev = (cur.parts.part3.answers || {})[it.id] ?? "";
+                      if (prev === v) return cur; // ★同値抑止
                       const prevAns = cur.parts.part3.answers || {};
                       const prevTs  = cur.parts.part3.answersUpdatedAt || {};
                       return {
@@ -548,6 +589,7 @@ const Part3 = React.memo(function Part3({ Card, ws, setWs, mode }) {
                     const items = cur.parts.part3.items;
                     const idx = items.findIndex((x) => x.id === it.id);
                     if (idx < 0) return cur;
+                    if ((items[idx].jp || "") === v) return cur; // ★同値抑止
                     const next = [...items]; next[idx] = { ...next[idx], jp: v };
                     return { ...cur, parts: { ...cur.parts, part3: { ...cur.parts.part3, items: next } } };
                   })}
@@ -709,7 +751,15 @@ export default function App() {
   const [showCal, setShowCal] = useState(false);
   const [cloudDates, setCloudDates] = useState(new Set());
 
-  const guard = useEditingGuard(2500);  // ← blur後 2.5s も“編集中扱い”で通信停止
+  const guard = useEditingGuard(2500);
+
+  /* ---- 追加：同期メタ ---- */
+  const lastRemoteShaRef = useRef("");        // 直近に採用したリモートsha
+  const lastRemoteSavedAtRef = useRef("");    // 直近に採用したリモートsavedAt
+  const lastSavedLocalShaRef = useRef("");    // 直近に保存したローカルsha（不要な再保存回避）
+  const listCtrlRef = useRef(null);           // listDates用Abort
+  const loadCtrlRef = useRef(null);           // load用Abort
+  const saveCtrlRef = useRef(null);           // save用Abort
 
   /* --- WS --- */
   const [ws, setWs] = useState(() => {
@@ -720,7 +770,7 @@ export default function App() {
 
   const genre = useMemo(() => DAY_GENRE[new Date(`${dateISO}T00:00:00`).getDay()], [dateISO]);
 
-  /* --- 編集ガード：focusin/out 監視（全体に1度だけ） --- */
+  /* --- 編集ガード：focusin/out 監視 --- */
   useEffect(() => {
     const onIn  = () => guard.startEdit();
     const onOut = () => guard.endEdit();
@@ -742,33 +792,58 @@ export default function App() {
     return () => clearTimeout(saveTimerRef.current);
   }, [ws, userId, dateISO]);
 
-  /* --- 初回/日付変更：クラウド読み込み（編集中は遅延） --- */
+  /* --- 初回/日付変更：クラウド読み込み（Abort＋採用条件） --- */
   useEffect(() => {
     let cancelled = false;
+    const myToken = ++__loadToken;
+
+    // 古いロードを中断
+    loadCtrlRef.current?.abort();
+    const ctrl = new AbortController();
+    loadCtrlRef.current = ctrl;
+
     (async () => {
       try {
         setStatus("クラウド読込中…");
-        if (guard.isEditing()) return setStatus("編集中のため読込待機");
-        const remote = await cloudLoad({ userId, dateISO });
-        if (!cancelled) {
-          if (remote && remote.data) {
-            setWs(ensureMaps(remote.data, dateISO));
-            setStatus("クラウドから読み込みました");
-          } else {
-            setWs(ensureMaps(defaultWorksheet(dateISO), dateISO));
-            setStatus("本日のワークシートを作成しました");
-          }
+        if (guard.isEditing()) { setStatus("編集中のため読込待機"); return; }
+
+        const remote = await cloudLoad({ userId, dateISO, signal: ctrl.signal }); // {data, sha?, savedAt?}
+        if (cancelled || myToken !== __loadToken) return;
+
+        // ローカル基準（LS）も読み込んで採用判定
+        const lsRaw = localStorage.getItem(`${LS_PREFIX}${userId}:${dateISO}`);
+        const localWs = ensureMaps(lsRaw ? JSON.parse(lsRaw) : defaultWorksheet(dateISO), dateISO);
+        const localSha = djb2(stableStringify(localWs));
+        const localSavedAt = lastRemoteSavedAtRef.current || ""; // 端末に保存している直近採用時刻
+
+        if (remote && remote.data && isRemoteNewer({ remote, localSha, localSavedAt })) {
+          setWs(ensureMaps(remote.data, dateISO));
+          lastRemoteShaRef.current = remote.sha || djb2(stableStringify(remote.data));
+          lastRemoteSavedAtRef.current = remote.savedAt || nowISO();
+          setStatus("クラウドから更新しました");
+        } else {
+          // リモートが同じ/古い → ローカル維持
+          setWs(ensureMaps(localWs, dateISO));
+          setStatus(remote && remote.data ? "最新のまま（ローカル優先）" : "本日のワークシートを作成しました");
         }
-      } catch {
+      } catch (e) {
+        if (e.name === "AbortError") return;
         setStatus("オフライン：ローカル保存のみ");
       }
     })();
-    return () => { cancelled = true; };
+
+    return () => { cancelled = true; ctrl.abort(); };
   }, [userId, dateISO, guard]);
 
   /* --- カレンダードット --- */
   const refreshCloudDates = useCallback(async () => {
-    try { const res = await cloudListDates({ userId }); setCloudDates(new Set(res.dates || [])); } catch {}
+    try {
+      listCtrlRef.current?.abort();
+      const ctrl = new AbortController();
+      listCtrlRef = { current: ctrl };
+      const res = await cloudListDates({ userId, signal: ctrl.signal });
+      setCloudDates(new Set(res.dates || []));
+    } catch {}
   }, [userId]);
   useEffect(() => { refreshCloudDates(); }, [refreshCloudDates]);
 
@@ -780,24 +855,39 @@ export default function App() {
     }
   } catch {} cloudDates.forEach((d)=>set.add(d)); return set; }, [userId, cloudDates]);
 
-  /* --- 自動保存：60s のみ（編集中は完全停止） --- */
+  /* --- 自動保存：60s のみ（編集中は完全停止） + 同一shaは送らない --- */
   const lastChangeRef = useRef(Date.now());
   useEffect(() => { lastChangeRef.current = Date.now(); }, [ws]);
+
   useEffect(() => {
     const id = setInterval(async () => {
       const idleFor = Date.now() - lastChangeRef.current;
       if (idleFor >= 60000 && !guard.isEditing()) {
         try {
+          const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+          const localSha = djb2(stableStringify(normalized));
+          if (localSha === lastSavedLocalShaRef.current) return; // 変更なし保存を回避
+
           setStatus("自動同期中…");
-          await cloudSave({
+          saveCtrlRef.current?.abort();
+          const ctrl = new AbortController();
+          saveCtrlRef.current = ctrl;
+
+          const res = await cloudSave({
             userId, dateISO,
-            data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+            data: normalized,
             asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
+            signal: ctrl.signal,
           });
+          if (res) {
+            lastSavedLocalShaRef.current = localSha;
+            lastRemoteShaRef.current = res.sha || localSha;
+            lastRemoteSavedAtRef.current = res.savedAt || nowISO();
+          }
           setStatus("自動同期完了");
           refreshCloudDates();
-        } catch {
-          setStatus("自動同期失敗：後で再試行");
+        } catch (e) {
+          if (e.name !== "AbortError") setStatus("自動同期失敗：後で再試行");
         }
         lastChangeRef.current = Date.now();
       }
@@ -805,17 +895,30 @@ export default function App() {
     return () => clearInterval(id);
   }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
 
-  /* --- トレーナー自動保存（編集中は停止 / 1.5s→3s） --- */
+  /* --- トレーナー自動保存（3s・編集中停止・同一sha回避） --- */
   useEffect(() => {
     if (mode !== "trainer") return;
     if (guard.isEditing()) return;
+
     const t = setTimeout(async () => {
       try {
-        await cloudSave({
-          userId, dateISO,
-          data: { ...ws, meta: { ...ws.meta, date: dateISO } },
-          asTrainer: true, pin: pinInput,
+        const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+        const localSha = djb2(stableStringify(normalized));
+        if (localSha === lastSavedLocalShaRef.current) return;
+
+        saveCtrlRef.current?.abort();
+        const ctrl = new AbortController();
+        saveCtrlRef.current = ctrl;
+
+        const res = await cloudSave({
+          userId, dateISO, data: normalized,
+          asTrainer: true, pin: pinInput, signal: ctrl.signal,
         });
+        if (res) {
+          lastSavedLocalShaRef.current = localSha;
+          lastRemoteShaRef.current = res.sha || localSha;
+          lastRemoteSavedAtRef.current = res.savedAt || nowISO();
+        }
         refreshCloudDates();
       } catch {}
     }, 3000);
@@ -826,15 +929,29 @@ export default function App() {
   const doSync = useCallback(async (reason = "同期") => {
     if (guard.isEditing()) { setStatus("編集中のため同期を保留"); return; }
     try {
+      const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
+      const localSha = djb2(stableStringify(normalized));
+      if (localSha === lastSavedLocalShaRef.current) { setStatus(`${reason}：変更なし`); return; }
+
       setStatus(`${reason}中…`);
-      await cloudSave({
-        userId, dateISO,
-        data: { ...ws, meta: { ...ws.meta, date: dateISO } },
+      saveCtrlRef.current?.abort();
+      const ctrl = new AbortController();
+      saveCtrlRef.current = ctrl;
+
+      const res = await cloudSave({
+        userId, dateISO, data: normalized,
         asTrainer: mode === "trainer", pin: mode === "trainer" ? pinInput : "",
+        signal: ctrl.signal,
       });
+      if (res) {
+        lastSavedLocalShaRef.current = localSha;
+        lastRemoteShaRef.current = res.sha || localSha;
+        lastRemoteSavedAtRef.current = res.savedAt || nowISO();
+      }
       setStatus(`${reason}完了`);
       refreshCloudDates();
-    } catch {
+    } catch (e) {
+      if (e.name === "AbortError") return;
       setStatus(`${reason}失敗：後で再試行`);
     }
   }, [userId, dateISO, ws, mode, pinInput, refreshCloudDates, guard]);
@@ -907,6 +1024,8 @@ export default function App() {
         resetQuestions={() => {
           if (!window.confirm("この日の出題を初期状態に戻します。回答・採点・コメントも消えます。続行しますか？")) return;
           setWs((cur) => { const next = defaultWorksheet(cur.meta.date); next.meta.theme = cur.meta.theme || ""; return next; });
+          // 変更点：リセットは確実にsha更新扱い
+          lastSavedLocalShaRef.current = "";
           setStatus("出題を初期化しました");
           doSync("出題リセット");
         }}
@@ -920,7 +1039,10 @@ export default function App() {
           multiline rows={3} autoGrow className="input field-full"
           placeholder="ここに英作文を入力してください"
           value={ws.parts.part4.answer || ""}
-          onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } }))}
+          onCommit={(v) => setWs((cur) => {
+            if ((cur.parts.part4.answer || "") === v) return cur; // ★同値抑止
+            return { ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, answer: v } } };
+          })}
         />
         {mode === "trainer" ? (
           <div style={{ marginTop: 12 }}>
@@ -928,7 +1050,10 @@ export default function App() {
             <DebouncedInput
               multiline rows={3} autoGrow className="input field-full teacher-comment"
               value={ws.parts.part4.trainerNotes || ""}
-              onCommit={(v) => setWs((cur) => ({ ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } }))}
+              onCommit={(v) => setWs((cur) => {
+                if ((cur.parts.part4.trainerNotes || "") === v) return cur; // ★同値抑止
+                return { ...cur, parts: { ...cur.parts, part4: { ...cur.parts.part4, trainerNotes: v } } };
+              })}
             />
           </div>
         ) : ws.parts.part4.trainerNotes ? (
@@ -946,7 +1071,10 @@ export default function App() {
               id="global-notes" key="global-notes" multiline rows={4} autoGrow
               className="input field-full teacher-comment"
               placeholder="今日のまとめコメントを入力" value={ws.trainerFeedback || ""}
-              onCommit={(v) => setWs((cur) => ({ ...cur, trainerFeedback: v }))}
+              onCommit={(v) => setWs((cur) => {
+                if ((cur.trainerFeedback || "") === v) return cur; // ★同値抑止
+                return { ...cur, trainerFeedback: v };
+              })}
             />
           </div>
         ) : ws.trainerFeedback ? (
