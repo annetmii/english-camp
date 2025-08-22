@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "deploy:prod": "vite build && npx netlify deploy --prod --dir=dist --functions=netlify/functions",
+  "deploy:front": "vite build && npx netlify deploy --prod --dir=dist"
+},
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
