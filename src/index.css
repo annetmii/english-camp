@@ -176,3 +176,26 @@ textarea.input::placeholder { color: #9ca3af; }
 /* 本日のテーマ（少し小さめ） */
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
+
+/* ==== iPhoneの上下ガタつき対策（安定ビューポート・ヘッダー再描画抑制） ==== */
+
+/* アプリ全体の最小高は「小さい安定ビューポート」基準 */
+.app-root {
+  min-height: 100vh;   /* 互換用 */
+  min-height: 100svh;  /* iOS16+ でアドレスバー出入りでも高さが安定 */
+}
+
+/* iOS Safari では backdrop-filter を切り、再描画コストを下げる */
+@supports (-webkit-touch-callout: none) {
+  .sticky-header {
+    backdrop-filter: none;
+    background: #ffffff;       /* 固定色でOK。必要なら半透明にしてもOK */
+  }
+}
+
+/* ステータス表示の高さを固定して、文言長で行高がズレないようにする */
+.status-slot {
+  min-height: 18px;            /* 1行分を確保（必要に応じて 20〜22px） */
+  display: inline-flex;
+  align-items: center;
+}
