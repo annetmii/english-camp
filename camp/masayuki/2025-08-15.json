@@ -1,122 +1,40 @@
 {
   "meta": {
     "app": "annetmii-english-camp",
-    "version": 43,
+    "version": 44,
     "date": "2025-08-15",
-    "genre": "Small Talk（雑談・会食）",
+    "genre": "Compliance（勤怠・制度）",
     "trainee": "Masayuki",
-    "theme": "Week 5｜Tue（Compliance）- 健康診断\nPicture Dictionaryの「Medical Care」（p.118）から学びましょう"
+    "theme": "Week 5｜Tue（Compliance）- 社宅を手配する\nPicture Dictionaryの「Finding a Home」（p.48）から学びましょう"
   },
   "parts": {
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [
-        {
-          "id": "372ba494-e011-4d10-b2ed-395de31275c1",
-          "en": "warning"
-        },
-        {
-          "id": "a032c47d-9d26-452e-884d-4db387c6a959",
-          "en": "shelter"
-        },
-        {
-          "id": "c1d21929-4e5c-4a81-884f-f026e66a7712",
-          "en": "evacuate"
-        },
-        {
-          "id": "8f0c92df-f41d-4af8-b0cf-cdb0dfe7ac14",
-          "en": "calm"
-        },
-        {
-          "id": "6350b232-c249-4da6-a5f3-af8fb798250c",
-          "en": "debris"
-        },
-        {
-          "id": "b7f0d52c-5183-4946-996c-4e22f6d356de",
-          "en": "inspect"
-        },
-        {
-          "id": "7375cc16-7d5e-4bbc-87ec-b7e002093065",
-          "en": "help"
-        },
-        {
-          "id": "2b37cf66-03b7-4eac-89fc-888c9c478385",
-          "en": "take cover"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part2": {
       "label": "Part 2｜構文トレーニング（穴埋め＋日本語訳）",
       "instructions": "Part1の語彙を使って文を完成させ、日本語訳も入力してください。",
-      "items": [
-        {
-          "id": "2fdbdf4a-a9d7-4fe8-8dba-b8b99cdc182b",
-          "prompt": "We need to follow the ______ from the radio."
-        },
-        {
-          "id": "7e28c582-83a5-4974-9889-33de425f5f87",
-          "prompt": "Please stay ______ until we know it’s safe."
-        },
-        {
-          "id": "42b861b9-ff83-4d32-88d6-b9ff971eeba7",
-          "prompt": "Let’s ______ the area before it’s too dangerous."
-        },
-        {
-          "id": "97fc7c88-1c74-4e11-9561-2d1220d757cb",
-          "prompt": "The city sent volunteers to ______ the elderly."
-        },
-        {
-          "id": "94c94b4e-22a9-48d7-a31d-78f971bb7db8",
-          "prompt": "After the storm, we need to ______ the power lines."
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part3": {
       "label": "Part 3｜会話ロールプレイ",
       "instructions": "英文を入力して会話を完成させてください。",
-      "items": [
-        {
-          "id": "be3dd0c9-9169-429f-b251-73ce9c1ed2f6",
-          "otherRole": "Coworker",
-          "otherEn": "Hey Masayuki, did you hear they issued a tsunami warning?",
-          "jp": "はい。日々の訓練通り、落ち着いて速やかに行動しましょう。"
-        },
-        {
-          "id": "68bfbcb9-7608-44f9-8a7b-1abd5ded9af3",
-          "otherRole": "Coworker",
-          "otherEn": "Please stay calm and follow the official instructions.",
-          "jp": "まずは警告を確認して指示に従いましょう。"
-        },
-        {
-          "id": "0798ceda-34d2-4d74-bab5-d7b312a0e1ef",
-          "otherRole": "Coworker",
-          "otherEn": "Shall we evacuate to higher ground now?",
-          "jp": "はい。急いで準備をして高台に行きましょう。"
-        },
-        {
-          "id": "f4192c63-b195-45d2-8e96-ab930047ee5d",
-          "otherRole": "Coworker",
-          "otherEn": "Do you need any help with your bag?",
-          "jp": "いいえ。一緒に安全を確保しましょう。"
-        }
-      ],
+      "items": [],
       "answers": {},
       "marks": {},
-      "trainerNotes": "",
-      "answersUpdatedAt": {}
+      "trainerNotes": ""
     },
     "part4": {
       "label": "Part 4｜英作文",
-      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。iPadは手書きも可（PNG保存）。",
+      "instructions": "本日のテーマに沿って80–120語で英作文を作ろう。",
       "answer": "",
       "handwriting": null,
       "trainerNotes": ""
