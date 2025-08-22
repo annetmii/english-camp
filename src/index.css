@@ -1,3 +1,4 @@
+/* src/index.css */
 /* =================== ベース：横揺れ防止・基本 =================== */
 html, body {
   margin: 0;
@@ -10,14 +11,11 @@ html, body, #root {
   touch-action: pan-y;
   overscroll-behavior-x: none;
 }
-* { box-sizing: border-box; min-width: 0; }   /* flex子のはみ出し防止 */
+* { box-sizing: border-box; min-width: 0; }
 textarea { resize: none; }
 
 /* =================== 中央カラム =================== */
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-}
+.container { max-width: 960px; margin: 0 auto; }
 .content-pad { padding: 16px; }
 
 /* =================== 入力の共通スタイル =================== */
@@ -33,6 +31,7 @@ textarea.input {
   padding: 10px 12px;
   font-size: 16px;           /* iOSズーム防止 */
   line-height: 1.4;
+  min-height: 44px;          /* ★追加：高さの最低値でガタつき抑制 */
   color: #111827;
   background: #fff;
 }
@@ -51,6 +50,7 @@ textarea.input::placeholder { color: #9ca3af; }
   backdrop-filter: blur(4px);
   background: rgba(255,255,255,0.85);
   border-bottom: 1px solid #e5e7eb;
+  transform: translateZ(0);   /* ★追加：iOSでの再描画抑制（独立レイヤー） */
 }
 .header-bar { padding: 12px 16px 8px; }
 .header-row { padding: 0 16px 8px; }
@@ -129,7 +129,7 @@ textarea.input::placeholder { color: #9ca3af; }
   gap: 6px;
   margin-left: 8px;
   vertical-align: middle;
-  flex: 0 0 auto;      /* 入力側が優先的に広がる */
+  flex: 0 0 auto;
 }
 .mark-btn {
   display:inline-flex; align-items:center; justify-content:center;
@@ -141,33 +141,33 @@ textarea.input::placeholder { color: #9ca3af; }
 .mark-btn.wrong { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
 .mark-btn.clear { background:#f3f4f6; border-color:#e5e7eb; color:#374151; }
 
-/* =================== Part1 レイアウト（統一） =================== */
-/* PC：横並び（英単語:固定幅 / 日本語欄:可変） */
-.p1-row { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
+/* =================== Part1（統一：常に“縦並び”＆フル幅） =================== */
+.p1-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 .p1-word {
-  font-weight: 600;
-  min-width: 120px;      /* 88〜140で微調整可 */
-  white-space: nowrap;   /* PCは折り返さない */
-  flex: 0 0 auto;
-}
-.p1-answer {            /* ← Part1の日本語入力。学習者入力欄と同じ設定 */
-  flex: 1 1 auto;
   min-width: 0;
-  max-width: 100%;
+  width: 100%;
+  white-space: normal;
+  font-weight: 600;
 }
-
-/* モバイル：縦積みでフル幅、マーク群は折り返し下へ */
-@media (max-width: 480px) {
-  .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word { min-width: 0; width: 100%; white-space: normal; }
-  .p1-row .p1-answer { width: 100%; flex: initial; }
-  .p1-row .mark-wrap { margin-left: 0; }
+.p1-row .row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.p1-row .flex-1 { flex: 1 1 auto; min-width: 0; }
+.p1-row .mark-wrap { flex: 0 0 auto; }
+.p1-answer { width: 100% !important; max-width: 100%; }
 
-/* =================== 共通行ユーティリティ（Part2/Part3等） =================== */
+/* =================== 共通行ユーティリティ =================== */
 .row { display: flex; gap: 8px; align-items: center; }
 .flex-1 { flex: 1 1 auto; min-width: 0; }
-.col-grow { flex: 1 1 0; min-width: 0; }   /* 旧クラス互換 */
+.col-grow { flex: 1 1 0; min-width: 0; }
 
 /* =================== メモ（講師コメントの見た目） =================== */
 .teacher-comment { color: #b91c1c; }
@@ -176,61 +176,3 @@ textarea.input::placeholder { color: #9ca3af; }
 /* 本日のテーマ（少し小さめ） */
 .theme-input { font-size: 14px; }
 .theme-text  { font-size: 14px; line-height: 1.6; }
-
-/* Part1：PCは横並び、入力は残り幅いっぱい／ボタンは固定幅 */
-.p1-row { display: flex; gap: 12px; align-items: center; }
-.p1-word { font-weight: 600; min-width: 120px; white-space: nowrap; flex: 0 0 auto; }
-
-/* 入力側を優先（field-fullの100%を打ち消す） */
-.p1-answer {
-  flex: 1 1 auto;
-  min-width: 0;
-  width: auto !important;
-  max-width: 100%;
-}
-
-/* ボタン側は縮ませない */
-.mark-wrap { flex: 0 0 auto; }
-
-/* モバイルは縦積み＋入力100%（従来どおり） */
-@media (max-width: 480px) {
-  .p1-row { flex-direction: column; align-items: stretch; }
-  .p1-word { min-width: 0; width: 100%; white-space: normal; }
-  .p1-answer { width: 100% !important; }
-}
-/* =================== Part1 を常に“縦並び”＆フル幅に（PC/iPhone共通） =================== */
-
-/* 1) 行を縦積みに固定（英単語の下に「入力＋採点」） */
-.p1-row {
-  display: flex;
-  flex-direction: column;     /* ← 常に縦積み */
-  align-items: stretch;
-  gap: 8px;
-}
-
-/* 2) 英単語ラベルは1行扱いをやめ、幅100%（折返し可） */
-.p1-word {
-  min-width: 0;
-  width: 100%;
-  white-space: normal;        /* ← PCでも折り返しOKに */
-  font-weight: 600;
-}
-
-/* 3) 「入力＋採点」を1行（横）にしつつ、入力側が可変でボタンは固定 */
-.p1-row .row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 入力欄は残り幅をすべて占有（field-fullの100%を優先） */
-.p1-row .flex-1 { flex: 1 1 auto; min-width: 0; }
-
-/* 採点ボタンは幅固定で縮ませない。外枠の内側に収まる */
-.p1-row .mark-wrap { flex: 0 0 auto; }
-
-/* 4) 以前に入れた “width:auto !important;” を打ち消し、常にフル幅へ */
-.p1-answer {
-  width: 100% !important;     /* ← これが肝。PCでもiPhoneでもフル幅 */
-  max-width: 100%;
-}
