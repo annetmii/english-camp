@@ -1,9 +1,9 @@
 {
   "meta": {
     "app": "annetmii-english-camp",
-    "version": 43,
+    "version": 44,
     "date": "2025-08-11",
-    "genre": "Small Talk（雑談・会食）",
+    "genre": "Sales（接客・営業・販売スキル）",
     "trainee": "Masayuki",
     "theme": ""
   },
@@ -11,7 +11,12 @@
     "part1": {
       "label": "Part 1｜語彙チェック（英単語→日本語訳）",
       "instructions": "英単語の日本語訳を入力してください。",
-      "items": [],
+      "items": [
+        {
+          "id": "f7b2be9a-0dad-4568-804d-2652019d8078",
+          "en": ""
+        }
+      ],
       "answers": {},
       "marks": {},
       "trainerNotes": ""
