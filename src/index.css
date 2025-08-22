@@ -199,3 +199,25 @@ textarea.input::placeholder { color: #9ca3af; }
   display: inline-flex;
   align-items: center;
 }
+/* ===== iOS Safari で sticky+blur のチラつきを止める ===== */
+@supports (-webkit-touch-callout: none) {
+  .sticky-header {
+    /* iOSではブラーを無効化して再描画負荷を下げる */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #fff; /* 半透明をやめて実色に */
+  }
+}
+
+/* ===== 画面の高さを安定させる（アドレスバー変動対策） ===== */
+.app-root { min-height: 100svh; }  /* iOS 16+ 推奨単位 */
+
+/* ===== ステータス欄の“最小高さ”を固定してガタつき防止 ===== */
+.status-slot {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;   /* 1行ぶん確保。必要なら 20px にしてOK */
+  color: #6b7280;
+  font-size: 13px;
+}
+

@@ -81,7 +81,9 @@ function useEditingGuard(graceMs = 2500) {
   }, []);
   const touch = useCallback(() => { lastTouchedRef.current = Date.now(); }, []);
 
-  return { isEditing, startEdit, endEdit, touch };
+  /* 返すオブジェクトの identity を固定して、useEffect の無駄再走を防止 */
+  return React.useMemo(() => ({ isEditing, startEdit, endEdit, touch }),
+    [isEditing, startEdit, endEdit, touch]);
 }
 
 /* ===================== Cloud I/O（計測＋トークン＋Abort） ===================== */
@@ -723,9 +725,7 @@ const Header = React.memo(function Header({
               )}
               <button className="hdr-btn submit-btn" onMouseDown={(e)=>e.preventDefault()} onClick={submit}>提出</button>
             </div>
-            <span className="status-slot" style={{ color: "#6b7280", fontSize: 13 }}>
-  ステータス：{status}
-</span>
+            <span className="status-slot">ステータス：{status}</span>
           </div>
         </div>
       </div>
@@ -758,6 +758,10 @@ export default function App() {
   const [mode, setMode] = useState("student");
   const [pinInput, setPinInput] = useState("");
   const [status, setStatus] = useState("準備完了");
+  const setStatusSafe = useCallback(
+  (next) => setStatus((prev) => (prev === next ? prev : next)),
+  []
+);
   const [showCal, setShowCal] = useState(false);
   const [cloudDates, setCloudDates] = useState(new Set());
 
@@ -814,8 +818,8 @@ export default function App() {
 
     (async () => {
       try {
-        setStatus("クラウド読込中…");
-        if (guard.isEditing()) { setStatus("編集中のため読込待機"); return; }
+        setStatusSafe("クラウド読込中…");
+        if (guard.isEditing()) { setStatusSafe("編集中のため読込待機"); return; }
 
         const remote = await cloudLoad({ userId, dateISO, signal: ctrl.signal }); // {data, sha?, savedAt?}
         if (cancelled || myToken !== __loadToken) return;
@@ -830,15 +834,15 @@ export default function App() {
           setWs(ensureMaps(remote.data, dateISO));
           lastRemoteShaRef.current = remote.sha || djb2(stableStringify(remote.data));
           lastRemoteSavedAtRef.current = remote.savedAt || nowISO();
-          setStatus("クラウドから更新しました");
+          setStatusSafe("クラウドから更新しました");
         } else {
           // リモートが同じ/古い → ローカル維持
           setWs(ensureMaps(localWs, dateISO));
-          setStatus(remote && remote.data ? "最新のまま（ローカル優先）" : "本日のワークシートを作成しました");
+          setStatusSafe(remote && remote.data ? "最新のまま（ローカル優先）" : "本日のワークシートを作成しました");
         }
       } catch (e) {
         if (e.name === "AbortError") return;
-        setStatus("オフライン：ローカル保存のみ");
+        setStatusSafe("オフライン：ローカル保存のみ");
       }
     })();
 
@@ -850,7 +854,7 @@ export default function App() {
     try {
       listCtrlRef.current?.abort();
       const ctrl = new AbortController();
-      listCtrlRef = { current: ctrl };
+      listCtrlRef.current = ctrl;
       const res = await cloudListDates({ userId, signal: ctrl.signal });
       setCloudDates(new Set(res.dates || []));
     } catch {}
@@ -878,7 +882,7 @@ export default function App() {
           const localSha = djb2(stableStringify(normalized));
           if (localSha === lastSavedLocalShaRef.current) return; // 変更なし保存を回避
 
-          setStatus("自動同期中…");
+          setStatusSafe("自動同期中…");
           saveCtrlRef.current?.abort();
           const ctrl = new AbortController();
           saveCtrlRef.current = ctrl;
@@ -894,10 +898,10 @@ export default function App() {
             lastRemoteShaRef.current = res.sha || localSha;
             lastRemoteSavedAtRef.current = res.savedAt || nowISO();
           }
-          setStatus("自動同期完了");
+          setStatusSafe("自動同期完了");
           refreshCloudDates();
         } catch (e) {
-          if (e.name !== "AbortError") setStatus("自動同期失敗：後で再試行");
+          if (e.name !== "AbortError") setStatusSafe("自動同期失敗：後で再試行");
         }
         lastChangeRef.current = Date.now();
       }
@@ -937,7 +941,7 @@ export default function App() {
 
   /* --- 手動同期 --- */
   const doSync = useCallback(async (reason = "同期") => {
-    if (guard.isEditing()) { setStatus("編集中のため同期を保留"); return; }
+    if (guard.isEditing()) { setStatusSafe("編集中のため同期を保留"); return; }
     try {
       const normalized = { ...ws, meta: { ...ws.meta, date: dateISO } };
       const localSha = djb2(stableStringify(normalized));
@@ -1036,7 +1040,7 @@ export default function App() {
           setWs((cur) => { const next = defaultWorksheet(cur.meta.date); next.meta.theme = cur.meta.theme || ""; return next; });
           // 変更点：リセットは確実にsha更新扱い
           lastSavedLocalShaRef.current = "";
-          setStatus("出題を初期化しました");
+          setStatusSafe("出題を初期化しました");
           doSync("出題リセット");
         }}
       />
